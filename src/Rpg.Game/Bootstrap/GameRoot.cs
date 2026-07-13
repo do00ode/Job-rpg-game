@@ -50,7 +50,7 @@ public partial class GameRoot : Node
         }
         catch (Exception exception)
         {
-            GD.PushError($"Application startup failed:{Environment.NewLine}{exception}");
+            GD.PushError($"Application startup failed:{System.Environment.NewLine}{exception}");
             GetTree().Quit(1);
         }
     }
@@ -116,11 +116,11 @@ public partial class GameRoot : Node
         if (!contentResult.IsSuccess)
         {
             string details = string.Join(
-                Environment.NewLine,
+                System.Environment.NewLine,
                 contentResult.Problems.Select(problem => problem.ToString()));
             throw new InvalidDataException(
                 $"Content validation failed with {contentResult.Problems.Count} problem(s):"
-                + Environment.NewLine
+                + System.Environment.NewLine
                 + details);
         }
 
