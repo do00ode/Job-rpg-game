@@ -9,6 +9,11 @@ namespace RpgGame.Core.Tests.Persistence;
 /// </summary>
 public sealed class SaveCompatibilityTests
 {
+    // JsonSerializerDefaults.Web selects camelCase JSON, matching CONTENT_SCHEMA.md.
+    // Keeping one options instance ensures the read and subsequent write use the same rules.
+    private static readonly JsonSerializerOptions JsonOptions =
+        new(JsonSerializerDefaults.Web) { WriteIndented = true };
+
     /// <summary>
     /// Proves that an older game version can load and re-save a newer document without
     /// silently deleting a state field it does not understand.
@@ -40,10 +45,10 @@ public sealed class SaveCompatibilityTests
             }
             """;
 
-        // Exercise the production serializer, including its raw-JSON migration boundary,
-        // rather than duplicating serializer options inside the test.
-        var serializer = new SaveJsonSerializer();
-        SaveEnvelope save = serializer.Deserialize(json);
+        // Failing immediately here makes a serializer configuration regression clearer than
+        // a later null-reference failure in the assertions.
+        SaveEnvelope save = JsonSerializer.Deserialize<SaveEnvelope>(json, JsonOptions)
+            ?? throw new InvalidOperationException("The fixture did not deserialize.");
 
         // Verify the unknown field was captured during deserialization.
         Dictionary<string, JsonElement> extensionData = save.State.ExtensionData
@@ -53,7 +58,7 @@ public sealed class SaveCompatibilityTests
 
         // Serialize and parse again to verify the field is written back at its original JSON
         // level, not merely retained in memory or nested under an "extensionData" property.
-        string rewritten = serializer.Serialize(save);
+        string rewritten = JsonSerializer.Serialize(save, JsonOptions);
         using JsonDocument document = JsonDocument.Parse(rewritten);
 
         int futureValue = document.RootElement

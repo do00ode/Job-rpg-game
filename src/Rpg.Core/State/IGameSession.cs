@@ -4,16 +4,13 @@ namespace RpgGame.Core.State;
 /// Narrow application service that owns the active state across scene changes.
 /// </summary>
 /// <remarks>
-/// The implementation lives for the application's lifetime, but consumers receive this
-/// small interface rather than a global bag of managers. Feature use cases will perform
-/// validated state transitions; the Milestone 1 contract supports new-game and restored-state
-/// replacement without introducing gameplay behavior.
+/// The future implementation may live for the application's lifetime, but consumers only
+/// receive this small interface rather than a global bag of managers. Feature use cases
+/// will perform validated state transitions; this bootstrap contract currently demonstrates
+/// ownership and restore/new-game replacement without implementing gameplay.
 /// </remarks>
 public interface IGameSession
 {
-    /// <summary>Whether a new or loaded campaign is currently active.</summary>
-    bool HasActiveGame { get; }
-
     /// <summary>Current authoritative campaign snapshot.</summary>
     GameState Current { get; }
 
