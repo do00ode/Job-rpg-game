@@ -1,13 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+
+    <!-- Tests are executable verification infrastructure, not a distributable library. -->
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Microsoft.NET.Test.Sdk lets Visual Studio/dotnet discover and execute tests. -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+
+    <!-- xUnit supplies Fact/Theory attributes and assertion APIs. -->
     <PackageReference Include="xunit" Version="2.9.2" />
+
+    <!-- Adapter used by Visual Studio Test Explorer; PrivateAssets keeps it test-local. -->
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -15,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tests target only the headless core, so no Godot process is required. -->
     <ProjectReference Include="../../src/Rpg.Core/RpgGame.Core.csproj" />
   </ItemGroup>
 </Project>
-

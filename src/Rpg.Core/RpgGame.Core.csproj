@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Plain Microsoft.NET.Sdk is intentional: this library must stay independent of Godot so
+    rules and state can run in unit tests, tools, and simulations without launching an engine.
+  -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>RpgGame.Core</AssemblyName>
     <RootNamespace>RpgGame.Core</RootNamespace>
   </PropertyGroup>
 </Project>
-

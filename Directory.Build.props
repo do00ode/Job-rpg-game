@@ -1,10 +1,23 @@
 <Project>
+  <!--
+    MSBuild automatically imports this file into every project below this directory.
+    Centralizing these settings prevents the Godot, core, and test projects from quietly
+    drifting to different language/nullability/build-safety rules.
+  -->
   <PropertyGroup>
+    <!-- C# 12 is the language version paired with this repository's .NET 8 baseline. -->
     <LangVersion>12.0</LangVersion>
+
+    <!-- Nullable analysis turns likely null-reference bugs into compiler diagnostics. -->
     <Nullable>enable</Nullable>
+
+    <!-- Makes common System namespaces available without repetitive using directives. -->
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Keep warnings actionable from the beginning instead of accumulating build debt. -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Identical source and toolchain inputs should produce identical assemblies. -->
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 </Project>
-

@@ -1,16 +1,27 @@
 <Project Sdk="Godot.NET.Sdk/4.7.0">
+  <!--
+    This is the engine-facing assembly built by the Godot .NET SDK. The SDK version should
+    match the installed Godot .NET editor so generated bindings/analyzers stay compatible.
+  -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>RpgGame</AssemblyName>
     <RootNamespace>RpgGame</RootNamespace>
+
+    <!--
+      A project at repository root would normally compile every descendant .cs file,
+      including core and tests. Disable that behavior so only Rpg.Game is compiled here.
+    -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Godot Nodes, adapters, and composition code form the engine-facing assembly. -->
     <Compile Include="src/Rpg.Game/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Dependency points inward: Godot integration may use the Godot-free RPG core. -->
     <ProjectReference Include="src/Rpg.Core/RpgGame.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,8 @@
 [gd_scene load_steps=2 format=3]
 
+; Link the authored scene to its C# composition-root script by a Godot resource path.
 [ext_resource type="Script" path="res://src/Rpg.Game/Bootstrap/GameRoot.cs" id="1_game_root"]
 
+; The root is deliberately a plain Node: no gameplay or visual hierarchy exists yet.
 [node name="GameRoot" type="Node"]
 script = ExtResource("1_game_root")
-
