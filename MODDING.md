@@ -2,10 +2,10 @@
 
 ## Scope of Milestone 1.5
 
-The game supports **data-only, loose-folder mods**. A mod may add records in the ten
+The game supports **data-only, loose-folder mods**. A mod may add records in the eleven
 JSON categories as the base game: actors, classes, statistics, items, equipment, abilities,
-enemies, encounters, quests, and starting-class rules. Those definitions enter the same typed
-catalog and pass the same strict validation as built-in content.
+enemies, encounters, quests, dialogues, and starting-class rules. Those definitions enter the
+same typed catalog and pass the same strict validation as built-in content.
 
 This milestone does **not** load C# assemblies, native libraries, GDScript, executable hooks,
 PCK/ZIP packages, Steam Workshop items, URLs, or arbitrary behavior expressions. It does not
@@ -15,6 +15,11 @@ package beneath the mods directory is enabled for that process.
 This narrow boundary gives community authors useful class, ability, item, enemy, encounter,
 and quest data without turning the first playable milestones into a plugin platform or
 exposing players to community code execution.
+
+Dialogue JSON uses the same namespace validation, but Milestone 2 exposes no mod-owned maps,
+NPC placement, scene resources, or presentation hooks that could select a new dialogue. That
+presentation integration remains explicitly unsupported even though the data record itself is
+safe to parse and validate.
 
 ## Package layout
 

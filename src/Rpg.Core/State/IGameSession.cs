@@ -6,8 +6,8 @@ namespace RpgGame.Core.State;
 /// <remarks>
 /// The implementation lives for the application's lifetime, but consumers receive this
 /// small interface rather than a global bag of managers. Feature use cases will perform
-/// validated state transitions; the Milestone 1 contract supports new-game and restored-state
-/// replacement without introducing gameplay behavior.
+/// validated state transitions. The contract exposes only the concrete campaign mutations
+/// currently required by new-game, save/load, and the first exploration slice.
 /// </remarks>
 public interface IGameSession
 {
@@ -28,4 +28,16 @@ public interface IGameSession
     /// Normal feature mutations will use narrower use cases rather than this method.
     /// </summary>
     void ReplaceState(GameState state);
+
+    /// <summary>
+    /// Replaces the persistent tile location after the exploration scene accepts a move.
+    /// Collision remains scene-owned because Core has no Godot map or physics dependency.
+    /// </summary>
+    void UpdateLocation(MapLocationState location);
+
+    /// <summary>Returns a persistent flag, treating an absent key as false.</summary>
+    bool GetEventFlag(string flagId);
+
+    /// <summary>Sets one stable persistent fact and notifies state observers.</summary>
+    void SetEventFlag(string flagId, bool value = true);
 }

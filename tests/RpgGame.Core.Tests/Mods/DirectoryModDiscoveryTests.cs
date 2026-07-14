@@ -36,7 +36,7 @@ public sealed class DirectoryModDiscoveryTests
             contentResult.IsSuccess,
             string.Join(Environment.NewLine, contentResult.Problems));
         ContentCatalog catalog = Assert.IsType<ContentCatalog>(contentResult.Catalog);
-        Assert.Equal(21, catalog.Count);
+        Assert.Equal(22, catalog.Count);
         Assert.NotNull(catalog.GetRequired<ClassDefinition>(
             "class.example.starter-pack.chronoguard"));
         Assert.NotNull(catalog.GetRequired<AbilityDefinition>(

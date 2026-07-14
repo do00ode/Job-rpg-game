@@ -193,6 +193,7 @@ public sealed class JsonContentLoader
                 "abilities" => JsonSerializer.Deserialize<AbilityDefinition>(json, SerializerOptions),
                 "actors" => JsonSerializer.Deserialize<ActorDefinition>(json, SerializerOptions),
                 "classes" => JsonSerializer.Deserialize<ClassDefinition>(json, SerializerOptions),
+                "dialogues" => JsonSerializer.Deserialize<DialogueDefinition>(json, SerializerOptions),
                 "encounters" => JsonSerializer.Deserialize<EncounterDefinition>(json, SerializerOptions),
                 "enemies" => JsonSerializer.Deserialize<EnemyDefinition>(json, SerializerOptions),
                 "equipment" => JsonSerializer.Deserialize<EquipmentDefinition>(json, SerializerOptions),
@@ -245,6 +246,7 @@ public sealed class JsonContentLoader
             "abilities" => "ability.",
             "actors" => "actor.",
             "classes" => "class.",
+            "dialogues" => "dialogue.",
             "encounters" => "encounter.",
             "enemies" => "enemy.",
             "equipment" => "equipment.",
@@ -289,6 +291,7 @@ public sealed class JsonContentLoader
         "abilities" or
         "actors" or
         "classes" or
+        "dialogues" or
         "encounters" or
         "enemies" or
         "equipment" or

@@ -12,7 +12,7 @@ Validate the base pack and this example together from the repository root:
 dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content examples/mods
 ```
 
-Successful combined validation loads 21 definitions. With this example enabled, the final
+Successful combined validation loads 22 definitions. With this example enabled, the final
 starting pool is Chronoguard, White Mage, and Vanguard.
 
 To try discovery in a development build, copy the entire `mod.example.starter-pack` folder into

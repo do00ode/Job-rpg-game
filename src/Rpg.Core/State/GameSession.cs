@@ -1,3 +1,5 @@
+using RpgGame.Core.Content;
+
 namespace RpgGame.Core.State;
 
 /// <summary>
@@ -6,7 +8,8 @@ namespace RpgGame.Core.State;
 /// <remarks>
 /// This service deliberately does not know how scenes work or where saves live. Application
 /// use cases replace state here, and scene controllers observe <see cref="StateChanged"/> to
-/// refresh presentation. More focused mutation methods will arrive with their features.
+/// refresh presentation. Its narrow mutations create replacement snapshots so callers cannot
+/// accidentally change shared collection instances without a notification.
 /// </remarks>
 public sealed class GameSession : IGameSession
 {
@@ -26,7 +29,86 @@ public sealed class GameSession : IGameSession
     public void ReplaceState(GameState state)
     {
         ArgumentNullException.ThrowIfNull(state);
+        Publish(state);
+    }
+
+    /// <inheritdoc />
+    public void UpdateLocation(MapLocationState location)
+    {
+        ArgumentNullException.ThrowIfNull(location);
+        ValidateLocation(location);
+
+        if (Current.Location == location)
+        {
+            return;
+        }
+
+        Publish(Current with { Location = location });
+    }
+
+    /// <inheritdoc />
+    public bool GetEventFlag(string flagId)
+    {
+        ValidateFlagId(flagId);
+        return Current.EventFlags.TryGetValue(flagId, out bool value) && value;
+    }
+
+    /// <inheritdoc />
+    public void SetEventFlag(string flagId, bool value = true)
+    {
+        ValidateFlagId(flagId);
+
+        if (Current.EventFlags.TryGetValue(flagId, out bool existing) && existing == value)
+        {
+            return;
+        }
+
+        var flags = new Dictionary<string, bool>(Current.EventFlags, StringComparer.Ordinal)
+        {
+            [flagId] = value,
+        };
+        Publish(Current with { EventFlags = flags });
+    }
+
+    private void Publish(GameState state)
+    {
         _current = state;
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static void ValidateLocation(MapLocationState location)
+    {
+        if (!ContentId.IsValid(location.MapId)
+            || !location.MapId.StartsWith("map.", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"Map ID '{location.MapId}' must be a canonical map.* ID.",
+                nameof(location));
+        }
+
+        if (location.X < 0 || location.Y < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(location),
+                "Exploration tile coordinates cannot be negative.");
+        }
+
+        if (location.Facing is not ("north" or "east" or "south" or "west"))
+        {
+            throw new ArgumentException(
+                $"Facing '{location.Facing}' is not north/east/south/west.",
+                nameof(location));
+        }
+    }
+
+    private static void ValidateFlagId(string flagId)
+    {
+        if (!ContentId.IsValid(flagId)
+            || !flagId.StartsWith("flag.", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"Event flag '{flagId}' must be a canonical flag.* ID.",
+                nameof(flagId));
+        }
     }
 }

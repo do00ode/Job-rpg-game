@@ -20,3 +20,8 @@ exercise dependency sorting/missing/cycle failures, and verify that saves reject
 version-mismatched required mods. Temporary manifest installations are deleted after each test.
 The suite also proves all three vanilla starting classes can create James and that the example
 mod can add Chronoguard while excluding vanilla Black Mage from the resolved pool.
+
+Milestone 2 tests validate the linear dialogue record, exercise location and event-flag
+mutations through `GameSession`, and prove the moved location plus
+`flag.test-room.npc-spoken-to` survive the real filesystem save/load round trip. Visual input
+and layout remain manual/Godot smoke-test concerns rather than being duplicated in Core tests.

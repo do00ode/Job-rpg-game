@@ -8,8 +8,8 @@ namespace RpgGame.Core.Tests.Persistence;
 public sealed class SaveRoundTripTests
 {
     /// <summary>
-    /// Satisfies the Milestone 1 exit criterion: content creates a campaign, the campaign
-    /// survives a real JSON file round trip, and a later write preserves a backup.
+    /// Covers the Milestone 1 round trip and Milestone 2 exploration proof: moved location
+    /// and NPC flag survive a real file, while a later write still preserves a backup.
     /// </summary>
     [Fact]
     public async Task FixtureContent_NewGame_SaveAndLoad_PreservesEquivalentState()
@@ -21,7 +21,7 @@ public sealed class SaveRoundTripTests
 
         try
         {
-            GameState original = new NewGameFactory(TestContent.LoadCatalog()).Create(
+            GameState newGame = new NewGameFactory(TestContent.LoadCatalog()).Create(
                 new NewGameRequest
                 {
                     SaveId = "round-trip-campaign",
@@ -38,7 +38,16 @@ public sealed class SaveRoundTripTests
                         },
                     ],
                 });
-            original.EventFlags["flag.test.introduction-seen"] = true;
+            var session = new GameSession();
+            session.ReplaceState(newGame);
+            session.UpdateLocation(newGame.Location with
+            {
+                X = 6,
+                Y = 4,
+                Facing = "east",
+            });
+            session.SetEventFlag("flag.test-room.npc-spoken-to");
+            GameState original = session.Current;
 
             var serializer = new SaveJsonSerializer();
             var store = new JsonFileSaveStore(saveDirectory, serializer);
@@ -49,6 +58,9 @@ public sealed class SaveRoundTripTests
                 ?? throw new InvalidOperationException("The saved slot unexpectedly disappeared.");
 
             AssertEquivalent(original, loaded);
+            Assert.Equal((6, 4, "east"),
+                (loaded.Location.X, loaded.Location.Y, loaded.Location.Facing));
+            Assert.True(loaded.EventFlags["flag.test-room.npc-spoken-to"]);
 
             // A second successful write copies the old primary to slot_1.json.bak before
             // replacing it, providing a last-known-good recovery file.

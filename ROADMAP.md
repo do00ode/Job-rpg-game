@@ -69,7 +69,7 @@ gameplay, mod menus/profiles, hot reload, scripts or assemblies, PCK/ZIP
 loading, Steam Workshop, network downloads, signatures, base-record overrides, and a general
 behavior language. See `MODDING.md` for the supported contract and installation workflow.
 
-## Milestone 2 — Exploration interaction slice
+## Milestone 2 — Exploration interaction slice (implemented)
 
 - Create one small tile map and tile-based player movement with collision.
 - Add map entry points and reconstruct the map from `GameState.Location`.
@@ -79,6 +79,29 @@ behavior language. See `MODDING.md` for the supported contract and installation 
 
 Exit criteria: the player can move through one test room, interact once, leave/reload,
 and see persistent state reflected correctly.
+
+Implementation notes:
+
+- `TestRoomView` owns one fixed 12×9 logical tile grid and draws placeholder tiles without art;
+- James moves exactly one tile per non-echo key press and cannot enter wall or NPC tiles;
+- `ExplorationSceneController` converts accepted Godot input into narrow `GameSession`
+  location/flag mutations;
+- the guide NPC returns one typed interaction result selecting a validated linear dialogue;
+- `flag.test-room.npc-spoken-to` changes the NPC view and survives R reconstruction/save-load;
+- no general navigator, authored map format, branching dialogue, or localization layer was added.
+
+See `MILESTONE_2_GUIDE.md` for controls, ownership, reconstruction, and validation details.
+
+### Milestone 2.1 — Manual persistence proof (implemented)
+
+- Make room reconstruction visibly confirm success while preserving in-memory state.
+- Add K/L development shortcuts that save and load `slot_1` through the existing coordinator.
+- Show success, unused-slot, and exception feedback in the test room.
+- Keep these controls behind a narrow injected presentation interface; do not add a save menu,
+  new persistence format, global service, or scene-owned campaign state.
+
+Exit criteria: R visibly confirms reconstruction, K writes the current location and event
+flags, and L visibly restores them in the running test room.
 
 ## Milestone 3 — First playable battle slice
 

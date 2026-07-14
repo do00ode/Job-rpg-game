@@ -5,6 +5,7 @@ using RpgGame.Core.Content.Loading;
 using RpgGame.Core.Mods;
 using RpgGame.Core.Persistence;
 using RpgGame.Core.State;
+using RpgGame.Exploration;
 
 namespace RpgGame.Bootstrap;
 
@@ -23,9 +24,13 @@ namespace RpgGame.Bootstrap;
 /// Godot requires scripts deriving from GodotObject to be <c>partial</c>; its source
 /// generators supply the engine-facing portion of the class during compilation.
 /// </remarks>
-public partial class GameRoot : Node
+public partial class GameRoot : Node, IExplorationDevelopmentCommands
 {
-    private const string GameVersion = "0.1.0-milestone1.5";
+    private const string GameVersion = "0.2.1-milestone2.1";
+    private const string TestRoomScenePath = "res://game/scenes/exploration/TestRoom.tscn";
+    private const string DevelopmentQuickSlotId = "slot_1";
+
+    private ExplorationSceneController? _explorationScene;
 
     /// <summary>Validated immutable content available after <see cref="_Ready"/>.</summary>
     public IContentCatalog Content { get; private set; } = null!;
@@ -43,6 +48,9 @@ public partial class GameRoot : Node
     /// </summary>
     public IReadOnlyList<ModReference> EnabledMods { get; private set; } = [];
 
+    /// <inheritdoc />
+    public string QuickSlotId => DevelopmentQuickSlotId;
+
     /// <summary>
     /// Godot calls this after the node enters the scene tree. Startup is deliberately
     /// synchronous while the fixture pack is small, making failures deterministic and visible.
@@ -52,8 +60,9 @@ public partial class GameRoot : Node
         try
         {
             InitializeApplicationServices();
+            RebuildExplorationScene();
             GD.Print(
-                $"Milestone 1.5 ready: loaded {Content.Count} definitions "
+                $"Milestone 2 ready: loaded {Content.Count} definitions "
                 + $"with {EnabledMods.Count} data mod(s); "
                 + $"new game {Session.Current.SaveId} starts at {Session.Current.Location.MapId}.");
         }
@@ -124,6 +133,14 @@ public partial class GameRoot : Node
         return true;
     }
 
+    /// <inheritdoc />
+    public Task SaveQuickSlotAsync(CancellationToken cancellationToken = default) =>
+        SaveCurrentGameAsync(DevelopmentQuickSlotId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<bool> LoadQuickSlotAsync(CancellationToken cancellationToken = default) =>
+        LoadGameAsync(DevelopmentQuickSlotId, cancellationToken);
+
     private void InitializeApplicationServices()
     {
         // Mods live in user:// so players can install data without modifying the exported
@@ -179,9 +196,40 @@ public partial class GameRoot : Node
         Saves = new SaveCoordinator(store, GameVersion, EnabledMods);
 
         // Creating the initial session last guarantees every dependency used by the public
-        // Milestone 1 methods is ready before StateChanged can notify future listeners.
+        // new-game/save/load methods is ready before StateChanged can notify listeners.
         StartNewGame();
     }
+
+    /// <summary>
+    /// Reconstructs the only current map from GameState. This is deliberately not a general
+    /// scene navigator; that abstraction waits until a second real map needs transitions.
+    /// </summary>
+    private void RebuildExplorationScene(string? developmentStatus = null)
+    {
+        if (_explorationScene is not null)
+        {
+            _explorationScene.ReloadRequested -= OnExplorationReloadRequested;
+            RemoveChild(_explorationScene);
+            _explorationScene.QueueFree();
+        }
+
+        PackedScene packedScene = ResourceLoader.Load<PackedScene>(TestRoomScenePath)
+            ?? throw new InvalidOperationException(
+                $"Could not load exploration scene '{TestRoomScenePath}'.");
+        var scene = packedScene.Instantiate<ExplorationSceneController>();
+        AddChild(scene);
+        scene.Initialize(Content, Session, this);
+        scene.ReloadRequested += OnExplorationReloadRequested;
+        if (developmentStatus is not null)
+        {
+            scene.ShowDevelopmentStatus(developmentStatus);
+        }
+
+        _explorationScene = scene;
+    }
+
+    private void OnExplorationReloadRequested(object? sender, EventArgs eventArgs) =>
+        RebuildExplorationScene("Room reconstructed from in-memory GameState.");
 
     private static void EnsureInitialized(object? service, string serviceName)
     {

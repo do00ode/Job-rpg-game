@@ -63,6 +63,9 @@ internal sealed class ContentValidator
                 case ClassDefinition classDefinition:
                     ValidateClass(item, classDefinition);
                     break;
+                case DialogueDefinition dialogue:
+                    ValidateDialogue(item, dialogue);
+                    break;
                 case EncounterDefinition encounter:
                     ValidateEncounter(item, encounter);
                     break;
@@ -192,6 +195,23 @@ internal sealed class ContentValidator
                 Add(item, $"{path}.abilityId", "class.duplicate-ability",
                     $"Ability '{unlock.AbilityId}' is unlocked more than once by this class.");
             }
+        }
+    }
+
+    private void ValidateDialogue(LoadedContent item, DialogueDefinition dialogue)
+    {
+        RequireNonBlank(item, "$.speakerName", dialogue.SpeakerName);
+
+        IReadOnlyList<string> lines = RequireList(item, "$.lines", dialogue.Lines);
+        if (lines.Count == 0)
+        {
+            Add(item, "$.lines", "dialogue.no-lines",
+                "A dialogue must contain at least one line.");
+        }
+
+        for (int index = 0; index < lines.Count; index++)
+        {
+            RequireNonBlank(item, $"$.lines[{index}]", lines[index]);
         }
     }
 
@@ -585,6 +605,7 @@ internal sealed class ContentValidator
             Type type when type == typeof(AbilityDefinition) => "ability.",
             Type type when type == typeof(ActorDefinition) => "actor.",
             Type type when type == typeof(ClassDefinition) => "class.",
+            Type type when type == typeof(DialogueDefinition) => "dialogue.",
             Type type when type == typeof(EncounterDefinition) => "encounter.",
             Type type when type == typeof(EnemyDefinition) => "enemy.",
             Type type when type == typeof(EquipmentDefinition) => "equipment.",

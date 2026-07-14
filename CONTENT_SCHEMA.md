@@ -25,6 +25,7 @@ The initial directory-to-type mapping is:
 |---|---|
 | `actors/` | `ActorDefinition` |
 | `classes/` | `ClassDefinition` |
+| `dialogues/` | `DialogueDefinition` |
 | `statistics/` | `StatisticDefinition` |
 | `items/` | `ItemDefinition` |
 | `equipment/` | `EquipmentDefinition` |
@@ -47,6 +48,7 @@ Use a category followed by useful namespaces and a specific name:
 ```text
 actor.hero.james
 class.magic.black-mage
+dialogue.prologue.test-room-guide
 stat.max-hp
 item.consumable.potion
 equipment.weapon.iron-sword
@@ -156,6 +158,31 @@ Exclusion wins globally, independent of filesystem or dependency order. Every re
 class must exist and belong to the correct category. At least one rule must exist and the
 resolved pool cannot be empty. Duplicate IDs within one list and including/excluding the
 same ID in one record are validation errors.
+
+### Dialogue
+
+Milestone 2 supports only one speaker and an ordered list of literal placeholder lines. This
+is intentionally not a branching conversation or cutscene language.
+
+| Field | Type | Notes |
+|---|---|---|
+| `speakerName` | string | Nonblank placeholder text shown above the dialogue. |
+| `lines` | string array | At least one nonblank line, displayed in authored order. |
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "dialogue.prologue.test-room-guide",
+  "speakerName": "Test Room Guide",
+  "lines": [
+    "Hello, James. This room remembers what happens here."
+  ]
+}
+```
+
+Literal text is a documented temporary Milestone 2 choice because localization is explicitly
+deferred. Do not add conditions, choices, portraits, actions, arbitrary commands, or resource
+paths to this record. The exploration scene selects the record through its stable dialogue ID.
 
 ### Statistic
 

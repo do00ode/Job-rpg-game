@@ -13,6 +13,7 @@ a general-purpose RPG engine.
 5. Read `MILESTONE_1_GUIDE.md` before changing startup, content loading, session, or saves.
 6. Read `MODDING.md` before changing mod manifests, discovery, namespaces, or compatibility.
 7. Read `STARTING_CLASS_GUIDE.md` before changing actor/class ownership or new-game class choices.
+8. Read `MILESTONE_2_GUIDE.md` before changing exploration movement, interaction, or dialogue.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

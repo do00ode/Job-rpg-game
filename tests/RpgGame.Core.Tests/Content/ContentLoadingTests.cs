@@ -8,7 +8,7 @@ namespace RpgGame.Core.Tests.Content;
 public sealed class ContentLoadingTests
 {
     /// <summary>
-    /// Loads every checked-in JSON record and proves all ten content categories made it
+    /// Loads every checked-in JSON record and proves all eleven content categories made it
     /// through parsing, identity checks, semantic checks, and cross-reference validation.
     /// </summary>
     [Fact]
@@ -16,9 +16,10 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(18, catalog.Count);
+        Assert.Equal(19, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
+        Assert.Single(catalog.GetAll<DialogueDefinition>());
         Assert.Equal(5, catalog.GetAll<StatisticDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<ItemDefinition>().Count);
         Assert.Single(catalog.GetAll<EquipmentDefinition>());
@@ -57,6 +58,14 @@ public sealed class ContentLoadingTests
                   "displayNameKey": "actor.wrong-category.name",
                   "baseStatistics": {},
                   "startingAbilityIds": []
+                }
+                """),
+            new("dialogues/broken.json", """
+                {
+                  "schemaVersion": 1,
+                  "id": "dialogue.test.broken",
+                  "speakerName": " ",
+                  "lines": []
                 }
                 """),
             new("starting-class-rules/broken.json", """
@@ -116,6 +125,11 @@ public sealed class ContentLoadingTests
         Assert.Contains(result.Problems, problem => problem.Code == "id.duplicate");
         Assert.Contains(result.Problems, problem => problem.Code == "category.unknown");
         Assert.Contains(result.Problems, problem => problem.Code == "id.invalid");
+        Assert.Contains(result.Problems, problem => problem.Code == "dialogue.no-lines");
+        Assert.Contains(
+            result.Problems,
+            problem => problem.FilePath.EndsWith("dialogues/broken.json", StringComparison.Ordinal)
+                && problem.Code == "value.blank");
     }
 
     /// <summary>

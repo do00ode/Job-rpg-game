@@ -70,6 +70,26 @@ changes. A map scene reads the location it needs and submits state changes throu
 application use case; it does not become the source of truth. Battle scenes receive a
 battle snapshot and can be destroyed and reconstructed without losing campaign state.
 
+### Exploration slice
+
+Milestone 2 makes that ownership concrete. `ExplorationSceneController` receives
+`IContentCatalog` and `IGameSession` from `GameRoot`; it never searches for an autoload or
+global Node. The game-specific `TestRoomView` owns the fixed tile grid, pixel conversion, and
+blocked tiles. Accepted moves call `IGameSession.UpdateLocation`, while the NPC interaction
+calls `IGameSession.SetEventFlag`. Both mutations replace the current `GameState` snapshot and
+raise `StateChanged`, allowing disposable views to reconstruct from authoritative data.
+
+Milestone 2.1 injects one presentation-layer `IExplorationDevelopmentCommands` interface so
+the test room can manually invoke quick-save and quick-load without knowing save directories
+or locating `GameRoot`. Its K/L shortcuts always target `slot_1` and display development
+feedback. They are temporary proof controls, not a permanent save-menu contract; persistent
+state still flows exclusively through `GameSession` and `SaveCoordinator`.
+
+The first room is drawn procedurally from colored rectangles because this milestone forbids
+graphical assets and has only one real map. It is still a tile-based map: movement, walls,
+occupancy, facing, and saved coordinates all use integer grid positions. A generalized map
+loader, entry-point registry, and scene navigator wait for a second map to prove their shape.
+
 ### Party capacity
 
 The game has one ordered party, stored in `ActivePartyActorIds`, with a hard maximum of four
@@ -212,14 +232,15 @@ The test pyramid is intentionally weighted toward fast, headless tests:
 
 `RpgGame.Core.Tests` now covers stable IDs, complete-pack loading, aggregated content
 failures, mod manifests/namespaces/dependency ordering, modded-save compatibility,
-new-game construction, session notification, save migrations, safe slot names, unknown
-future fields, and an actual filesystem save/load round trip.
+new-game construction, exploration location/flag mutations, session notification, dialogue
+content, save migrations, safe slot names, unknown future fields, and an actual filesystem
+save/load round trip.
 
 ## Decisions intentionally deferred
 
 - final damage and progression formulas;
 - status-effect stacking and timing;
-- dialogue/cutscene authoring format;
+- dialogue choices, conditions, cutscene commands, and localization;
 - map transition and encounter triggering details;
 - inventory stacking and equipment slot rules;
 - AI planning model;

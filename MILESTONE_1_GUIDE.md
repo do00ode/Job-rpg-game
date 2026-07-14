@@ -23,14 +23,16 @@ sequenceDiagram
     Loader-->>Root: Validated ContentCatalog
     Root->>Session: ReplaceState(new game)
     Root->>Saves: Configure user://saves
-    Root-->>Godot: Print Milestone 1.5 ready
+    Root-->>Godot: Print Milestone 2 ready
 ```
 
-`game/scenes/bootstrap/GameRoot.tscn` is still an empty `Node`, so running the game shows a
-blank window. That is expected. The useful result appears in Godot's **Output** panel:
+`game/scenes/bootstrap/GameRoot.tscn` is a small composition root. Milestone 2 now has it
+instantiate the test room after application services are ready, so running the game shows
+James, the guide, the grid, and development controls. Startup details also appear in Godot's
+**Output** panel:
 
 ```text
-Milestone 1.5 ready: loaded 18 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
+Milestone 2 ready: loaded 19 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
 ```
 
 If content is invalid, startup prints every discovered problem and exits instead of giving
@@ -237,9 +239,9 @@ breaking change:
 5. keep an old save fixture and test its meaning after migration;
 6. never rewrite an already released migration.
 
-## Boundaries retained for Milestone 2
+## Milestone 2 continuation
 
-Milestone 1 stores a starting map ID and tile coordinate but does not create a map or move a
-player. It defines ability, item, enemy, encounter, and quest data but does not execute those
-systems. Milestone 2 should consume these foundations to build one exploration interaction
-slice while keeping `GameState` authoritative and scenes disposable.
+Milestone 1 stored a starting map ID and tile coordinate without creating a map. Milestone 2
+now consumes those fields in one exploration interaction slice while keeping `GameState`
+authoritative and scenes disposable. See `MILESTONE_2_GUIDE.md`; combat and the other defined
+content systems remain deferred.

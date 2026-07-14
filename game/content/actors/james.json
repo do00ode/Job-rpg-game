@@ -3,11 +3,11 @@
   "id": "actor.hero.james",
   "displayNameKey": "actor.james.name",
   "baseStatistics": {
-    "stat.max-hp": 84,
-    "stat.max-mp": 12,
-    "stat.strength": 9,
-    "stat.defense": 7,
-    "stat.speed": 6
+	"stat.max-hp": 84,
+	"stat.max-mp": 12,
+	"stat.strength": 9,
+	"stat.defense": 7,
+	"stat.speed": 6
   },
   "startingAbilityIds": []
 }
