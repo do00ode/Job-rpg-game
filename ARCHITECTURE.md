@@ -135,6 +135,14 @@ derived from its manifest—for example, `mod.alex.weather-pack` may define
 base-game or dependency records through stable IDs. Installation order therefore cannot
 silently decide which definition wins.
 
+Starting-class availability is the one deliberate composition mechanism in this additive
+model. `StartingClassRuleDefinition` records contribute included and excluded class IDs;
+`StartingClassPool` computes the union of includes minus the union of excludes in ordinal
+order. A mod can therefore add its own class or remove a vanilla choice without replacing a
+base record. Exclusion always wins, which avoids an order-dependent conflict policy. James's
+selected class belongs to per-save `ActorProgressState`, not `ActorDefinition`, so different
+campaigns and future deterministic randomizers may choose different legal builds.
+
 JSON was selected over Godot `Resource` subclasses because definitions remain usable
 in headless tests and tools, diffs stay readable, and data does not acquire engine
 lifetime or import concerns. Godot resources remain appropriate for presentation

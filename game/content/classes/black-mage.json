@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "class.magic.black-mage",
+  "displayNameKey": "class.black-mage.name",
+  "baseStatisticBonuses": {
+    "stat.max-mp": 10,
+    "stat.speed": 1
+  },
+  "abilityUnlocks": []
+}

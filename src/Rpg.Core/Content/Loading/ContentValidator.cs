@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.State;
 
 namespace RpgGame.Core.Content.Loading;
 
@@ -77,6 +78,9 @@ internal sealed class ContentValidator
                 case QuestDefinition quest:
                     ValidateQuest(item, quest);
                     break;
+                case StartingClassRuleDefinition startingClassRule:
+                    ValidateStartingClassRule(item, startingClassRule);
+                    break;
                 case StatisticDefinition statistic:
                     ValidateStatistic(item, statistic);
                     break;
@@ -84,13 +88,12 @@ internal sealed class ContentValidator
         }
 
         ValidateEquipmentItemUniqueness();
+        ValidateStartingClassPool();
     }
 
     private void ValidateActor(LoadedContent item, ActorDefinition actor)
     {
         RequireNonBlank(item, "$.displayNameKey", actor.DisplayNameKey);
-        RequireAtLeast(item, "$.startingLevel", actor.StartingLevel, 1);
-        RequireReference<ClassDefinition>(item, "$.startingClassId", actor.StartingClassId);
         ValidateStatisticMap(
             item,
             "$.baseStatistics",
@@ -106,6 +109,55 @@ internal sealed class ContentValidator
                 item,
                 $"$.startingAbilityIds[{index}]",
                 startingAbilityIds[index]);
+        }
+    }
+
+    /// <summary>
+    /// Validates one additive contribution to the new-game class pool. Multiple records
+    /// may include or exclude the same class because independent mods must be composable;
+    /// duplicate entries inside one record are almost certainly an authoring mistake.
+    /// </summary>
+    private void ValidateStartingClassRule(
+        LoadedContent item,
+        StartingClassRuleDefinition rule)
+    {
+        IReadOnlyList<string> includeClassIds = RequireList(
+            item,
+            "$.includeClassIds",
+            rule.IncludeClassIds);
+        IReadOnlyList<string> excludeClassIds = RequireList(
+            item,
+            "$.excludeClassIds",
+            rule.ExcludeClassIds);
+
+        var included = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < includeClassIds.Count; index++)
+        {
+            string classId = includeClassIds[index];
+            RequireReference<ClassDefinition>(item, $"$.includeClassIds[{index}]", classId);
+            if (!included.Add(classId))
+            {
+                Add(item, $"$.includeClassIds[{index}]", "starting-class-rule.duplicate-include",
+                    $"Class '{classId}' is included more than once by this rule.");
+            }
+        }
+
+        var excluded = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < excludeClassIds.Count; index++)
+        {
+            string classId = excludeClassIds[index];
+            RequireReference<ClassDefinition>(item, $"$.excludeClassIds[{index}]", classId);
+            if (!excluded.Add(classId))
+            {
+                Add(item, $"$.excludeClassIds[{index}]", "starting-class-rule.duplicate-exclude",
+                    $"Class '{classId}' is excluded more than once by this rule.");
+            }
+
+            if (included.Contains(classId))
+            {
+                Add(item, $"$.excludeClassIds[{index}]", "starting-class-rule.contradictory",
+                    $"Class '{classId}' cannot be both included and excluded by one rule.");
+            }
         }
     }
 
@@ -420,6 +472,22 @@ internal sealed class ContentValidator
         }
     }
 
+    private void ValidateStartingClassPool()
+    {
+        if (_catalog.GetAll<StartingClassRuleDefinition>().Count == 0)
+        {
+            Add("<content>", "$", "starting-class-pool.missing",
+                "At least one starting-class-rules record is required.");
+            return;
+        }
+
+        if (StartingClassPool.Resolve(_catalog).Count == 0)
+        {
+            Add("<content>", "$", "starting-class-pool.empty",
+                "Starting-class rules resolve to an empty pool; include at least one class that is not excluded.");
+        }
+    }
+
     /// <summary>
     /// Converts an explicitly null JSON object to an empty view after recording the error.
     /// This lets validation continue and report independent failures in other records.
@@ -522,6 +590,7 @@ internal sealed class ContentValidator
             Type type when type == typeof(EquipmentDefinition) => "equipment.",
             Type type when type == typeof(ItemDefinition) => "item.",
             Type type when type == typeof(QuestDefinition) => "quest.",
+            Type type when type == typeof(StartingClassRuleDefinition) => "newgame.class-rule.",
             Type type when type == typeof(StatisticDefinition) => "stat.",
             _ => throw new InvalidOperationException(
                 $"No content ID prefix is registered for {typeof(TDefinition).Name}."),

@@ -7,14 +7,24 @@ namespace RpgGame.Bootstrap;
 /// </summary>
 public static class DefaultGameSetup
 {
-    /// <summary>Creates a fresh request with a unique save lineage.</summary>
-    public static NewGameRequest CreateRequest() => new()
+    /// <summary>
+    /// Creates a fresh request with a unique save lineage and an explicit class choice.
+    /// </summary>
+    public static NewGameRequest CreateRequest(string startingClassId) => new()
     {
         SaveId = Guid.NewGuid().ToString("N"),
         StartingMapId = "map.prologue.test-room",
         StartingX = 4,
         StartingY = 4,
         StartingFacing = "south",
-        StartingActorIds = ["actor.hero.james"],
+        StartingPartyMembers =
+        [
+            new StartingPartyMemberRequest
+            {
+                ActorId = "actor.hero.james",
+                ClassId = startingClassId,
+                Level = 1,
+            },
+        ],
     };
 }

@@ -72,13 +72,21 @@ public partial class GameRoot : Node
     /// "New Game." Keeping creation here for now demonstrates the complete use case without
     /// introducing a title screen or global service locator during this milestone.
     /// </remarks>
-    public void StartNewGame()
+    public void StartNewGame(string? startingClassId = null)
     {
         EnsureInitialized(Content, nameof(Content));
         EnsureInitialized(Session, nameof(Session));
 
+        // Until the title screen supplies a player choice, select the first stable ID from
+        // the resolved pool. This is deterministic and remains valid when a mod removes the
+        // vanilla Vanguard choice. It is a bootstrap fallback, not actor configuration.
+        string selectedClassId = startingClassId
+            ?? StartingClassPool.Resolve(Content).FirstOrDefault()
+            ?? throw new InvalidOperationException(
+                "Content does not provide any selectable starting classes.");
+
         GameState initialState = new NewGameFactory(Content).Create(
-            DefaultGameSetup.CreateRequest());
+            DefaultGameSetup.CreateRequest(selectedClassId));
         Session.ReplaceState(initialState);
     }
 

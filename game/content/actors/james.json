@@ -2,8 +2,6 @@
   "schemaVersion": 1,
   "id": "actor.hero.james",
   "displayNameKey": "actor.james.name",
-  "startingClassId": "class.martial.vanguard",
-  "startingLevel": 1,
   "baseStatistics": {
     "stat.max-hp": 84,
     "stat.max-mp": 12,

@@ -18,3 +18,5 @@ temporary folder and removes it afterward. It does not touch a developer's actua
 Milestone 1.5 tests also load the checked-in example data mod, enforce its namespace,
 exercise dependency sorting/missing/cycle failures, and verify that saves reject missing or
 version-mismatched required mods. Temporary manifest installations are deleted after each test.
+The suite also proves all three vanilla starting classes can create James and that the example
+mod can add Chronoguard while excluding vanilla Black Mage from the resolved pool.

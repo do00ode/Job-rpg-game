@@ -2,10 +2,10 @@
 
 ## Scope of Milestone 1.5
 
-The game supports **data-only, loose-folder mods**. A mod may add records in the same nine
+The game supports **data-only, loose-folder mods**. A mod may add records in the ten
 JSON categories as the base game: actors, classes, statistics, items, equipment, abilities,
-enemies, encounters, and quests. Those definitions enter the same typed catalog and pass the
-same strict validation as built-in content.
+enemies, encounters, quests, and starting-class rules. Those definitions enter the same typed
+catalog and pass the same strict validation as built-in content.
 
 This milestone does **not** load C# assemblies, native libraries, GDScript, executable hooks,
 PCK/ZIP packages, Steam Workshop items, URLs, or arbitrary behavior expressions. It does not
@@ -27,8 +27,10 @@ user://mods/
     └── content/
         ├── abilities/
         │   └── temporal-guard.json
-        └── classes/
-            └── chronoguard.json
+        ├── classes/
+        │   └── chronoguard.json
+        └── starting-class-rules/
+            └── class-pool.json
 ```
 
 `user://` is Godot's per-user writable data location, not a directory in the repository. In
@@ -93,6 +95,47 @@ A record may reference:
 
 The validator proves that every reference exists, has the right content category, and—when
 it crosses from one mod to another—that the target mod is listed as a direct dependency.
+
+## Changing the new-game class pool
+
+The base game includes Vanguard, Black Mage, and White Mage. Availability is not stored on
+James or as an `availableAtStart` Boolean inside each class. That approach would let a mod add
+its own starting class, but it could not remove a vanilla choice because mods may not replace
+vanilla files.
+
+Instead, add a namespaced record beneath `content/starting-class-rules/`:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "newgame.class-rule.example.starter-pack.class-pool",
+  "includeClassIds": [
+    "class.example.starter-pack.chronoguard"
+  ],
+  "excludeClassIds": [
+    "class.magic.black-mage"
+  ]
+}
+```
+
+The resolver combines every base and mod record as:
+
+```text
+all included classes - all excluded classes
+```
+
+In this example, Chronoguard is added and vanilla Black Mage is removed. Exclusion always
+wins—even if a different rule includes the same ID—so the result does not change with folder
+enumeration or load order. A mod can reference vanilla classes freely. It may reference a
+class from another mod only when that mod is listed as a direct manifest dependency.
+
+Do not exclude every included class: validation rejects an empty starting pool. These rules
+control only new-game availability. They do not delete class definitions, alter existing
+saves, unlock later classes, or implement a class-selection screen.
+
+This same resolved pool is a clean future input for a seeded randomizer: the randomizer can
+choose among legal IDs without rewriting James or duplicating mod-conflict rules. Actual
+randomizer selection is deliberately deferred until gameplay needs it.
 
 ## Deterministic loading and failure behavior
 

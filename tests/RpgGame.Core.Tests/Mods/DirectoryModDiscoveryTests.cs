@@ -1,6 +1,8 @@
+using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Content.Loading;
 using RpgGame.Core.Mods;
+using RpgGame.Core.State;
 using Xunit;
 
 namespace RpgGame.Core.Tests.Mods;
@@ -33,11 +35,36 @@ public sealed class DirectoryModDiscoveryTests
         Assert.True(
             contentResult.IsSuccess,
             string.Join(Environment.NewLine, contentResult.Problems));
-        Assert.Equal(17, contentResult.Catalog!.Count);
-        Assert.NotNull(contentResult.Catalog.GetRequired<ClassDefinition>(
+        ContentCatalog catalog = Assert.IsType<ContentCatalog>(contentResult.Catalog);
+        Assert.Equal(21, catalog.Count);
+        Assert.NotNull(catalog.GetRequired<ClassDefinition>(
             "class.example.starter-pack.chronoguard"));
-        Assert.NotNull(contentResult.Catalog.GetRequired<AbilityDefinition>(
+        Assert.NotNull(catalog.GetRequired<AbilityDefinition>(
             "ability.example.starter-pack.temporal-guard"));
+        Assert.Equal(
+            new[]
+            {
+                "class.example.starter-pack.chronoguard",
+                "class.magic.white-mage",
+                "class.martial.vanguard",
+            },
+            StartingClassPool.Resolve(catalog));
+
+        var excludedChoice = new NewGameRequest
+        {
+            SaveId = "excluded-class-test",
+            StartingMapId = "map.prologue.test-room",
+            StartingPartyMembers =
+            [
+                new StartingPartyMemberRequest
+                {
+                    ActorId = "actor.hero.james",
+                    ClassId = "class.magic.black-mage",
+                },
+            ],
+        };
+        Assert.Throws<ArgumentException>(
+            () => new NewGameFactory(catalog).Create(excludedChoice));
     }
 
     [Fact]

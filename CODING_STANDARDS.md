@@ -68,6 +68,8 @@ edition of the Godot editor; standard editor builds cannot compile C# projects.
   the first file.
 - Validate party size through `PartyRules`. Do not scatter literal `4` checks through future
   recruitment, menus, or combat code.
+- Resolve new-game class choices through `StartingClassPool`; never hard-code availability
+  on an actor, infer it from filenames, or depend on content/mod enumeration order.
 - Treat a mod manifest ID and version as a compatibility contract. Never derive either
   from display text or silently rewrite it during discovery.
 - Data mods contain JSON definitions only. Do not deserialize type names, invoke authored

@@ -29,7 +29,14 @@ public sealed class SaveRoundTripTests
                     StartingX = 2,
                     StartingY = 3,
                     StartingFacing = "east",
-                    StartingActorIds = ["actor.hero.james"],
+                    StartingPartyMembers =
+                    [
+                        new StartingPartyMemberRequest
+                        {
+                            ActorId = "actor.hero.james",
+                            ClassId = "class.martial.vanguard",
+                        },
+                    ],
                 });
             original.EventFlags["flag.test.introduction-seen"] = true;
 

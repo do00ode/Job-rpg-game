@@ -6,7 +6,7 @@ namespace RpgGame.Core.Content.Loading;
 /// <param name="FilePath">
 /// Stable source ID plus relative content path, or the source root for source failures.
 /// </param>
-/// <param name="JsonPath">JSON path such as <c>$.startingClassId</c>.</param>
+/// <param name="JsonPath">JSON path such as <c>$.includeClassIds[0]</c>.</param>
 /// <param name="Code">Stable machine-readable category for tests and future tooling.</param>
 /// <param name="Message">Concise explanation intended for a content author.</param>
 public sealed record ContentProblem(

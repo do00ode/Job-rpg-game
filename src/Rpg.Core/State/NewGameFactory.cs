@@ -42,26 +42,56 @@ public sealed class NewGameFactory
                 nameof(request));
         }
 
-        PartyRules.ValidateMemberCount(request.StartingActorIds.Count, nameof(request));
+        PartyRules.ValidateMemberCount(request.StartingPartyMembers.Count, nameof(request));
+
+        IReadOnlyList<string> selectableStartingClasses = StartingClassPool.Resolve(_content);
+        if (selectableStartingClasses.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "Content does not provide any selectable starting classes.");
+        }
+
+        var selectableClassIds = selectableStartingClasses.ToHashSet(StringComparer.Ordinal);
 
         var progress = new Dictionary<string, ActorProgressState>(StringComparer.Ordinal);
-        foreach (string actorId in request.StartingActorIds)
+        foreach (StartingPartyMemberRequest member in request.StartingPartyMembers)
         {
-            if (progress.ContainsKey(actorId))
+            if (member is null)
             {
                 throw new ArgumentException(
-                    $"Starting actor '{actorId}' is listed more than once.",
+                    "Starting party entries cannot be null.",
                     nameof(request));
             }
 
-            ActorDefinition actor = _content.GetRequired<ActorDefinition>(actorId);
-            _content.GetRequired<ClassDefinition>(actor.StartingClassId);
+            if (member.Level < 1)
+            {
+                throw new ArgumentException(
+                    $"Starting level for actor '{member.ActorId}' must be at least 1.",
+                    nameof(request));
+            }
 
-            progress.Add(actorId, new ActorProgressState
+            if (progress.ContainsKey(member.ActorId))
+            {
+                throw new ArgumentException(
+                    $"Starting actor '{member.ActorId}' is listed more than once.",
+                    nameof(request));
+            }
+
+            ActorDefinition actor = _content.GetRequired<ActorDefinition>(member.ActorId);
+            ClassDefinition selectedClass = _content.GetRequired<ClassDefinition>(member.ClassId);
+
+            if (!selectableClassIds.Contains(selectedClass.Id))
+            {
+                throw new ArgumentException(
+                    $"Class '{selectedClass.Id}' is not available during new-game selection.",
+                    nameof(request));
+            }
+
+            progress.Add(actor.Id, new ActorProgressState
             {
                 ActorId = actor.Id,
-                ClassId = actor.StartingClassId,
-                Level = actor.StartingLevel,
+                ClassId = selectedClass.Id,
+                Level = member.Level,
                 Experience = 0,
             });
         }
@@ -76,7 +106,9 @@ public sealed class NewGameFactory
                 Y = request.StartingY,
                 Facing = request.StartingFacing,
             },
-            ActivePartyActorIds = [.. request.StartingActorIds],
+            ActivePartyActorIds = request.StartingPartyMembers
+                .Select(member => member.ActorId)
+                .ToList(),
             ActorProgress = progress,
             EventFlags = new Dictionary<string, bool>(StringComparer.Ordinal),
         };

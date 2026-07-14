@@ -20,6 +20,25 @@ public sealed record NewGameRequest
     /// <summary>Initial logical facing direction.</summary>
     public string StartingFacing { get; init; } = "south";
 
-    /// <summary>Actor definition IDs in initial active-party order.</summary>
-    public List<string> StartingActorIds { get; init; } = [];
+    /// <summary>Actors, selected classes, and levels in initial party order.</summary>
+    public List<StartingPartyMemberRequest> StartingPartyMembers { get; init; } = [];
+}
+
+/// <summary>
+/// One explicit actor/class choice used to construct a new campaign.
+/// </summary>
+/// <remarks>
+/// Keeping this choice outside ActorDefinition lets separate runs—and future randomizers—
+/// start the same story actor in different valid classes without rewriting actor content.
+/// </remarks>
+public sealed record StartingPartyMemberRequest
+{
+    /// <summary>Stable actor definition selected for this party position.</summary>
+    public required string ActorId { get; init; }
+
+    /// <summary>Stable class definition selected from the resolved starting-class pool.</summary>
+    public required string ClassId { get; init; }
+
+    /// <summary>Initial campaign level for this actor.</summary>
+    public int Level { get; init; } = 1;
 }

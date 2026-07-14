@@ -8,7 +8,7 @@ namespace RpgGame.Core.Tests.Content;
 public sealed class ContentLoadingTests
 {
     /// <summary>
-    /// Loads every checked-in JSON record and proves all nine initial categories made it
+    /// Loads every checked-in JSON record and proves all ten content categories made it
     /// through parsing, identity checks, semantic checks, and cross-reference validation.
     /// </summary>
     [Fact]
@@ -16,9 +16,9 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(15, catalog.Count);
+        Assert.Equal(18, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
-        Assert.Single(catalog.GetAll<ClassDefinition>());
+        Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Equal(5, catalog.GetAll<StatisticDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<ItemDefinition>().Count);
         Assert.Single(catalog.GetAll<EquipmentDefinition>());
@@ -26,9 +26,10 @@ public sealed class ContentLoadingTests
         Assert.Single(catalog.GetAll<EnemyDefinition>());
         Assert.Single(catalog.GetAll<EncounterDefinition>());
         Assert.Single(catalog.GetAll<QuestDefinition>());
+        Assert.Single(catalog.GetAll<StartingClassRuleDefinition>());
 
         ActorDefinition actor = catalog.GetRequired<ActorDefinition>("actor.hero.james");
-        Assert.Equal("class.martial.vanguard", actor.StartingClassId);
+        Assert.Equal("actor.james.name", actor.DisplayNameKey);
     }
 
     /// <summary>
@@ -45,8 +46,6 @@ public sealed class ContentLoadingTests
                   "schemaVersion": 1,
                   "id": "actor.hero.broken",
                   "displayNameKey": "actor.broken.name",
-                  "startingClassId": "class.missing.class",
-                  "startingLevel": 1,
                   "baseStatistics": {},
                   "startingAbilityIds": []
                 }
@@ -56,10 +55,19 @@ public sealed class ContentLoadingTests
                   "schemaVersion": 1,
                   "id": "actor.hero.wrong-category",
                   "displayNameKey": "actor.wrong-category.name",
-                  "startingClassId": "item.test.duplicate",
-                  "startingLevel": 1,
                   "baseStatistics": {},
                   "startingAbilityIds": []
+                }
+                """),
+            new("starting-class-rules/broken.json", """
+                {
+                  "schemaVersion": 1,
+                  "id": "newgame.class-rule.base.broken",
+                  "includeClassIds": [
+                    "class.missing.class",
+                    "item.test.duplicate"
+                  ],
+                  "excludeClassIds": []
                 }
                 """),
             new("items/first.json", """
@@ -166,15 +174,34 @@ public sealed class ContentLoadingTests
               "grantedAbilityIds": []
             }
             """);
+        ContentDocument baseClass = new("classes/test.json", """
+            {
+              "schemaVersion": 1,
+              "id": "class.test.starting",
+              "displayNameKey": "class.test.starting.name",
+              "baseStatisticBonuses": {},
+              "abilityUnlocks": []
+            }
+            """);
+        ContentDocument startingClassRule = new("starting-class-rules/default.json", """
+            {
+              "schemaVersion": 1,
+              "id": "newgame.class-rule.base.test",
+              "includeClassIds": ["class.test.starting"],
+              "excludeClassIds": []
+            }
+            """);
 
         var loader = new JsonContentLoader();
         ContentLoadResult undeclared = loader.Load(
         [
+            new MemoryContentSource(ContentSourceIds.Base, [baseClass, startingClassRule]),
             new MemoryContentSource("mod.example.library", [item]),
             new MemoryContentSource("mod.example.addon", [equipment]),
         ]);
         ContentLoadResult declared = loader.Load(
         [
+            new MemoryContentSource(ContentSourceIds.Base, [baseClass, startingClassRule]),
             new MemoryContentSource("mod.example.library", [item]),
             new MemoryContentSource(
                 "mod.example.addon",
@@ -186,6 +213,40 @@ public sealed class ContentLoadingTests
             undeclared.Problems,
             problem => problem.Code == "reference.undeclared-mod-dependency");
         Assert.True(declared.IsSuccess, string.Join(Environment.NewLine, declared.Problems));
+    }
+
+    [Fact]
+    public void StartingClassRule_ContradictionAndEmptyPool_AreRejected()
+    {
+        ContentDocument classDefinition = new("classes/test.json", """
+            {
+              "schemaVersion": 1,
+              "id": "class.test.starting",
+              "displayNameKey": "class.test.starting.name",
+              "baseStatisticBonuses": {},
+              "abilityUnlocks": []
+            }
+            """);
+        ContentDocument contradictoryRule = new("starting-class-rules/default.json", """
+            {
+              "schemaVersion": 1,
+              "id": "newgame.class-rule.base.test",
+              "includeClassIds": ["class.test.starting"],
+              "excludeClassIds": ["class.test.starting"]
+            }
+            """);
+
+        ContentLoadResult result = new JsonContentLoader().Load(
+            new MemoryContentSource(
+                ContentSourceIds.Base,
+                [classDefinition, contradictoryRule]));
+
+        Assert.Contains(
+            result.Problems,
+            problem => problem.Code == "starting-class-rule.contradictory");
+        Assert.Contains(
+            result.Problems,
+            problem => problem.Code == "starting-class-pool.empty");
     }
 
     /// <summary>Minimal source double keeps failure scenarios free from temporary-file IO.</summary>

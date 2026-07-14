@@ -5,8 +5,13 @@ are scanned recursively at startup and by the command-line validator. The exact
 contract and stable ID rules are defined in `CONTENT_SCHEMA.md`.
 
 The records here are a deliberately tiny fixture pack, not production content. Together
-they exercise every Milestone 1 category, cross-record references, new-game creation,
+they exercise every implemented category, cross-record references, new-game creation,
 and save/load tests. They should remain small as real content is introduced separately.
+
+The base pack currently contains 18 definitions. James is class-neutral; the
+`starting-class-rules/default.json` record makes Vanguard, Black Mage, and White Mage legal
+new-game choices. Until a class-selection screen exists, the bootstrap selects the first
+stable ID in the resolved pool solely so the nonvisual startup demonstration can run.
 
 Run validation without opening Godot:
 

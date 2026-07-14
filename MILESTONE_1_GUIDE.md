@@ -30,7 +30,7 @@ sequenceDiagram
 blank window. That is expected. The useful result appears in Godot's **Output** panel:
 
 ```text
-Milestone 1.5 ready: loaded 15 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
+Milestone 1.5 ready: loaded 18 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
 ```
 
 If content is invalid, startup prints every discovered problem and exits instead of giving
@@ -59,14 +59,15 @@ The pipeline has four small parts:
 - nonnegative prices and ability costs;
 - valid loot probabilities and quantity ranges;
 - duplicate class unlocks, encounter positions, quest objective IDs, and equipment items;
+- starting-class rule references, duplicates, contradictions, and a nonempty final pool;
 - stable prefixes for targeting, rulesets, equipment slots, formation slots, music,
   battlefields, objectives, maps, and event flags.
 
 Errors include a file, JSON path, stable error code, and explanation. For example:
 
 ```text
-base/actors/james.json $.startingClassId: Referenced ClassDefinition
-'class.missing.vanguard' does not exist. [reference.missing]
+base/starting-class-rules/default.json $.includeClassIds[0]: Referenced
+ClassDefinition 'class.missing.vanguard' does not exist. [reference.missing]
 ```
 
 The catalog indexes definitions by both concrete type and ID. This is valid:
@@ -80,14 +81,15 @@ kind of content from silently being used as another.
 
 ## The fixture pack
 
-The 15 checked-in records cover every initial category:
+The 18 checked-in records cover every implemented category:
 
 | Category | Fixture purpose |
 |---|---|
 | Statistics | Bounds and dictionary references for HP, MP, strength, defense, and speed |
 | Abilities | One hero guard action and one enemy tackle action |
-| Class | James's Vanguard starting class and level-one ability unlock |
-| Actor | James, the starting actor used by new-game creation |
+| Classes | Vanguard, Black Mage, and White Mage definitions |
+| Starting-class rule | Makes those three vanilla classes legal new-game choices |
+| Actor | Class-neutral James, the starting actor used by new-game creation |
 | Items | A potion and the inventory identity for an iron sword |
 | Equipment | Equippable behavior that decorates the iron-sword item |
 | Enemy | A green slime with statistics, an ability, and loot |
@@ -100,8 +102,21 @@ final characters, balance, names, or story content.
 ## New-game creation and persistent session state
 
 `DefaultGameSetup` contains game-specific starting choices: map ID, tile coordinate, facing,
-and party actor IDs. `NewGameFactory` is reusable application logic that validates those
+and structured party actor/class choices. `NewGameFactory` is reusable application logic that validates those
 choices against the catalog and creates a fresh `GameState`.
+
+James's JSON no longer selects Vanguard. `ActorDefinition` describes identity, name key,
+intrinsic statistics, and actor-specific abilities. A `StartingPartyMemberRequest` supplies
+the class and level for this particular campaign; `NewGameFactory` checks that class against
+the pool produced by `StartingClassPool`. Until a UI exists, the bootstrap chooses the first
+stable ID in that resolved pool, while `GameRoot.StartNewGame(classId)` accepts an explicit
+legal choice. No class ID is hard-coded on James or in the bootstrap fallback.
+
+This is what enables replayability without hard-coding James: separate saves can start him as
+Vanguard, Black Mage, or White Mage, while his stable actor ID and display-name key remain the
+same. Mods can change the legal pool through `starting-class-rules` records. A future seeded
+randomizer should consume that same resolved pool rather than altering actor definitions.
+See `STARTING_CLASS_GUIDE.md` for the file-by-file authoring and modding walkthrough.
 
 The resulting state contains only save-specific facts:
 

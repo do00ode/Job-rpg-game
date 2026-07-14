@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "newgame.class-rule.example.starter-pack.class-pool",
+  "includeClassIds": [
+    "class.example.starter-pack.chronoguard"
+  ],
+  "excludeClassIds": [
+    "class.magic.black-mage"
+  ]
+}

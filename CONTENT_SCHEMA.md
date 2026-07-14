@@ -32,6 +32,7 @@ The initial directory-to-type mapping is:
 | `enemies/` | `EnemyDefinition` |
 | `encounters/` | `EncounterDefinition` |
 | `quests/` | `QuestDefinition` |
+| `starting-class-rules/` | `StartingClassRuleDefinition` |
 
 ## Stable IDs
 
@@ -53,6 +54,7 @@ ability.black-magic.fire
 enemy.forest.green-slime
 encounter.forest.slimes-01
 quest.prologue.first-steps
+newgame.class-rule.base.default
 ```
 
 Rules:
@@ -88,22 +90,22 @@ for the manifest and folder contract.
 | Field | Type | Notes |
 |---|---|---|
 | `displayNameKey` | string | Localization key. |
-| `startingClassId` | ID | Must reference a class. |
-| `startingLevel` | integer | At least `1`. |
 | `baseStatistics` | object of ID → integer | Keys reference statistics. |
-| `startingAbilityIds` | ID array | References abilities. |
+| `startingAbilityIds` | ID array | Actor-intrinsic abilities; references abilities. |
 
 ```json
 {
   "schemaVersion": 1,
   "id": "actor.hero.james",
   "displayNameKey": "actor.james.name",
-  "startingClassId": "class.martial.vanguard",
-  "startingLevel": 1,
   "baseStatistics": { "stat.max-hp": 84, "stat.strength": 9 },
-  "startingAbilityIds": ["ability.vanguard.guard"]
+  "startingAbilityIds": []
 }
 ```
+
+An actor is identity, not a campaign's current build. The selected class and level are
+written to `ActorProgressState` when a new game is created. Consequently James can be a
+Vanguard in one save and a White Mage in another without changing `actor.hero.james`.
 
 ### Class
 
@@ -124,6 +126,36 @@ for the manifest and folder contract.
   ]
 }
 ```
+
+### Starting-class rule
+
+Starting classes are composed through additive rules instead of a Boolean on each class.
+This matters for data mods: mods cannot overwrite vanilla class files, but a rule owned by a
+mod can still include or exclude a vanilla class by stable ID.
+
+| Field | Type | Notes |
+|---|---|---|
+| `includeClassIds` | ID array | Class IDs contributed to the selection pool. |
+| `excludeClassIds` | ID array | Class IDs removed from the final pool. |
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "newgame.class-rule.base.default",
+  "includeClassIds": [
+    "class.martial.vanguard",
+    "class.magic.black-mage",
+    "class.magic.white-mage"
+  ],
+  "excludeClassIds": []
+}
+```
+
+The final pool is `union(all includeClassIds) minus union(all excludeClassIds)`.
+Exclusion wins globally, independent of filesystem or dependency order. Every referenced
+class must exist and belong to the correct category. At least one rule must exist and the
+resolved pool cannot be empty. Duplicate IDs within one list and including/excluding the
+same ID in one record are validation errors.
 
 ### Statistic
 

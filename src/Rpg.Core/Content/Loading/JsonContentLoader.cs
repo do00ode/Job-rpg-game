@@ -198,6 +198,7 @@ public sealed class JsonContentLoader
                 "equipment" => JsonSerializer.Deserialize<EquipmentDefinition>(json, SerializerOptions),
                 "items" => JsonSerializer.Deserialize<ItemDefinition>(json, SerializerOptions),
                 "quests" => JsonSerializer.Deserialize<QuestDefinition>(json, SerializerOptions),
+                "starting-class-rules" => JsonSerializer.Deserialize<StartingClassRuleDefinition>(json, SerializerOptions),
                 "statistics" => JsonSerializer.Deserialize<StatisticDefinition>(json, SerializerOptions),
                 _ => null,
             };
@@ -249,6 +250,7 @@ public sealed class JsonContentLoader
             "equipment" => "equipment.",
             "items" => "item.",
             "quests" => "quest.",
+            "starting-class-rules" => "newgame.class-rule.",
             "statistics" => "stat.",
             _ => string.Empty,
         };
@@ -292,6 +294,7 @@ public sealed class JsonContentLoader
         "equipment" or
         "items" or
         "quests" or
+        "starting-class-rules" or
         "statistics";
 
     private static string NormalizePath(string relativePath) =>

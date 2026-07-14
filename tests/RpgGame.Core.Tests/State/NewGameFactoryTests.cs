@@ -16,7 +16,14 @@ public sealed class NewGameFactoryTests
             StartingX = 4,
             StartingY = 7,
             StartingFacing = "south",
-            StartingActorIds = ["actor.hero.james"],
+            StartingPartyMembers =
+            [
+                new StartingPartyMemberRequest
+                {
+                    ActorId = "actor.hero.james",
+                    ClassId = "class.martial.vanguard",
+                },
+            ],
         };
 
         GameState state = new NewGameFactory(TestContent.LoadCatalog()).Create(request);
@@ -51,13 +58,13 @@ public sealed class NewGameFactoryTests
         {
             SaveId = "invalid-party-test",
             StartingMapId = "map.prologue.test-room",
-            StartingActorIds =
+            StartingPartyMembers =
             [
-                "actor.hero.james",
-                "actor.hero.james",
-                "actor.hero.james",
-                "actor.hero.james",
-                "actor.hero.james",
+                Member("actor.hero.james"),
+                Member("actor.hero.james"),
+                Member("actor.hero.james"),
+                Member("actor.hero.james"),
+                Member("actor.hero.james"),
             ],
         };
 
@@ -77,7 +84,7 @@ public sealed class NewGameFactoryTests
             {
                 SaveId = "event-test",
                 StartingMapId = "map.prologue.test-room",
-                StartingActorIds = ["actor.hero.james"],
+                StartingPartyMembers = [Member("actor.hero.james")],
             });
 
         session.ReplaceState(state);
@@ -86,4 +93,30 @@ public sealed class NewGameFactoryTests
         Assert.Same(state, session.Current);
         Assert.Equal(1, notificationCount);
     }
+
+    [Theory]
+    [InlineData("class.martial.vanguard")]
+    [InlineData("class.magic.black-mage")]
+    [InlineData("class.magic.white-mage")]
+    public void Create_AllThreeVanillaStartingClassesAreSelectable(string classId)
+    {
+        var request = new NewGameRequest
+        {
+            SaveId = "class-choice-test",
+            StartingMapId = "map.prologue.test-room",
+            StartingPartyMembers = [Member("actor.hero.james", classId)],
+        };
+
+        GameState state = new NewGameFactory(TestContent.LoadCatalog()).Create(request);
+
+        Assert.Equal(classId, state.ActorProgress["actor.hero.james"].ClassId);
+    }
+
+    private static StartingPartyMemberRequest Member(
+        string actorId,
+        string classId = "class.martial.vanguard") => new()
+        {
+            ActorId = actorId,
+            ClassId = classId,
+        };
 }
