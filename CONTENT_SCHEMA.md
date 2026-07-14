@@ -67,6 +67,20 @@ Rules:
   targeting modes, and code-owned rulesets also use stable namespaced strings, even
   though they are not all top-level content records.
 
+### Data-mod namespaces
+
+A mod manifest ID uses `mod.author.mod-name`. Records owned by that mod must place the
+same namespace between the category and record name:
+
+| Manifest ID | Valid record examples |
+|---|---|
+| `mod.example.starter-pack` | `class.example.starter-pack.chronoguard`, `ability.example.starter-pack.temporal-guard` |
+
+This is enforced by the production loader. Mod records cannot reuse or replace base-game
+IDs, and all IDs remain globally unique. References may point to base content or a declared
+dependency, but the referenced record is still selected only by stable ID. See `MODDING.md`
+for the manifest and folder contract.
+
 ## Record fields
 
 ### Actor
@@ -291,6 +305,12 @@ Run the exact loader and validator used by the tests and Godot startup with:
 
 ```sh
 dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content
+```
+
+To validate base content with an installed or example mod directory:
+
+```sh
+dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content examples/mods
 ```
 
 The tool prints every problem in deterministic file/path/code order and returns a nonzero

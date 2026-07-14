@@ -99,7 +99,7 @@ public sealed class ContentLoadingTests
         ];
 
         ContentLoadResult result = new JsonContentLoader().Load(
-            new MemoryContentSource(documents));
+            new MemoryContentSource(ContentSourceIds.Base, documents));
 
         Assert.False(result.IsSuccess);
         Assert.Null(result.Catalog);
@@ -110,10 +110,96 @@ public sealed class ContentLoadingTests
         Assert.Contains(result.Problems, problem => problem.Code == "id.invalid");
     }
 
+    /// <summary>
+    /// Community records may reference base content, but they may not impersonate built-in
+    /// IDs or another author's namespace. This also keeps duplicate behavior unambiguous.
+    /// </summary>
+    [Fact]
+    public void ModRecord_OutsideManifestNamespace_IsRejectedWithSourceInDiagnostic()
+    {
+        ContentDocument[] documents =
+        [
+            new("items/potion.json", """
+                {
+                  "schemaVersion": 1,
+                  "id": "item.consumable.potion",
+                  "displayNameKey": "item.potion.name",
+                  "descriptionKey": "item.potion.description",
+                  "buyPrice": 10,
+                  "sellPrice": 5,
+                  "maxStack": 99
+                }
+                """),
+        ];
+
+        ContentLoadResult result = new JsonContentLoader().Load(
+            new MemoryContentSource("mod.example.test", documents));
+
+        ContentProblem problem = Assert.Single(
+            result.Problems,
+            problem => problem.Code == "id.wrong-namespace");
+        Assert.Equal("mod.example.test/items/potion.json", problem.FilePath);
+        Assert.Contains("item.example.test.", problem.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CrossModReference_RequiresDirectManifestDependency()
+    {
+        ContentDocument item = new("items/sword.json", """
+            {
+              "schemaVersion": 1,
+              "id": "item.example.library.sword",
+              "displayNameKey": "item.example.library.sword.name",
+              "descriptionKey": "item.example.library.sword.description",
+              "buyPrice": 10,
+              "sellPrice": 5,
+              "maxStack": 1
+            }
+            """);
+        ContentDocument equipment = new("equipment/sword.json", """
+            {
+              "schemaVersion": 1,
+              "id": "equipment.example.addon.sword",
+              "itemId": "item.example.library.sword",
+              "slotId": "slot.weapon.main-hand",
+              "statisticModifiers": {},
+              "grantedAbilityIds": []
+            }
+            """);
+
+        var loader = new JsonContentLoader();
+        ContentLoadResult undeclared = loader.Load(
+        [
+            new MemoryContentSource("mod.example.library", [item]),
+            new MemoryContentSource("mod.example.addon", [equipment]),
+        ]);
+        ContentLoadResult declared = loader.Load(
+        [
+            new MemoryContentSource("mod.example.library", [item]),
+            new MemoryContentSource(
+                "mod.example.addon",
+                [equipment],
+                ["mod.example.library"]),
+        ]);
+
+        Assert.Contains(
+            undeclared.Problems,
+            problem => problem.Code == "reference.undeclared-mod-dependency");
+        Assert.True(declared.IsSuccess, string.Join(Environment.NewLine, declared.Problems));
+    }
+
     /// <summary>Minimal source double keeps failure scenarios free from temporary-file IO.</summary>
-    private sealed class MemoryContentSource(IReadOnlyList<ContentDocument> documents)
+    private sealed class MemoryContentSource(
+        string sourceId,
+        IReadOnlyList<ContentDocument> documents,
+        IReadOnlyCollection<string>? declaredDependencyIds = null)
         : IContentSource
     {
+        public string SourceId => sourceId;
+
+        public IReadOnlyCollection<string> DeclaredDependencyIds { get; } =
+            declaredDependencyIds ?? [];
+
         public IReadOnlyList<ContentDocument> ReadAll() => documents;
     }
 }

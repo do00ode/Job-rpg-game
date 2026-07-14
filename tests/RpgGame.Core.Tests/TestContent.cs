@@ -11,7 +11,7 @@ internal static class TestContent
 {
     public static ContentCatalog LoadCatalog()
     {
-        string contentDirectory = Path.Combine(FindRepositoryRoot(), "game", "content");
+        string contentDirectory = Path.Combine(RepositoryRoot, "game", "content");
         ContentLoadResult result = new JsonContentLoader().Load(
             new DirectoryContentSource(contentDirectory));
 
@@ -24,6 +24,9 @@ internal static class TestContent
 
         return result.Catalog!;
     }
+
+    /// <summary>Repository root used by tests that exercise checked-in example packages.</summary>
+    public static string RepositoryRoot { get; } = FindRepositoryRoot();
 
     private static string FindRepositoryRoot()
     {

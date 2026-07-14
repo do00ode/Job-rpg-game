@@ -13,3 +13,6 @@ Run validation without opening Godot:
 ```sh
 dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content
 ```
+
+Community data records belong in packages outside this base folder. See `MODDING.md` and the
+`examples/mods` fixture; mods are combined with this pack only after both contracts validate.

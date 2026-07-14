@@ -2,6 +2,7 @@ using Godot;
 using RpgGame.Adapters.Content;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Loading;
+using RpgGame.Core.Mods;
 using RpgGame.Core.Persistence;
 using RpgGame.Core.State;
 
@@ -24,7 +25,7 @@ namespace RpgGame.Bootstrap;
 /// </remarks>
 public partial class GameRoot : Node
 {
-    private const string GameVersion = "0.1.0-milestone1";
+    private const string GameVersion = "0.1.0-milestone1.5";
 
     /// <summary>Validated immutable content available after <see cref="_Ready"/>.</summary>
     public IContentCatalog Content { get; private set; } = null!;
@@ -36,6 +37,13 @@ public partial class GameRoot : Node
     public SaveCoordinator Saves { get; private set; } = null!;
 
     /// <summary>
+    /// Validated loose-folder data mods active for this process, in dependency order. The
+    /// collection is diagnostic/application metadata; scenes should still request definitions
+    /// from <see cref="Content"/> instead of reaching into mod folders.
+    /// </summary>
+    public IReadOnlyList<ModReference> EnabledMods { get; private set; } = [];
+
+    /// <summary>
     /// Godot calls this after the node enters the scene tree. Startup is deliberately
     /// synchronous while the fixture pack is small, making failures deterministic and visible.
     /// </summary>
@@ -45,7 +53,8 @@ public partial class GameRoot : Node
         {
             InitializeApplicationServices();
             GD.Print(
-                $"Milestone 1 ready: loaded {Content.Count} definitions; "
+                $"Milestone 1.5 ready: loaded {Content.Count} definitions "
+                + $"with {EnabledMods.Count} data mod(s); "
                 + $"new game {Session.Current.SaveId} starts at {Session.Current.Location.MapId}.");
         }
         catch (Exception exception)
@@ -109,9 +118,36 @@ public partial class GameRoot : Node
 
     private void InitializeApplicationServices()
     {
+        // Mods live in user:// so players can install data without modifying the exported
+        // game's read-only res:// pack. GlobalizePath converts that virtual Godot location
+        // into the operating-system path consumed by the plain .NET discovery service.
+        string modsDirectory = ProjectSettings.GlobalizePath("user://mods");
+        ModDiscoveryResult modResult = new DirectoryModDiscovery().Discover(modsDirectory);
+        if (!modResult.IsSuccess)
+        {
+            string details = string.Join(
+                System.Environment.NewLine,
+                modResult.Problems.Select(problem => problem.ToString()));
+            throw new InvalidDataException(
+                $"Data-mod validation failed with {modResult.Problems.Count} problem(s):"
+                + System.Environment.NewLine
+                + details);
+        }
+
+        // Base content is always first. Mod discovery has already produced a deterministic
+        // topological order in which every dependency precedes the mod that needs it.
+        var sources = new List<IContentSource>
+        {
+            new GodotContentSource(ContentSourceIds.Base, "res://game/content"),
+        };
+        sources.AddRange(modResult.Mods.Select(mod =>
+            new DirectoryContentSource(
+                mod.Manifest.Id,
+                mod.ContentDirectory,
+                mod.Manifest.Dependencies)));
+
         var loader = new JsonContentLoader();
-        ContentLoadResult contentResult = loader.Load(
-            new GodotContentSource("res://game/content"));
+        ContentLoadResult contentResult = loader.Load(sources);
 
         if (!contentResult.IsSuccess)
         {
@@ -125,13 +161,14 @@ public partial class GameRoot : Node
         }
 
         Content = contentResult.Catalog!;
+        EnabledMods = modResult.Mods.Select(mod => mod.ToReference()).ToArray();
 
         Session = new GameSession();
 
         string saveDirectory = ProjectSettings.GlobalizePath("user://saves");
         var serializer = new SaveJsonSerializer();
         var store = new JsonFileSaveStore(saveDirectory, serializer);
-        Saves = new SaveCoordinator(store, GameVersion);
+        Saves = new SaveCoordinator(store, GameVersion, EnabledMods);
 
         // Creating the initial session last guarantees every dependency used by the public
         // Milestone 1 methods is ready before StateChanged can notify future listeners.

@@ -11,11 +11,16 @@ public sealed class GodotContentSource : IContentSource
 {
     private readonly string _rootPath;
 
-    public GodotContentSource(string rootPath)
+    public GodotContentSource(string sourceId, string rootPath)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
         ArgumentException.ThrowIfNullOrWhiteSpace(rootPath);
+        SourceId = sourceId;
         _rootPath = rootPath.TrimEnd('/');
     }
+
+    /// <inheritdoc />
+    public string SourceId { get; }
 
     /// <inheritdoc />
     public IReadOnlyList<ContentDocument> ReadAll()

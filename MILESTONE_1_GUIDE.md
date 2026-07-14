@@ -11,23 +11,26 @@ behavior, dialogue, maps, or graphical assets.
 sequenceDiagram
     participant Godot
     participant Root as GameRoot
+    participant Mods as ModDiscovery
     participant Loader as JsonContentLoader
     participant Session as GameSession
     participant Saves as SaveCoordinator
 
     Godot->>Root: _Ready()
-    Root->>Loader: Load res://game/content
+    Root->>Mods: Discover user://mods
+    Mods-->>Root: Validated dependency order
+    Root->>Loader: Load base plus mod content
     Loader-->>Root: Validated ContentCatalog
     Root->>Session: ReplaceState(new game)
     Root->>Saves: Configure user://saves
-    Root-->>Godot: Print Milestone 1 ready
+    Root-->>Godot: Print Milestone 1.5 ready
 ```
 
 `game/scenes/bootstrap/GameRoot.tscn` is still an empty `Node`, so running the game shows a
 blank window. That is expected. The useful result appears in Godot's **Output** panel:
 
 ```text
-Milestone 1 ready: loaded 15 definitions; new game ... starts at map.prologue.test-room.
+Milestone 1.5 ready: loaded 15 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
 ```
 
 If content is invalid, startup prints every discovered problem and exits instead of giving
@@ -62,7 +65,7 @@ The pipeline has four small parts:
 Errors include a file, JSON path, stable error code, and explanation. For example:
 
 ```text
-actors/james.json $.startingClassId: Referenced ClassDefinition
+base/actors/james.json $.startingClassId: Referenced ClassDefinition
 'class.missing.vanguard' does not exist. [reference.missing]
 ```
 
@@ -108,9 +111,10 @@ The resulting state contains only save-specific facts:
 - each actor's current class, level, and experience;
 - persistent event flags.
 
-The party is stored as an ordered list, so it already supports the intended four members.
-The game begins with James alone; later recruitment and party-selection features will add the
-other three IDs without changing the save-state structure.
+The game begins with James alone and supports up to four heroes total. `PartyRules` owns that
+maximum, and `NewGameFactory` already rejects an invalid starting party before creating state.
+Milestone 1 does not recruit actors or provide a party menu; those later use cases will call
+the same rule instead of scattering literal size checks across several screens.
 
 Actor names, base statistics, and class definitions are not copied into the save. They remain
 in the content catalog and are found through stable IDs. This avoids bloated saves and makes
@@ -138,6 +142,7 @@ letters, digits, `_`, and `-`, preventing path traversal and invalid filenames.
 - `saveFormatVersion`, which controls compatibility and migrations;
 - `gameVersion`, which is diagnostic only;
 - `savedAtUtc`;
+- `enabledMods`, the required data-mod ID/version pairs added by Milestone 1.5;
 - the scene-independent campaign `state`.
 
 `SaveJsonSerializer` parses old JSON into a mutable JSON tree, runs every ordered
@@ -177,6 +182,13 @@ dotnet build RpgGame.sln
 The first command runs nonvisual xUnit tests. The second validates every content record with
 the production loader. The third builds the core library, validator, tests, and Godot C#
 assembly.
+
+To include the checked-in Milestone 1.5 example data mod in validation, pass a second
+directory argument:
+
+```powershell
+dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content examples/mods
+```
 
 The key integration test performs the complete milestone flow without opening a Godot scene:
 

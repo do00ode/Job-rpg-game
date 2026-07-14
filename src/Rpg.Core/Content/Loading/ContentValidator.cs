@@ -16,8 +16,13 @@ internal sealed class ContentValidator
     private readonly ContentCatalog _catalog;
     private readonly List<ContentProblem> _problems = [];
     private readonly Dictionary<string, string> _pathById;
+    private readonly Dictionary<string, string> _sourceById;
+    private readonly IReadOnlyDictionary<string, IReadOnlySet<string>> _dependencyIdsBySource;
 
-    private ContentValidator(IReadOnlyList<LoadedContent> loaded, ContentCatalog catalog)
+    private ContentValidator(
+        IReadOnlyList<LoadedContent> loaded,
+        ContentCatalog catalog,
+        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource)
     {
         _loaded = loaded;
         _catalog = catalog;
@@ -25,13 +30,19 @@ internal sealed class ContentValidator
             item => item.Definition.Id,
             item => item.RelativePath,
             StringComparer.Ordinal);
+        _sourceById = loaded.ToDictionary(
+            item => item.Definition.Id,
+            item => item.SourceId,
+            StringComparer.Ordinal);
+        _dependencyIdsBySource = dependencyIdsBySource;
     }
 
     public static IReadOnlyList<ContentProblem> Validate(
         IReadOnlyList<LoadedContent> loaded,
-        ContentCatalog catalog)
+        ContentCatalog catalog,
+        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource)
     {
-        var validator = new ContentValidator(loaded, catalog);
+        var validator = new ContentValidator(loaded, catalog, dependencyIdsBySource);
         validator.ValidateAll();
         return validator._problems;
     }
@@ -467,12 +478,37 @@ internal sealed class ContentValidator
 
         if (_catalog.TryGet<TDefinition>(id, out TDefinition? definition))
         {
+            ValidateModDependency(item, jsonPath, id);
             return definition;
         }
 
         Add(item, jsonPath, "reference.missing",
             $"Referenced {typeof(TDefinition).Name} '{id}' does not exist.");
         return null;
+    }
+
+    private void ValidateModDependency(LoadedContent item, string jsonPath, string targetId)
+    {
+        // Base records are validated and shipped independently. A mod may freely reference
+        // base content or its own records; cross-mod references must be declared directly in
+        // manifest.json so discovery can reject an incomplete installation before gameplay.
+        if (string.Equals(item.SourceId, ContentSourceIds.Base, StringComparison.Ordinal)
+            || !_sourceById.TryGetValue(targetId, out string? targetSourceId)
+            || string.Equals(targetSourceId, ContentSourceIds.Base, StringComparison.Ordinal)
+            || string.Equals(targetSourceId, item.SourceId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (!_dependencyIdsBySource.TryGetValue(
+                item.SourceId,
+                out IReadOnlySet<string>? dependencyIds)
+            || !dependencyIds.Contains(targetSourceId))
+        {
+            Add(item, jsonPath, "reference.undeclared-mod-dependency",
+                $"Reference '{targetId}' is owned by '{targetSourceId}', which must be "
+                + $"listed in mod '{item.SourceId}' dependencies.");
+        }
     }
 
     private static string ExpectedPrefix<TDefinition>()

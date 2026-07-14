@@ -36,6 +36,36 @@ public sealed class NewGameFactoryTests
     }
 
     [Fact]
+    public void PartyRule_AllowsFourHeroesAndRejectsFive()
+    {
+        PartyRules.ValidateMemberCount(4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => PartyRules.ValidateMemberCount(5));
+    }
+
+    [Fact]
+    public void Create_StartingPartyAboveFour_IsRejectedBeforeContentLookup()
+    {
+        var request = new NewGameRequest
+        {
+            SaveId = "invalid-party-test",
+            StartingMapId = "map.prologue.test-room",
+            StartingActorIds =
+            [
+                "actor.hero.james",
+                "actor.hero.james",
+                "actor.hero.james",
+                "actor.hero.james",
+                "actor.hero.james",
+            ],
+        };
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new NewGameFactory(TestContent.LoadCatalog()).Create(request));
+    }
+
+    [Fact]
     public void ReplaceState_NotifiesSessionObservers()
     {
         var session = new GameSession();

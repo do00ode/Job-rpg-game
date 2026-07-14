@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Mods;
 
 namespace RpgGame.Core.Content.Loading;
 
@@ -15,27 +16,79 @@ public sealed class JsonContentLoader
     /// Loads an entire source in deterministic path order. A bad file does not stop the pass,
     /// allowing the author to fix several related problems after one run.
     /// </summary>
-    public ContentLoadResult Load(IContentSource source)
+    public ContentLoadResult Load(IContentSource source) => Load([source]);
+
+    /// <summary>
+    /// Loads built-in content and dependency-ordered mod sources into one validated catalog.
+    /// Sources cannot replace records: globally duplicate IDs remain errors.
+    /// </summary>
+    public ContentLoadResult Load(IEnumerable<IContentSource> sources)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(sources);
 
-        IReadOnlyList<ContentDocument> documents;
-        try
-        {
-            documents = source.ReadAll();
-        }
-        catch (Exception exception)
-        {
-            return new ContentLoadResult(
-                null,
-                [new ContentProblem("<content-source>", "$", "source.read", exception.Message)]);
-        }
-
+        IContentSource[] sourceList = sources.ToArray();
         var problems = new List<ContentProblem>();
+        var sourceDocuments = new List<SourceDocument>();
+        var loadedSourceOrder = new List<string>();
+        var seenSourceIds = new HashSet<string>(StringComparer.Ordinal);
+        var dependencyIdsBySource = new Dictionary<string, IReadOnlySet<string>>(
+            StringComparer.Ordinal);
+
+        foreach (IContentSource source in sourceList)
+        {
+            if (source is null)
+            {
+                problems.Add(new ContentProblem(
+                    "<content-source>",
+                    "$",
+                    "source.null",
+                    "Content source collections cannot contain null entries."));
+                continue;
+            }
+
+            if (!IsValidSourceId(source.SourceId))
+            {
+                problems.Add(new ContentProblem(
+                    "<content-source>",
+                    "$",
+                    "source.id-invalid",
+                    $"Source ID '{source.SourceId}' must be 'base' or a valid mod ID."));
+                continue;
+            }
+
+            if (!seenSourceIds.Add(source.SourceId))
+            {
+                problems.Add(new ContentProblem(
+                    $"{source.SourceId}/<content-source>",
+                    "$",
+                    "source.id-duplicate",
+                    $"Content source '{source.SourceId}' was supplied more than once."));
+                continue;
+            }
+
+            loadedSourceOrder.Add(source.SourceId);
+            dependencyIdsBySource[source.SourceId] = source.DeclaredDependencyIds.ToHashSet(
+                StringComparer.Ordinal);
+
+            try
+            {
+                sourceDocuments.AddRange(source.ReadAll().Select(
+                    document => new SourceDocument(source.SourceId, document)));
+            }
+            catch (Exception exception)
+            {
+                problems.Add(new ContentProblem(
+                    $"{source.SourceId}/<content-source>",
+                    "$",
+                    "source.read",
+                    exception.Message));
+            }
+        }
+
         var loaded = new List<LoadedContent>();
         var firstPathById = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        if (documents.Count == 0)
+        if (sourceDocuments.Count == 0 && problems.Count == 0)
         {
             problems.Add(new ContentProblem(
                 "<content-source>",
@@ -44,11 +97,18 @@ public sealed class JsonContentLoader
                 "No JSON content records were found."));
         }
 
-        foreach (ContentDocument document in documents.OrderBy(
-                     document => document.RelativePath,
-                     StringComparer.Ordinal))
+        // Source order comes from the dependency planner; path order makes each source stable.
+        // SelectMany preserves that source order without depending on directory enumeration.
+        IEnumerable<SourceDocument> orderedDocuments = loadedSourceOrder
+            .SelectMany(sourceId => sourceDocuments
+                .Where(item => string.Equals(item.SourceId, sourceId, StringComparison.Ordinal))
+                .OrderBy(item => item.Document.RelativePath, StringComparer.Ordinal));
+
+        foreach (SourceDocument sourceDocument in orderedDocuments)
         {
+            ContentDocument document = sourceDocument.Document;
             string relativePath = NormalizePath(document.RelativePath);
+            string diagnosticPath = $"{sourceDocument.SourceId}/{relativePath}";
             string category = relativePath.Split('/', 2)[0];
 
             if (!TryDeserialize(category, document.Json, out ContentDefinition? definition, out JsonException? error))
@@ -59,21 +119,26 @@ public sealed class JsonContentLoader
                 string code = error is null ? "category.unknown" : "json.invalid";
                 string jsonPath = error?.Path ?? "$";
 
-                problems.Add(new ContentProblem(relativePath, jsonPath, code, message));
+                problems.Add(new ContentProblem(diagnosticPath, jsonPath, code, message));
                 continue;
             }
 
             if (definition is null)
             {
                 problems.Add(new ContentProblem(
-                    relativePath,
+                    diagnosticPath,
                     "$",
                     "json.null",
                     "A content file must contain one JSON object, not null."));
                 continue;
             }
 
-            ValidateIdentity(definition, category, relativePath, problems);
+            ValidateIdentity(
+                definition,
+                category,
+                sourceDocument.SourceId,
+                diagnosticPath,
+                problems);
 
             // System.Text.Json enforces that required properties are present, but .NET 8 can
             // still assign an explicit JSON null to a non-nullable reference property. Do not
@@ -83,23 +148,26 @@ public sealed class JsonContentLoader
                 continue;
             }
 
-            if (!firstPathById.TryAdd(definition.Id, relativePath))
+            if (!firstPathById.TryAdd(definition.Id, diagnosticPath))
             {
                 problems.Add(new ContentProblem(
-                    relativePath,
+                    diagnosticPath,
                     "$.id",
                     "id.duplicate",
                     $"ID '{definition.Id}' was already declared by '{firstPathById[definition.Id]}'."));
                 continue;
             }
 
-            loaded.Add(new LoadedContent(relativePath, definition));
+            loaded.Add(new LoadedContent(sourceDocument.SourceId, diagnosticPath, definition));
         }
 
         // Build a temporary catalog from every uniquely identified record so reference errors
         // can still be reported even when unrelated files have identity/parse problems.
         var candidateCatalog = new ContentCatalog(loaded.Select(item => item.Definition));
-        problems.AddRange(ContentValidator.Validate(loaded, candidateCatalog));
+        problems.AddRange(ContentValidator.Validate(
+            loaded,
+            candidateCatalog,
+            dependencyIdsBySource));
 
         IReadOnlyList<ContentProblem> orderedProblems = problems
             .OrderBy(problem => problem.FilePath, StringComparer.Ordinal)
@@ -148,13 +216,14 @@ public sealed class JsonContentLoader
     private static void ValidateIdentity(
         ContentDefinition definition,
         string category,
-        string relativePath,
+        string sourceId,
+        string diagnosticPath,
         ICollection<ContentProblem> problems)
     {
         if (definition.SchemaVersion != 1)
         {
             problems.Add(new ContentProblem(
-                relativePath,
+                diagnosticPath,
                 "$.schemaVersion",
                 "schema.unsupported",
                 $"Schema version {definition.SchemaVersion} is unsupported; expected 1."));
@@ -163,7 +232,7 @@ public sealed class JsonContentLoader
         if (!ContentId.IsValid(definition.Id))
         {
             problems.Add(new ContentProblem(
-                relativePath,
+                diagnosticPath,
                 "$.id",
                 "id.invalid",
                 $"'{definition.Id}' is not a canonical stable content ID."));
@@ -187,12 +256,32 @@ public sealed class JsonContentLoader
         if (!definition.Id.StartsWith(expectedPrefix, StringComparison.Ordinal))
         {
             problems.Add(new ContentProblem(
-                relativePath,
+                diagnosticPath,
                 "$.id",
                 "id.wrong-category",
                 $"ID '{definition.Id}' must begin with '{expectedPrefix}' in {category}/."));
+            return;
+        }
+
+        if (!string.Equals(sourceId, ContentSourceIds.Base, StringComparison.Ordinal))
+        {
+            string modNamespace = ModIdentity.GetContentNamespace(sourceId);
+            string requiredPrefix = $"{expectedPrefix}{modNamespace}.";
+
+            if (!definition.Id.StartsWith(requiredPrefix, StringComparison.Ordinal))
+            {
+                problems.Add(new ContentProblem(
+                    diagnosticPath,
+                    "$.id",
+                    "id.wrong-namespace",
+                    $"Mod '{sourceId}' must declare {category} IDs beginning with '{requiredPrefix}'."));
+            }
         }
     }
+
+    private static bool IsValidSourceId(string? sourceId) =>
+        string.Equals(sourceId, ContentSourceIds.Base, StringComparison.Ordinal)
+        || ModIdentity.IsValidId(sourceId);
 
     private static bool IsKnownCategory(string category) => category is
         "abilities" or
@@ -225,4 +314,10 @@ public sealed class JsonContentLoader
 }
 
 /// <summary>Internal pairing retained so validation errors can name their source file.</summary>
-internal sealed record LoadedContent(string RelativePath, ContentDefinition Definition);
+internal sealed record LoadedContent(
+    string SourceId,
+    string RelativePath,
+    ContentDefinition Definition);
+
+/// <summary>Associates a raw document with the pack that supplied it.</summary>
+internal sealed record SourceDocument(string SourceId, ContentDocument Document);

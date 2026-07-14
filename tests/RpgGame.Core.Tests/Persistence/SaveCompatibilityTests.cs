@@ -45,6 +45,10 @@ public sealed class SaveCompatibilityTests
         var serializer = new SaveJsonSerializer();
         SaveEnvelope save = serializer.Deserialize(json);
 
+        // Milestone 1 saves predate data mods. The additive list must receive its safe
+        // default without requiring a format-version migration.
+        Assert.Empty(save.EnabledMods);
+
         // Verify the unknown field was captured during deserialization.
         Dictionary<string, JsonElement> extensionData = save.State.ExtensionData
             ?? throw new InvalidOperationException("Unknown state fields were not retained.");

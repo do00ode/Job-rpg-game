@@ -42,10 +42,7 @@ public sealed class NewGameFactory
                 nameof(request));
         }
 
-        if (request.StartingActorIds.Count == 0)
-        {
-            throw new ArgumentException("A new game requires at least one starting actor.", nameof(request));
-        }
+        PartyRules.ValidateMemberCount(request.StartingActorIds.Count, nameof(request));
 
         var progress = new Dictionary<string, ActorProgressState>(StringComparer.Ordinal);
         foreach (string actorId in request.StartingActorIds)

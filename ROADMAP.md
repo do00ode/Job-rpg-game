@@ -44,6 +44,27 @@ inventory behavior, dialogue, map art, or other gameplay presentation.
 See `MILESTONE_1_GUIDE.md` for the runtime flow, file-by-file responsibilities, and
 local validation instructions.
 
+## Milestone 1.5 — Data-mod foundation (implemented)
+
+- Discover loose-folder packages beneath `user://mods` using a strict data-only manifest.
+- Validate stable mod IDs, Semantic Versions, one integer game data-API version, folder
+  layout, dependency presence, and dependency cycles.
+- Load base content plus dependency-ordered mod content through the production validator.
+- Reserve one record namespace per mod and reject base-record replacement or ambiguous
+  duplicate IDs.
+- Store required mod ID/version pairs in save envelopes and reject missing or mismatched
+  requirements on load while preserving older unmodded saves.
+- Extend the command-line validator and tests with one checked-in example data mod.
+- Centralize and test the game's four-hero party maximum without adding party gameplay.
+
+Exit criteria: the example mod adds a class and ability to the same validated catalog,
+invalid dependencies/namespaces prevent startup, and save loading detects missing or changed
+required mods without launching Godot.
+
+Explicitly excluded: gameplay, mod menus/profiles, hot reload, scripts or assemblies, PCK/ZIP
+loading, Steam Workshop, network downloads, signatures, base-record overrides, and a general
+behavior language. See `MODDING.md` for the supported contract and installation workflow.
+
 ## Milestone 2 — Exploration interaction slice
 
 - Create one small tile map and tile-based player movement with collision.
