@@ -333,8 +333,22 @@ empty inventories.
 Explicitly excluded: loot rolls, victory rewards, item-use effects, equipment, shops, gold,
 sorting UI, battle items, and inventory presentation. See `MILESTONE_4_0_GUIDE.md`.
 
-The intended next slices are Milestone 4.1, deterministic loot resolution, and Milestone 4.2,
-victory reward application plus a reward summary. Remaining vertical-slice work will then:
+### Milestone 4.1 - Deterministic loot resolution
+
+- Resolve defeated enemy definition IDs through their reusable loot tables.
+- Evaluate independent entries in authored order using injected deterministic randomness.
+- Return ordered typed item awards without changing campaign state or inventory.
+
+Exit criteria: headless tests prove chance and inclusive quantity boundaries, duplicate award
+preservation, deterministic scripted rolls, input ordering, immutable results, and clear
+missing/wrong-category failures.
+
+Explicitly excluded: inventory mutation, victory handoff, reward UI, encounter changes,
+experience, gold, stack overflow handling, aggregation, save changes, weighted pools, stealing,
+and conditional drops. See `MILESTONE_4_1_GUIDE.md`.
+
+Milestone 4.2 will apply confirmed-victory awards exactly once through `InventoryService` and
+show a reward summary. Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.
 - Add a limited set of common ability effects and status effects based on actual slice

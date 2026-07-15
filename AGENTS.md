@@ -46,6 +46,8 @@ a general-purpose RPG engine.
     victory/defeat scene handoff, trigger suppression, or clearance persistence.
 24. Read `MILESTONE_4_0_GUIDE.md` before changing persistent inventory ownership, item
     stack limits, inventory mutations, session inventory publication, or inventory saves.
+25. Read `MILESTONE_4_1_GUIDE.md` before changing deterministic loot resolution, loot award
+    ordering, chance/quantity random rolls, or the boundary between loot and inventory.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

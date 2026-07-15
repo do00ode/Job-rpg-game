@@ -254,11 +254,12 @@ is a legal deliberate no-award configuration. The production validator proves ta
 references, chance bounds, and inclusive positive quantity ranges before publishing the
 catalog.
 
-This milestone defines no `LootResolver`. Later victory handling will pass defeated enemy IDs,
-validated content, and an injected `IRandomSource` to a small pure-core resolver. That resolver
-will return typed award data; a separate campaign/inventory use case will decide whether and
-how those awards enter persistent state. Content definitions never roll randomness or mutate
-`GameState`, and Godot never owns reward calculations.
+Milestone 4.1 supplies the promised pure-core `LootResolver`. It receives defeated enemy
+definition IDs in explicit order, validated content, and an injected `IRandomSource`; it returns
+one ordered `LootAward` for every independently successful entry. Duplicate item awards remain
+separate facts, and a later campaign use case decides whether/how they enter persistent state.
+The resolver never reads `GameState`, mutates inventory, aggregates stacks, or depends on Godot.
+Content definitions themselves still never roll randomness or mutate campaign state.
 
 The standalone table is useful for additive mods, but it deliberately does not create base
 record replacement. A mod may add its own table and enemy or reference base/dependency content;
@@ -292,9 +293,9 @@ serialization writes current stacks, and existing extension-data handling contin
 unknown future fields. Data-mod items use the same resolved catalog and stable-ID rules; the
 mod data API and content schemas do not change.
 
-Loot tables still only define possible awards. Milestone 4.0 does not roll a table or connect
-battle victory to inventory. A later deterministic loot resolver will produce awards, and a
-separate reward-application use case will call this inventory boundary.
+Loot tables define possible awards, and Milestone 4.1 resolves them into transient typed facts.
+That resolver still does not connect battle victory to inventory. Milestone 4.2 will own the
+one-time application boundary that passes those facts to this inventory service.
 
 ### Mod composition boundary
 

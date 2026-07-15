@@ -41,8 +41,9 @@ public interface IEnemyCommandPlanner
 }
 
 /// <summary>
-/// Random-number boundary retained for future deterministic combat rules.
-/// The current physical-damage formula does not consume randomness.
+/// Shared random-number boundary for deterministic core rules.
+/// Physical damage currently does not consume randomness; loot resolution does through an
+/// injected implementation so the same defeated definitions and scripted rolls stay repeatable.
 /// </summary>
 public interface IRandomSource
 {

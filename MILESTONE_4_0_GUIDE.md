@@ -83,12 +83,10 @@ when that item is present in the resolved catalog.
 
 ## Relationship to loot tables
 
-Loot tables reference item definitions and describe possible quantities, but they still do
-not roll randomness or mutate campaign state. Milestone 4.0 provides the inventory application
-boundary that a later reward use case can call after deterministic loot resolution.
-
-Milestone 4.1 will add deterministic loot resolution. Milestone 4.2 will apply victory rewards
-and present a reward summary. Neither behavior is part of this milestone.
+Loot tables reference item definitions and describe possible quantities. Milestone 4.1 now
+resolves those independent rolls into transient typed awards, but it still does not mutate
+campaign state. Milestone 4.0 provides the inventory application boundary that Milestone 4.2
+will call after a confirmed victory.
 
 ## Automated coverage
 

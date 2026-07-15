@@ -36,8 +36,8 @@ public sealed record EnemyDefinition : ContentDefinition
     /// <remarks>
     /// The member is required in enemy-schema version 2 JSON so accidentally forgetting loot
     /// ownership cannot silently mean "no drops." A present JSON null is the explicit no-loot
-    /// choice. The referenced table remains definition data; per-battle rolls and awarded
-    /// inventory will belong to future transient/domain state rather than this enemy record.
+    /// choice. The referenced table remains definition data; the loot resolver returns
+    /// transient award facts, while later campaign code decides whether to grant inventory.
     /// </remarks>
     [JsonRequired]
     public string? LootTableId { get; init; }

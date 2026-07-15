@@ -6,10 +6,11 @@ Milestone 3.06 separates enemy combat definitions from item-drop authoring. An e
 one stable `lootTableId`; the referenced JSON record stores the possible items, probabilities,
 and quantity ranges.
 
-This is content infrastructure only. The game does **not** roll these tables, grant inventory,
-show a reward screen, or save awarded items yet. Those behaviors wait for victory and inventory
-milestones. Defining the content boundary first prevents those later systems from depending on
-enemy JSON layout or Godot scenes.
+Milestone 4.1 resolves these tables into ordered transient award facts through the pure-core
+`LootResolver`. It does **not** grant inventory, show a reward screen, save awarded items, or
+connect battle victory to campaign state. Those behaviors wait for Milestone 4.2. Keeping this
+content boundary separate prevents reward application from depending on enemy JSON layout or
+Godot scenes.
 
 ## The three records involved
 
@@ -192,21 +193,22 @@ IDs remain errors because “last mod wins” would make outcomes depend on inst
 Vanilla-loot replacement, selected loot profiles, and randomizer mappings need a later explicit
 composition design.
 
-## Where future loot behavior belongs
+## Runtime resolution boundary
 
-A later pure-.NET reward resolver should:
+Milestone 4.1's pure-.NET resolver:
 
 1. receive defeated enemy definition IDs;
 2. resolve their table IDs through `IContentCatalog`;
 3. receive randomness through `IRandomSource`;
-4. roll entries deterministically in an explicitly documented order;
-5. return typed item/quantity awards;
-6. leave a campaign/inventory use case to apply those awards.
+4. rolls entries independently in supplied enemy and authored entry order;
+5. returns one typed item/quantity award per successful entry without aggregating duplicates;
+6. leaves a later campaign/inventory use case to apply those awards.
 
-The resolver must not find Godot nodes, play animations, update controls, or mutate a scene.
-The loot table must not contain C# method names, scripts, formulas, or reflection-selected
-types. A future randomizer can work with the same stable table IDs; its seed or generated
-mapping would be campaign state, while the original tables remain definition data.
+The resolver must not find Godot nodes, play animations, update controls, mutate a scene, or
+touch `GameState`/inventory. The loot table must not contain C# method names, scripts, formulas,
+or reflection-selected types. A future randomizer can work with the same stable table IDs; its
+seed or generated mapping would be campaign state, while the original tables remain definition
+data.
 
 ## Common validation failures
 

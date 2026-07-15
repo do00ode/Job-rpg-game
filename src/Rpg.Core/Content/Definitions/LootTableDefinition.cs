@@ -10,12 +10,13 @@ namespace RpgGame.Core.Content.Definitions;
 /// not roll randomness, mutate inventory, or remember whether an enemy was defeated. Keeping
 /// this record separate from <see cref="EnemyDefinition"/> lets several enemies share one
 /// table and lets a content author rebalance drops without editing combat statistics or AI.
-/// A future pure-core reward resolver will interpret these entries after victory.
+/// The pure-core <c>LootResolver</c> interprets these entries into transient awards. Campaign
+/// reward application remains a separate later concern.
 /// </remarks>
 public sealed record LootTableDefinition : ContentDefinition
 {
     /// <summary>
-    /// Independent item-drop entries evaluated in authored order by a future resolver.
+    /// Independent item-drop entries evaluated in authored order by <c>LootResolver</c>.
     /// </summary>
     /// <remarks>
     /// The property must be present in JSON even when the deliberate value is an empty array.
