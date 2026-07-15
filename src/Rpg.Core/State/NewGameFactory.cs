@@ -19,7 +19,7 @@ public sealed class NewGameFactory
     }
 
     /// <summary>
-    /// Builds fresh actor progress, active-party order, location, and empty event flags.
+    /// Builds fresh actor progress, active-party order, location, inventory, and event flags.
     /// Invalid setup is rejected here rather than becoming a corrupt save later.
     /// </summary>
     public GameState Create(NewGameRequest request)
@@ -110,6 +110,7 @@ public sealed class NewGameFactory
                 .Select(member => member.ActorId)
                 .ToList(),
             ActorProgress = progress,
+            Inventory = new Dictionary<string, int>(StringComparer.Ordinal),
             EventFlags = new Dictionary<string, bool>(StringComparer.Ordinal),
         };
     }

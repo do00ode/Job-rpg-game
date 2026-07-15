@@ -1,3 +1,4 @@
+using RpgGame.Core.Inventory;
 using RpgGame.Core.Persistence;
 using RpgGame.Core.State;
 using Xunit;
@@ -21,7 +22,8 @@ public sealed class SaveRoundTripTests
 
         try
         {
-            GameState newGame = new NewGameFactory(TestContent.LoadCatalog()).Create(
+            var content = TestContent.LoadCatalog();
+            GameState newGame = new NewGameFactory(content).Create(
                 new NewGameRequest
                 {
                     SaveId = "round-trip-campaign",
@@ -48,6 +50,9 @@ public sealed class SaveRoundTripTests
             });
             session.SetEventFlag("flag.test-room.npc-spoken-to");
             session.SetEventFlag("flag.encounter.forest.slimes-01.cleared");
+            var inventory = new InventoryService(content, session);
+            inventory.AddItem("item.consumable.potion", 3);
+            inventory.AddItem("item.equipment.iron-sword", 1);
             GameState original = session.Current;
 
             var serializer = new SaveJsonSerializer();
@@ -63,6 +68,8 @@ public sealed class SaveRoundTripTests
                 (loaded.Location.X, loaded.Location.Y, loaded.Location.Facing));
             Assert.True(loaded.EventFlags["flag.test-room.npc-spoken-to"]);
             Assert.True(loaded.EventFlags["flag.encounter.forest.slimes-01.cleared"]);
+            Assert.Equal(3, loaded.Inventory["item.consumable.potion"]);
+            Assert.Equal(1, loaded.Inventory["item.equipment.iron-sword"]);
 
             // A second successful write copies the old primary to slot_1.json.bak before
             // replacing it, providing a last-known-good recovery file.
@@ -101,6 +108,12 @@ public sealed class SaveRoundTripTests
         Assert.Equal(expected.SaveId, actual.SaveId);
         Assert.Equal(expected.Location, actual.Location);
         Assert.Equal(expected.ActivePartyActorIds, actual.ActivePartyActorIds);
+        Assert.Equal(expected.Inventory.Count, actual.Inventory.Count);
+        foreach ((string itemId, int quantity) in expected.Inventory)
+        {
+            Assert.True(actual.Inventory.TryGetValue(itemId, out int actualQuantity));
+            Assert.Equal(quantity, actualQuantity);
+        }
         Assert.Equal(expected.EventFlags, actual.EventFlags);
         Assert.Equal(expected.ActorProgress.Keys.Order(), actual.ActorProgress.Keys.Order());
 

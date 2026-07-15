@@ -35,6 +35,11 @@ public interface IGameSession
     /// </summary>
     void UpdateLocation(MapLocationState location);
 
+    /// <summary>
+    /// Replaces campaign inventory after a content-aware use case validates item stacks.
+    /// </summary>
+    void UpdateInventory(IReadOnlyDictionary<string, int> inventory);
+
     /// <summary>Returns a persistent flag, treating an absent key as false.</summary>
     bool GetEventFlag(string flagId);
 

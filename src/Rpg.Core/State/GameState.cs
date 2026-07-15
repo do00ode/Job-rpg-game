@@ -43,6 +43,12 @@ public sealed record GameState
     public Dictionary<string, ActorProgressState> ActorProgress { get; init; } = [];
 
     /// <summary>
+    /// Owned item quantities keyed by stable <c>item.*</c> definition ID. Each key is one
+    /// stack; an absent key means zero and stored quantities are always positive.
+    /// </summary>
+    public Dictionary<string, int> Inventory { get; init; } = new(StringComparer.Ordinal);
+
+    /// <summary>
     /// Persistent facts used to connect otherwise independent systems—for example,
     /// whether a chest is open, a bridge is repaired, or a boss is defeated.
     /// </summary>
@@ -86,8 +92,9 @@ public sealed record MapLocationState
 /// </summary>
 /// <remarks>
 /// Base statistics and starting values still come from ActorDefinition. This state records
-/// only what can differ between playthroughs. Inventory/equipment fields are deliberately
-/// absent until those systems are implemented and their actual requirements are known.
+/// only what can differ between playthroughs. Inventory is campaign-owned by
+/// <see cref="GameState.Inventory"/>; actor equipment fields remain deferred until that
+/// system's actual requirements are known.
 /// </remarks>
 public sealed record ActorProgressState
 {

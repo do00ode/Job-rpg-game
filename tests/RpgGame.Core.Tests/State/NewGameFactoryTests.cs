@@ -34,6 +34,7 @@ public sealed class NewGameFactoryTests
         Assert.Equal(7, state.Location.Y);
         Assert.Equal("south", state.Location.Facing);
         Assert.Equal(["actor.hero.james"], state.ActivePartyActorIds);
+        Assert.Empty(state.Inventory);
         Assert.Empty(state.EventFlags);
 
         ActorProgressState progress = state.ActorProgress["actor.hero.james"];

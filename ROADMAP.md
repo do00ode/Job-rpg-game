@@ -319,8 +319,24 @@ resolution, experience, gold, inventory mutation, map navigation, and battle per
 
 ## Milestone 4 — Small vertical slice
 
-- Add a three-character party shell, inventory stacks, equipment, item rewards, a shop,
-  and one short quest.
+### Milestone 4.0 — Persistent inventory stacks
+
+- Add one persistent item stack per stable item ID to `GameState`.
+- Validate quantities against `ItemDefinition.MaxStack`.
+- Add narrow add, remove, and quantity-query use cases.
+- Preserve inventory through new-game and save/load flows.
+
+Exit criteria: headless tests prove inventory additions and removals are atomic, stack limits
+are enforced, unrelated campaign state is preserved, and old saves without inventory load as
+empty inventories.
+
+Explicitly excluded: loot rolls, victory rewards, item-use effects, equipment, shops, gold,
+sorting UI, battle items, and inventory presentation. See `MILESTONE_4_0_GUIDE.md`.
+
+The intended next slices are Milestone 4.1, deterministic loot resolution, and Milestone 4.2,
+victory reward application plus a reward summary. Remaining vertical-slice work will then:
+
+- Add a three-character party shell, equipment, item rewards, a shop, and one short quest.
 - Add a limited set of common ability effects and status effects based on actual slice
   content.
 - Add one short scripted cutscene and map transition.

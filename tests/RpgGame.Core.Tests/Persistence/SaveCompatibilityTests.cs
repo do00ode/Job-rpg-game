@@ -1,5 +1,7 @@
 using System.Text.Json;
+using RpgGame.Core.Inventory;
 using RpgGame.Core.Persistence;
+using RpgGame.Core.State;
 using Xunit;
 
 namespace RpgGame.Core.Tests.Persistence;
@@ -48,6 +50,7 @@ public sealed class SaveCompatibilityTests
         // Milestone 1 saves predate data mods. The additive list must receive its safe
         // default without requiring a format-version migration.
         Assert.Empty(save.EnabledMods);
+        Assert.Empty(save.State.Inventory);
 
         // Verify the unknown field was captured during deserialization.
         Dictionary<string, JsonElement> extensionData = save.State.ExtensionData
@@ -57,7 +60,12 @@ public sealed class SaveCompatibilityTests
 
         // Serialize and parse again to verify the field is written back at its original JSON
         // level, not merely retained in memory or nested under an "extensionData" property.
-        string rewritten = serializer.Serialize(save);
+        var session = new GameSession();
+        session.ReplaceState(save.State);
+        new InventoryService(TestContent.LoadCatalog(), session)
+            .AddItem("item.consumable.potion", 2);
+
+        string rewritten = serializer.Serialize(save with { State = session.Current });
         using JsonDocument document = JsonDocument.Parse(rewritten);
 
         int futureValue = document.RootElement
@@ -67,5 +75,12 @@ public sealed class SaveCompatibilityTests
             .GetInt32();
 
         Assert.Equal(42, futureValue);
+        Assert.Equal(
+            2,
+            document.RootElement
+                .GetProperty("state")
+                .GetProperty("inventory")
+                .GetProperty("item.consumable.potion")
+                .GetInt32());
     }
 }

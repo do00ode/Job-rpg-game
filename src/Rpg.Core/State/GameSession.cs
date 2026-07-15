@@ -47,6 +47,44 @@ public sealed class GameSession : IGameSession
     }
 
     /// <inheritdoc />
+    public void UpdateInventory(IReadOnlyDictionary<string, int> inventory)
+    {
+        ArgumentNullException.ThrowIfNull(inventory);
+
+        var replacement = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach ((string itemId, int quantity) in inventory)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                throw new ArgumentException(
+                    "Inventory item IDs cannot be blank.",
+                    nameof(inventory));
+            }
+
+            if (quantity <= 0)
+            {
+                throw new ArgumentException(
+                    $"Inventory quantity for '{itemId}' must be positive; received {quantity}.",
+                    nameof(inventory));
+            }
+
+            if (!replacement.TryAdd(itemId, quantity))
+            {
+                throw new ArgumentException(
+                    $"Inventory contains duplicate item ID '{itemId}'.",
+                    nameof(inventory));
+            }
+        }
+
+        if (InventoriesEqual(Current.Inventory, replacement))
+        {
+            return;
+        }
+
+        Publish(Current with { Inventory = replacement });
+    }
+
+    /// <inheritdoc />
     public bool GetEventFlag(string flagId)
     {
         ValidateFlagId(flagId);
@@ -74,6 +112,27 @@ public sealed class GameSession : IGameSession
     {
         _current = state;
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static bool InventoriesEqual(
+        IReadOnlyDictionary<string, int>? current,
+        IReadOnlyDictionary<string, int> replacement)
+    {
+        if (current is null || current.Count != replacement.Count)
+        {
+            return false;
+        }
+
+        foreach ((string itemId, int quantity) in current)
+        {
+            if (!replacement.TryGetValue(itemId, out int replacementQuantity)
+                || replacementQuantity != quantity)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void ValidateLocation(MapLocationState location)

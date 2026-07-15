@@ -265,6 +265,37 @@ record replacement. A mod may add its own table and enemy or reference base/depe
 it may not redeclare a vanilla table ID. A future randomizer or vanilla-loot customization
 feature needs an explicit deterministic profile/composition design rather than load-order wins.
 
+### Persistent inventory boundary
+
+Milestone 4.0 stores one campaign stack per stable `item.*` ID in `GameState.Inventory`.
+Definitions remain immutable catalog data: `ItemDefinition.MaxStack` supplies the upper bound,
+while the save stores only item IDs and positive owned quantities. An absent key means zero;
+there are no duplicate stacks or saved slot indexes.
+
+```mermaid
+flowchart TD
+    Inputs["ItemDefinition + GameState.Inventory"] --> Service["InventoryService"]
+    Service --> Session["IGameSession.UpdateInventory"]
+    Session --> State["replacement GameState"]
+```
+
+`InventoryService` is a plain-.NET, content-aware application service. It validates the whole
+current inventory before each mutation, applies checked add/remove rules to an ordinal copy,
+and publishes only a complete valid replacement. `GameSession` deliberately has no content
+catalog; its narrower responsibility is to copy positive key/value pairs, suppress logically
+identical updates, preserve unrelated campaign fields, and raise `StateChanged` once for a
+real change.
+
+The inventory field is additive and defaults to an empty ordinal dictionary, so saves that
+predate Milestone 4.0 load without a migration or format-version increment. Normal JSON
+serialization writes current stacks, and existing extension-data handling continues to retain
+unknown future fields. Data-mod items use the same resolved catalog and stable-ID rules; the
+mod data API and content schemas do not change.
+
+Loot tables still only define possible awards. Milestone 4.0 does not roll a table or connect
+battle victory to inventory. A later deterministic loot resolver will produce awards, and a
+separate reward-application use case will call this inventory boundary.
+
 ### Mod composition boundary
 
 Milestone 1.5 has no replacement or patch semantics. A mod owns only IDs under the namespace
@@ -547,7 +578,7 @@ ability/target policy.
 - status-effect stacking and timing;
 - dialogue choices, conditions, cutscene commands, and localization;
 - general map transitions and random/scalable encounter triggering details;
-- inventory stacking and equipment slot rules;
+- item use, equipment ownership, and equipment slot rules;
 - advanced AI profiles, scoring, and authored behavior differences;
 - final save-slot UI and platform paths;
 - content hot reload and custom editor tooling;

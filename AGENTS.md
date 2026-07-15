@@ -44,6 +44,8 @@ a general-purpose RPG engine.
     selection, HP presentation, event-log playback, or terminal confirmation.
 23. Read `MILESTONE_3_15_GUIDE.md` before changing the fixed encounter-clearance flag,
     victory/defeat scene handoff, trigger suppression, or clearance persistence.
+24. Read `MILESTONE_4_0_GUIDE.md` before changing persistent inventory ownership, item
+    stack limits, inventory mutations, session inventory publication, or inventory saves.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.
