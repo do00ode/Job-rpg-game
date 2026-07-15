@@ -9,5 +9,7 @@
 	"stat.defense": 7,
 	"stat.speed": 6
   },
-  "startingAbilityIds": []
+  "startingAbilityIds": [
+    "ability.command.attack"
+  ]
 }

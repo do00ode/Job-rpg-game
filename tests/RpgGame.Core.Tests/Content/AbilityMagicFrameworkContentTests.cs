@@ -7,16 +7,20 @@ namespace RpgGame.Core.Tests.Content;
 public sealed class AbilityMagicFrameworkContentTests
 {
     [Fact]
-    public void FixturePack_ExistingAbilitiesDefaultToSkillsWithoutConcreteDisciplines()
+    public void FixturePack_BaseAbilitiesAreSkillsWithoutConcreteDisciplines()
     {
         var catalog = TestContent.LoadCatalog();
 
         Assert.Empty(catalog.GetAll<MagicDisciplineDefinition>());
+        AbilityDefinition attack = catalog.GetRequired<AbilityDefinition>(
+            "ability.command.attack");
         AbilityDefinition guard = catalog.GetRequired<AbilityDefinition>(
             "ability.vanguard.guard");
         AbilityDefinition tackle = catalog.GetRequired<AbilityDefinition>(
             "ability.enemy.tackle");
 
+        Assert.Equal(AbilityKindIds.Skill, attack.AbilityKindId);
+        Assert.Empty(attack.MagicDisciplineIds);
         Assert.Equal(AbilityKindIds.Skill, guard.AbilityKindId);
         Assert.Empty(guard.MagicDisciplineIds);
         Assert.Equal(AbilityKindIds.Skill, tackle.AbilityKindId);

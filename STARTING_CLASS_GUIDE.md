@@ -41,6 +41,11 @@ without making display text part of identity.
 Vanguard's Guard belongs in `classes/vanguard.json`, not on James, because a Black Mage or
 White Mage James should not inherit Vanguard-only training.
 
+Milestone 3.10 adds `ability.command.attack` to James's `startingAbilityIds` for the opposite
+reason: Attack is the universal basic command James should retain with every starting class.
+That intrinsic grant does not make James a Vanguard and does not change which classes can be
+selected.
+
 ## Adding a vanilla starting class
 
 1. Add one class JSON file under `game/content/classes/` with a permanent `class.*` ID.

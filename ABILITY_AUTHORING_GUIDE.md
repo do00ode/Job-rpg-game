@@ -6,10 +6,11 @@ An **ability** is the general content record for something a combatant may event
 A **Skill** is one kind of ability that appears directly in the future command menu. Magic is
 the other implemented kind and is covered in `MAGIC_AUTHORING_GUIDE.md`.
 
-The repository can currently load, validate, grant, and place ability IDs into an initial
-combat snapshot. It does **not** execute those abilities yet. Adding JSON now proves that the
-content and learning relationships are correct; it does not create damage, animation, MP use,
-or a visible battle command before those later milestones exist.
+The repository can load, validate, grant, and place ability IDs into a combat snapshot.
+Milestone 3.10 can also execute one narrow family in pure core tests: a free
+`target.enemy.single` + `rules.damage.physical` ability. There is still no Godot battle menu,
+animation, MP use, Guard execution, or automatic turn flow. Adding JSON selects only behavior
+the trusted C# resolver already supports; it never creates a new mechanic by itself.
 
 ## What can be authored without new C#
 
@@ -17,11 +18,13 @@ The game accepts only code-owned target and ruleset contracts that it understand
 
 | Targeting ID | Ruleset ID | Required parameters | Legal values |
 |---|---|---|---|
-| `target.self` | `rules.defense.guard` | `damage-reduction` | Greater than `0` and at most `1` |
-| `target.enemy.single` | `rules.damage.physical` | `power` | Greater than `0` |
+| `target.self` | `rules.defense.guard` | `damage-reduction` | Greater than `0` and at most `1`; validated but not executed yet |
+| `target.enemy.single` | `rules.damage.physical` | `power` | Greater than `0`; executable now only when cost-free |
 
-For example, `0.25` means a 25% reduction. The exact effect execution is still deferred, but
-the authoring contract is validated now so bad data cannot reach the future resolver.
+For example, `0.25` means a 25% reduction. The Guard authoring contract is validated now so
+bad data cannot reach its future resolver. Physical damage currently uses
+`max(1, Strength + power - Defense)`, floors a decimal result, and clamps applied damage to the
+target's remaining HP.
 
 A new ability may reuse one of these rows and choose new tuning values. A new target mode or a
 genuinely different effect—healing, poison, fire damage, stealing, resurrection, and so on—
@@ -94,6 +97,8 @@ Add its ID to an actor's `startingAbilityIds`:
 
 Use this only when the ability belongs to that character regardless of selected class. James
 is intentionally class-neutral, so class abilities normally belong on the class record.
+`ability.command.attack` is the deliberate exception: it is James's class-independent basic
+combat command, while Vanguard's Guard remains a Vanguard class unlock.
 
 ### Give it to an enemy
 

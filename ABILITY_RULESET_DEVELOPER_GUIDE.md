@@ -18,7 +18,7 @@ from ability JSON. That boundary keeps community data deterministic, testable, a
 | Supported stable target/ruleset/parameter IDs | `AbilityContentIds.cs` |
 | Content contract and actionable diagnostics | `ContentValidator` |
 | Learned Skill/Magic availability | `AbilityAvailabilityResolver` |
-| Future state changes and domain events | Plain .NET combat resolver |
+| State changes and domain events | Plain .NET `CombatResolver` |
 | Animation, sound, menus, and target highlights | Godot presentation under `src/Rpg.Game` |
 
 Do not make a Godot node calculate damage or let a ruleset locate scene objects.
@@ -38,12 +38,12 @@ Do not make a Godot node calculate damage or let a ruleset locate scene objects.
    - stable, actionable diagnostic codes.
 5. Add content tests for a valid definition, every invalid boundary, missing parameters,
    extra parameters, and target incompatibility.
-6. When command resolution exists, implement the effect in `src/Rpg.Core/Combat`. Receive an
-   explicit `CombatCommand`, return a new snapshot plus typed domain events, and inject any
-   randomness through `IRandomSource`.
+6. Extend `CombatResolver` in `src/Rpg.Core/Combat`. Receive an explicit `CombatCommand`,
+   return a new snapshot plus typed domain events, and inject any randomness through
+   `IRandomSource`. Do not bypass its actor/ownership/target/cost validation.
 7. Add deterministic resolver tests before connecting Godot presentation.
-8. Let `src/Rpg.Game` translate domain events into visuals. Never put node paths, animations,
-   sounds, or resource paths into the core ruleset.
+8. Let `src/Rpg.Game` translate domain events such as `DamageApplied` into visuals. Never put
+   node paths, animations, sounds, or resource paths into the core ruleset.
 9. Update `CONTENT_SCHEMA.md`, `ABILITY_AUTHORING_GUIDE.md`, and mod documentation in the same
    change. Decide whether the stricter public content contract requires a mod data-API change.
 

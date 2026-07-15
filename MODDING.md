@@ -275,13 +275,20 @@ inventing a `target.*`, `rules.*`, or numeric-parameter key. Unknown IDs, missin
 extra parameters, and illegal ranges prevent catalog publication. Executable scripts and
 assemblies remain outside the data-mod boundary.
 
+Milestone 3.10 executes the supported, cost-free `target.enemy.single` plus
+`rules.damage.physical` combination in the pure core resolver. A mod ability using that exact
+contract and granted through the normal actor/class availability rules receives the same
+deterministic behavior. Cost-bearing abilities, Guard, and new effect strings remain
+non-executable; data still cannot supply code.
+
 Current additive mods also cannot patch a vanilla class's `abilityUnlocks` or
 `magicDisciplineUnlocks`. A mod that distributes a spell should grant it from a class owned by
 that mod. Extending vanilla progression needs a future explicit composition contract rather
 than order-dependent JSON replacement.
 
-This remains data-only. It does not add scripts, spell effects, MP, battle menus, enemy
-spellbook AI, or save data. Because omitted ability kinds remain Skills and the category was
+This remains data-only. It does not add scripts, mod-defined effect implementations, MP,
+battle menus, enemy spellbook AI, or save data. Because omitted ability kinds remain Skills
+and the category was
 additive, Milestone 3.05 did not itself change the then-current `gameApiVersion`; the later
 API-3 change is solely the loot contract described above. Neither ability classification nor
 loot definitions change the save format.

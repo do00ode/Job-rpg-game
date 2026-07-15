@@ -233,11 +233,30 @@ Explicitly excluded: random loot rolls, victory rewards, inventory mutation, gol
 stealing, weighted pools, conditional drops, encounter overrides, reward UI, randomizers, and
 save-format changes.
 
+### Milestone 3.10 — Single-action physical combat (implementation review pending)
+
+- Let reusable combatant runtime state represent defeat at zero current HP while keeping
+  initial snapshot creation positive.
+- Add one intrinsic `ability.command.attack` Skill so James can attack with any starting class.
+- Validate one explicit actor/ability/single-target command against the current snapshot.
+- Resolve the existing free, single-enemy physical-damage contract deterministically.
+- Return a new immutable snapshot plus typed damage and defeat events.
+
+Exit criteria: headless tests prove the input snapshot never mutates, damage follows the
+documented Strength + power - Defense formula with a one-damage minimum, lethal damage clamps
+at zero HP, defeated actors and targets are rejected, and unrelated combatant state/order is
+preserved.
+
+Explicitly excluded: Guard execution, current MP or resource payment, rounds, speed ordering,
+enemy AI, victory, defeat outcomes, loot rolls, rewards, Godot battle UI, campaign-state
+changes, encounter clearing, and battle saves. See `MILESTONE_3_10_GUIDE.md`.
+
 ### Remaining first-playable work
 
-- Implement one deterministic battle resolver with Attack, Guard, HP, speed-based turn
-  order, victory, and defeat—no generalized effect scripting.
-- Add one hero, one class, two abilities, one enemy, and one fixed encounter.
+- Extend the deterministic resolver with Guard, speed-based turn order, victory, and defeat—no
+  generalized effect scripting.
+- Keep the existing hero, starting classes, abilities, enemy, and fixed encounter as the small
+  first-playable content set.
 - Add a minimal command menu and battle presentation that consumes domain events.
 - Return battle outcome to the campaign session and set one victory flag.
 - Add deterministic rules tests, including boundary and defeat cases.

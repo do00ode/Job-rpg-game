@@ -34,6 +34,8 @@ a general-purpose RPG engine.
     numeric parameter contract, or executable ability behavior.
 18. Read `LOOT_TABLE_AUTHORING_GUIDE.md` before adding enemy drops, loot-table records,
     or future reward-resolution behavior.
+19. Read `MILESTONE_3_10_GUIDE.md` before changing runtime HP invariants, combat-command
+    validation, physical damage, combat state replacement, or combat domain events.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

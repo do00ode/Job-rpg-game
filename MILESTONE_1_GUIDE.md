@@ -32,7 +32,7 @@ James, the guide, the grid, and development controls. Startup details also appea
 **Output** panel:
 
 ```text
-Milestone 2.75 ready: loaded 20 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
+Milestone 3.10 ready: loaded 21 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
 ```
 
 If content is invalid, startup prints every discovered problem and exits instead of giving

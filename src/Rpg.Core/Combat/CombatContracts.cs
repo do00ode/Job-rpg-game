@@ -4,28 +4,28 @@ using RpgGame.Core.Combat.Formation;
 namespace RpgGame.Core.Combat;
 
 /// <summary>
-/// Pure rules boundary reserved for later combat-command resolution.
+/// Pure rules boundary for applying one validated combat command to immutable battle state.
 /// </summary>
 /// <remarks>
-/// Milestone 3.0 constructs only the initial snapshot. No implementation of this interface,
-/// command validation, damage, targeting, or turn behavior exists yet.
+/// Implementations return a replacement snapshot and typed events. They never mutate the input,
+/// touch Godot, update campaign state, or decide how the result is animated.
 /// </remarks>
 public interface ICombatResolver
 {
-	CombatResolution Resolve(CombatSnapshot current, CombatCommand command);
+    CombatResolution Resolve(CombatSnapshot current, CombatCommand command);
 }
 
 /// <summary>
 /// Random-number boundary retained for future deterministic combat rules.
-/// Milestone 3.0 does not consume randomness.
+/// The current physical-damage formula does not consume randomness.
 /// </summary>
 public interface IRandomSource
 {
-	int Next(int minInclusive, int maxExclusive);
+    int Next(int minInclusive, int maxExclusive);
 }
 
 /// <summary>
-/// Complete immutable state at the beginning of a transient battle.
+/// Complete immutable state at one point in a transient battle.
 /// </summary>
 /// <remarks>
 /// This state belongs to one encounter, not to <c>GameState</c> or a save file. Combatants
@@ -33,27 +33,27 @@ public interface IRandomSource
 /// </remarks>
 public sealed record CombatSnapshot
 {
-	public CombatSnapshot(int round, IReadOnlyList<CombatantSnapshot> combatants)
-	{
-		if (round < 1)
-		{
-			throw new ArgumentOutOfRangeException(
-				nameof(round),
-				round,
-				"A combat round number must be at least 1.");
-		}
+    public CombatSnapshot(int round, IReadOnlyList<CombatantSnapshot> combatants)
+    {
+        if (round < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(round),
+                round,
+                "A combat round number must be at least 1.");
+        }
 
-		ArgumentNullException.ThrowIfNull(combatants);
-		if (combatants.Any(combatant => combatant is null))
-		{
-			throw new ArgumentException(
-				"A combat snapshot cannot contain a null combatant.",
-				nameof(combatants));
-		}
+        ArgumentNullException.ThrowIfNull(combatants);
+        if (combatants.Any(combatant => combatant is null))
+        {
+            throw new ArgumentException(
+                "A combat snapshot cannot contain a null combatant.",
+                nameof(combatants));
+        }
 
-		Round = round;
+        Round = round;
 
-		// Copy before wrapping. A ReadOnlyCollection over the caller's original List would
+        // Copy before wrapping. A ReadOnlyCollection over the caller's original List would
         // still change if that caller later edited the list.
         Combatants = Array.AsReadOnly(combatants.ToArray());
     }
@@ -75,12 +75,12 @@ public sealed record CombatSnapshot
                 instanceId,
                 StringComparison.Ordinal))
             ?? throw new KeyNotFoundException(
-				$"Combatant instance '{instanceId}' does not exist in this battle snapshot.");
+                $"Combatant instance '{instanceId}' does not exist in this battle snapshot.");
     }
 }
 
 /// <summary>
-/// Immutable initial state for one actor or enemy instance in one battle.
+/// Immutable runtime state for one actor or enemy instance in one battle.
 /// </summary>
 /// <remarks>
 /// <see cref="Placement"/> remains authoritative for identity, side, anchor, and footprint.
@@ -141,32 +141,34 @@ public sealed record CombatantSnapshot
         if (!statistics.TryGetValue(CombatStatisticIds.MaxHp, out int maximumHp))
         {
             throw new ArgumentException(
-				$"Combatant '{placement.InstanceId}' is missing required statistic "
-				+ $"'{CombatStatisticIds.MaxHp}'.",
+                $"Combatant '{placement.InstanceId}' is missing required statistic "
+                + $"'{CombatStatisticIds.MaxHp}'.",
                 nameof(statistics));
         }
 
         if (maximumHp <= 0)
         {
             throw new ArgumentException(
-				$"Combatant '{placement.InstanceId}' must have a positive "
-				+ $"'{CombatStatisticIds.MaxHp}' statistic, but resolved {maximumHp}.",
+                $"Combatant '{placement.InstanceId}' must have a positive "
+                + $"'{CombatStatisticIds.MaxHp}' statistic, but resolved {maximumHp}.",
                 nameof(statistics));
         }
 
-        if (currentHp <= 0 || currentHp > maximumHp)
+        // Runtime state must be able to represent defeat. Initial construction remains stricter:
+        // CombatSnapshotFactory still derives a positive starting value from stat.max-hp.
+        if (currentHp < 0 || currentHp > maximumHp)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(currentHp),
                 currentHp,
-				$"Initial current HP for '{placement.InstanceId}' must be within "
-                + $"1..{maximumHp}.");
+                $"Current HP for '{placement.InstanceId}' must be within "
+                + $"0..{maximumHp}.");
         }
 
         if (abilityIds.Any(string.IsNullOrWhiteSpace))
         {
             throw new ArgumentException(
-				$"Combatant '{placement.InstanceId}' ability IDs cannot be blank.",
+                $"Combatant '{placement.InstanceId}' ability IDs cannot be blank.",
                 nameof(abilityIds));
         }
 
@@ -212,25 +214,84 @@ public sealed record CombatantSnapshot
     public BattleSide Side => Placement.Anchor.Side;
 
     public int MaximumHp => Statistics[CombatStatisticIds.MaxHp];
+
+    /// <summary>True when this battle-local combatant has no remaining HP.</summary>
+    public bool IsDefeated => CurrentHp == 0;
+
+    /// <summary>
+    /// Creates a replacement state with different current HP while preserving every other
+    /// authored and battle-local property.
+    /// </summary>
+    /// <remarks>
+    /// Keeping this copy operation beside the state type prevents effect resolvers from
+    /// accidentally dropping structured party abilities when replacing a damaged combatant.
+    /// The constructor still enforces the shared <c>0..MaximumHp</c> runtime invariant.
+    /// </remarks>
+    public CombatantSnapshot WithCurrentHp(int currentHp) =>
+        PartyAbilityAvailability is null
+            ? new CombatantSnapshot(Placement, Statistics, AbilityIds, currentHp)
+            : new CombatantSnapshot(Placement, Statistics, PartyAbilityAvailability, currentHp);
 }
 
 /// <summary>
-/// Existing intent contract reserved for later milestones. Milestone 3.0 creates no commands.
+/// Player- or AI-authored intent to use one ability against explicit battle-local targets.
 /// </summary>
-public sealed record CombatCommand(
-    string ActingCombatantId,
-    string AbilityId,
-    IReadOnlyList<string> TargetCombatantIds);
+/// <remarks>
+/// The target collection is defensively copied. Its shape and legality are deliberately checked
+/// by <see cref="ICombatResolver"/>, because those rules depend on the selected ability and the
+/// current snapshot rather than on command syntax alone.
+/// </remarks>
+public sealed record CombatCommand
+{
+    public CombatCommand(
+        string actingCombatantId,
+        string abilityId,
+        IReadOnlyList<string> targetCombatantIds)
+    {
+        ArgumentNullException.ThrowIfNull(targetCombatantIds);
+
+        ActingCombatantId = actingCombatantId;
+        AbilityId = abilityId;
+        TargetCombatantIds = Array.AsReadOnly(targetCombatantIds.ToArray());
+    }
+
+    public string ActingCombatantId { get; }
+
+    public string AbilityId { get; }
+
+    public IReadOnlyList<string> TargetCombatantIds { get; }
+}
 
 /// <summary>
-/// Existing result contract reserved for later milestones. Milestone 3.0 resolves no command.
+/// Immutable result of one accepted combat command.
 /// </summary>
-public sealed record CombatResolution(
-    CombatSnapshot Next,
-    IReadOnlyList<CombatEvent> Events);
+public sealed record CombatResolution
+{
+    public CombatResolution(CombatSnapshot next, IReadOnlyList<CombatEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(events);
+        if (events.Any(combatEvent => combatEvent is null))
+        {
+            throw new ArgumentException(
+                "A combat resolution cannot contain a null event.",
+                nameof(events));
+        }
+
+        Next = next;
+        Events = Array.AsReadOnly(events.ToArray());
+    }
+
+    public CombatSnapshot Next { get; }
+
+    public IReadOnlyList<CombatEvent> Events { get; }
+}
 
 /// <summary>
-/// Presentation adapters will eventually translate concrete domain events into visuals.
-/// Concrete event types remain deferred until command resolution is implemented.
+/// Presentation-neutral fact emitted by trusted combat rules.
 /// </summary>
+/// <remarks>
+/// Godot may translate concrete events into animation, sound, or UI updates, but presentation
+/// must not recalculate their gameplay meaning.
+/// </remarks>
 public abstract record CombatEvent;

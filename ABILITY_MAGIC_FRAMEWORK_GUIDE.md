@@ -108,7 +108,9 @@ closed. Current content may select:
 
 Unknown target/ruleset IDs and unknown, missing, or out-of-range parameters fail validation.
 This prevents a JSON typo or mod-authored method name from becoming a delayed runtime failure.
-It does not yet execute Guard or damage; command resolution remains deferred.
+Milestone 3.10 executes the free, single-enemy physical-damage combination only. Guard,
+resource costs, and Magic-specific effects remain deferred even though their definitions and
+availability can be validated.
 
 Cost fields are also not executable yet. New abilities should use null/zero until mutable
 current resource state is implemented; `stat.max-mp` is not current MP.

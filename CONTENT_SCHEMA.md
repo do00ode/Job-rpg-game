@@ -351,6 +351,20 @@ Current authored contracts are:
 | `target.self` | `rules.defense.guard` | `damage-reduction` greater than `0` and at most `1` |
 | `target.enemy.single` | `rules.damage.physical` | `power` greater than `0` |
 
+Milestone 3.10 executes only the free `target.enemy.single` plus
+`rules.damage.physical` combination. For integer HP, its deterministic calculation is:
+
+```text
+rawDamage = max(1, attacker Strength + authored power - defender Defense)
+roundedDamage = floor(rawDamage)
+appliedDamage = min(roundedDamage, target CurrentHp)
+```
+
+The floor is relevant only when content authors choose decimal power. Reaching zero current HP
+marks the transient combatant defeated. Current HP is runtime combat state, not an ability or
+save/content field. Guard and resource costs remain validated authoring contracts but are not
+executed yet.
+
 Cost fields remain part of the early DTO, but current resource spending is not implemented.
 New content should use null/zero until mutable current MP/resource ownership is defined. In
 particular, `stat.max-mp` is a maximum statistic and must not be treated as current MP.

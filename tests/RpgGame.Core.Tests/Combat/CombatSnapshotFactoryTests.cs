@@ -62,6 +62,7 @@ public sealed class CombatSnapshotFactoryTests
 
         Assert.Equal(96, james.MaximumHp);
         Assert.Equal(james.MaximumHp, james.CurrentHp);
+        Assert.False(james.IsDefeated);
     }
 
     [Fact]
@@ -71,7 +72,9 @@ public sealed class CombatSnapshotFactoryTests
             .Snapshot.GetRequiredCombatant("party-0");
 
         Assert.NotNull(james.PartyAbilityAvailability);
-        Assert.Equal([CombatTestFixture.GuardId], james.DirectSkillIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
+            james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
         Assert.Equal(james.PartyAbilityAvailability!.ExecutableAbilityIds, james.AbilityIds);
     }
@@ -436,7 +439,31 @@ public sealed class CombatSnapshotFactoryTests
     }
 
     [Fact]
-    public void CombatantSnapshot_ZeroInitialCurrentHp_IsRejected()
+    public void CombatantSnapshot_ZeroRuntimeCurrentHp_IsDefeated()
+    {
+        var placement = new FormationPlacement(
+            "party-0",
+            CombatTestFixture.JamesId,
+            new FormationCell(BattleSide.Party, 0, 0),
+            FormationFootprint.SingleCell);
+
+        var combatant = new CombatantSnapshot(
+            placement,
+            new Dictionary<string, int>(StringComparer.Ordinal)
+            {
+                [CombatStatisticIds.MaxHp] = 10,
+            },
+            [],
+            currentHp: 0);
+
+        Assert.Equal(0, combatant.CurrentHp);
+        Assert.True(combatant.IsDefeated);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(11)]
+    public void CombatantSnapshot_CurrentHpOutsideRuntimeRange_IsRejected(int currentHp)
     {
         var placement = new FormationPlacement(
             "party-0",
@@ -451,7 +478,7 @@ public sealed class CombatSnapshotFactoryTests
                 [CombatStatisticIds.MaxHp] = 10,
             },
             [],
-            currentHp: 0));
+            currentHp));
     }
 
     private static SnapshotInput CreateInMemoryInput(

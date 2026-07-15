@@ -18,6 +18,7 @@ internal static class CombatTestFixture
     public const string BlackMageId = "class.magic.black-mage";
     public const string EncounterId = "encounter.forest.slimes-01";
     public const string GreenSlimeId = "enemy.forest.green-slime";
+    public const string AttackId = "ability.command.attack";
     public const string GuardId = "ability.vanguard.guard";
     public const string TackleId = "ability.enemy.tackle";
 

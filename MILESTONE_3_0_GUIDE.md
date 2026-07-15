@@ -66,8 +66,10 @@ CurrentHp = Statistics["stat.max-hp"]
 ```
 
 The factory rejects missing, zero, or negative maximum HP. It never substitutes a fallback or
-clamps a bad value. A later damage milestone may replace a snapshot with one containing lower
-current HP while leaving maximum HP unchanged.
+clamps a bad value. Milestone 3.10 clarifies the two invariants: reusable runtime
+`CombatantSnapshot` accepts `0..MaximumHp` so zero can represent defeat, while this initial
+factory continues creating only positive starting HP. Damage replaces current HP without
+changing maximum HP.
 
 `CombatStatisticIds.MaxHp` is the only code-owned statistic constant added here.
 `CombatStatisticResolver` still discovers and resolves every registered statistic
@@ -84,10 +86,10 @@ dynamically; the project has not introduced a closed statistic enum.
 The resolver preserves authored order, removes duplicates with ordinal comparison while
 keeping the first occurrence, and resolves every included ID as an `AbilityDefinition`.
 
-James remains class-neutral. His checked-in actor definition grants no intrinsic ability.
-When a test campaign explicitly selects Vanguard at level one, James receives Vanguard's
-`ability.vanguard.guard`. A Black Mage James does not receive Guard, and the resolver does
-not invent a fallback Attack.
+James remains class-neutral. At Milestone 3.0 his checked-in actor definition granted no
+intrinsic ability. Milestone 3.10 deliberately adds `ability.command.attack` as a universal
+actor starting ability; Vanguard still adds `ability.vanguard.guard`, while a Black Mage or
+White Mage James receives Attack without inheriting Vanguard-only Guard.
 
 Milestone 3.05 evolves this flat list into a structured party projection with direct Skills
 and Magic discipline containers. The compatibility `AbilityIds` view still means the complete
@@ -166,6 +168,9 @@ not construct or display this snapshot.
 A later ticket will decide how the battle scene receives a snapshot. This milestone makes no
 change to `GameRoot`, encounter return behavior, save state, content schema, or mod API.
 
+Milestone 3.10 adds headless command resolution but still does not connect the snapshot or
+resolver to the Godot placeholder. This running-game statement therefore remains true.
+
 ## Automated coverage
 
 The focused tests describe:
@@ -209,12 +214,13 @@ if ($LASTEXITCODE -ne 0) {
 
 All five commands must return exit code `0` before the milestone is committed.
 
-## Deferred scope
+## Deferred scope at Milestone 3.0
 
 Milestone 3.0 does not implement:
 
-- Attack content, damage, healing, or HP changes after initialization;
-- targeting, command validation, Guard execution, enemy AI, or speed ordering;
+- Attack content, damage, and command validation were deferred here and are introduced by
+  Milestone 3.10; healing and Guard execution remain deferred;
+- enemy AI or speed ordering;
 - turns, victory, defeat, rewards, encounter clearing, or campaign result handling;
 - current MP, costs, statuses, equipment, or progression formulas;
 - Skill/Magic/Hybrid categories, magic schools, or ability-combination recipes;

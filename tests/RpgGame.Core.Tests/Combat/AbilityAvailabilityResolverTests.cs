@@ -8,26 +8,30 @@ namespace RpgGame.Core.Tests.Combat;
 public sealed class AbilityAvailabilityResolverTests
 {
     [Fact]
-    public void ResolvePartyActor_CheckedInVanguard_GuardRemainsDirectSkill()
+    public void ResolvePartyActor_CheckedInVanguard_HasIntrinsicAttackThenClassGuard()
     {
         CombatantSnapshot james = CombatTestFixture.CreateFixedBattle()
             .Snapshot.GetRequiredCombatant("party-0");
 
-        Assert.Equal([CombatTestFixture.GuardId], james.DirectSkillIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
+            james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
-        Assert.Equal([CombatTestFixture.GuardId], james.AbilityIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
+            james.AbilityIds);
     }
 
     [Fact]
-    public void ResolvePartyActor_CheckedInBlackMage_HasNoInventedFallbackAbility()
+    public void ResolvePartyActor_CheckedInBlackMage_KeepsOnlyIntrinsicAttack()
     {
         CombatantSnapshot james = CombatTestFixture
             .CreateFixedBattle(CombatTestFixture.BlackMageId)
             .Snapshot.GetRequiredCombatant("party-0");
 
-        Assert.Empty(james.DirectSkillIds);
+        Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
-        Assert.Empty(james.AbilityIds);
+        Assert.Equal([CombatTestFixture.AttackId], james.AbilityIds);
     }
 
     [Fact]

@@ -313,8 +313,10 @@ order. `CombatSnapshotFactory` copies those results; it never modifies their sou
 Each `CombatantSnapshot` preserves its existing `FormationPlacement`, which remains the one
 authority for battle-local instance ID, definition ID, side, anchor, and rectangular
 footprint. The snapshot adds independently owned read-only statistics and ability IDs plus
-current HP. Starting current HP equals resolved `stat.max-hp` and must be positive. It is a
-separate encounter value, so later damage will not rewrite maximum HP or authored content.
+current HP. Reusable runtime state accepts `0..MaximumHp`, where zero means defeated.
+`CombatSnapshotFactory` owns the stricter initialization rule: starting current HP equals the
+positive resolved `stat.max-hp`. Damage therefore replaces transient current HP without
+rewriting maximum HP or authored content.
 
 Party ability availability is actor `startingAbilityIds` followed by current-class unlocks at
 or below the actor's level. Authored order is preserved and duplicates keep their first
@@ -334,8 +336,8 @@ Ability target modes and rulesets are closed, code-owned contracts. Current JSON
 `target.self` with `rules.defense.guard` or `target.enemy.single` with
 `rules.damage.physical`; each ruleset has an exact required numeric-parameter shape and range.
 Unknown IDs and extra keys are errors rather than dormant behavior. This validation does not
-execute an ability. Actual state changes remain the responsibility of a future pure-core combat
-resolver, while Godot remains responsible only for presentation.
+execute an ability. Milestone 3.10's pure-core resolver owns the first physical state change,
+while Godot remains responsible only for presentation.
 
 `AbilityDefinitionContractValidator` owns only that ability-specific semantic table and returns
 path/code/message problems to the broader `ContentValidator`. It does not read files or resolve
@@ -352,14 +354,39 @@ snapshot at round one. It rejects wrong-side/category placements, duplicate batt
 missing or duplicate actor progress, inactive party actors, missing abilities, and invalid
 maximum HP rather than silently skipping or repairing a combatant.
 
-This snapshot belongs only to a future battle's lifetime. It is not added to `GameState`,
+This snapshot belongs only to a battle's lifetime. It is not added to `GameState`,
 `SaveEnvelope`, content JSON, or a Godot node. Milestone 3.0 does not connect it to
 `GameRoot`; the running project intentionally continues to show the Milestone 2.75
 non-combat formation placeholder.
 
-`ICombatResolver`, `CombatCommand`, and `CombatEvent` remain narrow reserved contracts from
-the architecture foundation. There is still no resolver implementation, target selection,
-damage, Guard behavior, turn order, enemy AI, outcome, or campaign result handling.
+### Single-action physical resolution
+
+Milestone 3.10 implements the first narrow use of the reserved `ICombatResolver`,
+`CombatCommand`, `CombatResolution`, and `CombatEvent` contracts. `CombatResolver` receives an
+already validated `IContentCatalog`; it does not read files or discover behavior dynamically.
+It accepts only a living combatant using an owned, free `target.enemy.single` plus
+`rules.damage.physical` ability against one living opposing combatant.
+
+```mermaid
+flowchart TD
+    Command["Snapshot + explicit command"] --> Validate["Validate actor, ability, target"]
+    Validate --> Resolve["Strength + power - Defense"]
+    Resolve --> Result["New snapshot + typed events"]
+```
+
+Physical damage uses decimal authored power and integer statistics. The formula takes a
+minimum of one, rounds the final decimal down explicitly, and clamps applied damage to the
+target's remaining integer HP. Only the target slot is replaced; round number, combatant
+order, formation, statistics, abilities, unrelated HP, and the input snapshot are preserved.
+`DamageApplied` reports the authoritative before/after values so presentation never repeats
+the calculation. `CombatantDefeated` reports reaching zero without deciding a battle or
+campaign outcome.
+
+Invalid runtime intent raises `CombatCommandValidationException` with a stable problem code
+instead of requiring a caller to parse text. Malformed catalog/snapshot invariants remain data
+errors. Resource-bearing abilities are rejected because current MP/resource state does not
+exist yet. Guard behavior, turn order, enemy AI, victory/defeat, rewards, campaign changes, and
+Godot presentation remain outside this resolver slice.
 
 ## Save and load
 

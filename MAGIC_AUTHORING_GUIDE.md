@@ -13,8 +13,10 @@ This separation supports replayable class builds and multi-discipline spells wit
 a discipline into an executable command. Unlocking a discipline never teaches every spell in
 it, and learning a spell without a matching discipline does not make it executable.
 
-The current milestone validates and resolves this structure but does not execute spell
-effects, spend MP, or show a Magic menu yet.
+The current code validates and resolves this structure. Milestone 3.10 can execute a learned,
+cost-free Magic ability only when it reuses the same single-enemy physical-damage contract as
+Attack. It still does not implement a magical-damage family, Guard effects, healing, MP
+spending, or a visible Magic menu.
 
 ## Step 1: create a magic discipline
 

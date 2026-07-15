@@ -17,7 +17,7 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(20, catalog.Count);
+        Assert.Equal(21, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Single(catalog.GetAll<DialogueDefinition>());
@@ -25,7 +25,7 @@ public sealed class ContentLoadingTests
         Assert.Equal(2, catalog.GetAll<ItemDefinition>().Count);
         Assert.Single(catalog.GetAll<EquipmentDefinition>());
         Assert.Single(catalog.GetAll<LootTableDefinition>());
-        Assert.Equal(2, catalog.GetAll<AbilityDefinition>().Count);
+        Assert.Equal(3, catalog.GetAll<AbilityDefinition>().Count);
         Assert.Empty(catalog.GetAll<MagicDisciplineDefinition>());
         Assert.Single(catalog.GetAll<EnemyDefinition>());
         Assert.Single(catalog.GetAll<EncounterDefinition>());
@@ -34,6 +34,7 @@ public sealed class ContentLoadingTests
 
         ActorDefinition actor = catalog.GetRequired<ActorDefinition>("actor.hero.james");
         Assert.Equal("actor.james.name", actor.DisplayNameKey);
+        Assert.Equal(["ability.command.attack"], actor.StartingAbilityIds);
 
         // Milestone 2.75 uses this exact checked-in record at the scene boundary. Keeping the
         // proof here confirms the production loader—not a duplicated placeholder list—owns

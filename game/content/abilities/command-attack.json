@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.command.attack",
+  "displayNameKey": "ability.attack.name",
+  "descriptionKey": "ability.attack.description",
+  "abilityKindId": "ability-kind.skill",
+  "magicDisciplineIds": [],
+  "targetingId": "target.enemy.single",
+  "costStatisticId": null,
+  "costAmount": 0,
+  "rulesetId": "rules.damage.physical",
+  "numericParameters": {
+    "power": 4
+  }
+}
