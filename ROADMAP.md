@@ -253,8 +253,8 @@ changes, encounter clearing, and battle saves. See `MILESTONE_3_10_GUIDE.md`.
 
 ### Remaining first-playable work
 
-- Extend the deterministic resolver with Guard, speed-based turn order, victory, and defeat—no
-  generalized effect scripting.
+- Extend the deterministic resolver with explicit action sequencing, speed-based turn order,
+  victory, and defeat—no generalized effect scripting or speculative class commands.
 - Keep the existing hero, starting classes, abilities, enemy, and fixed encounter as the small
   first-playable content set.
 - Add a minimal command menu and battle presentation that consumes domain events.
@@ -290,8 +290,8 @@ Only after the vertical slice is fun and stable:
 ## Concise first-playable proposal
 
 Build one gray-box room containing a save point and a single fixed enemy trigger. The
-player controls one hero, chooses **Attack** or **Guard**, defeats one enemy, returns to
-the room, sees the trigger remain cleared, and can save/reload that result. This slice
+player controls one hero, uses **Attack** to defeat one enemy, returns to the room, sees
+the trigger remain cleared, and can save/reload that result. This slice
 proves the four riskiest seams—content loading, scene-independent state, pure combat,
 and scene presentation—without building the full inventory, class, dialogue, or quest
 systems first.

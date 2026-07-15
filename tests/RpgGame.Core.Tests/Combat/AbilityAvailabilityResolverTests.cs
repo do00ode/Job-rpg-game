@@ -8,18 +8,14 @@ namespace RpgGame.Core.Tests.Combat;
 public sealed class AbilityAvailabilityResolverTests
 {
     [Fact]
-    public void ResolvePartyActor_CheckedInVanguard_HasIntrinsicAttackThenClassGuard()
+    public void ResolvePartyActor_CheckedInVanguard_HasOnlyIntrinsicAttack()
     {
         CombatantSnapshot james = CombatTestFixture.CreateFixedBattle()
             .Snapshot.GetRequiredCombatant("party-0");
 
-        Assert.Equal(
-            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
-            james.DirectSkillIds);
+        Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
-        Assert.Equal(
-            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
-            james.AbilityIds);
+        Assert.Equal([CombatTestFixture.AttackId], james.AbilityIds);
     }
 
     [Fact]

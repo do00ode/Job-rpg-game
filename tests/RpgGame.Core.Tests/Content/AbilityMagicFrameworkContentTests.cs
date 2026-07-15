@@ -14,17 +14,20 @@ public sealed class AbilityMagicFrameworkContentTests
         Assert.Empty(catalog.GetAll<MagicDisciplineDefinition>());
         AbilityDefinition attack = catalog.GetRequired<AbilityDefinition>(
             "ability.command.attack");
-        AbilityDefinition guard = catalog.GetRequired<AbilityDefinition>(
-            "ability.vanguard.guard");
         AbilityDefinition tackle = catalog.GetRequired<AbilityDefinition>(
             "ability.enemy.tackle");
 
         Assert.Equal(AbilityKindIds.Skill, attack.AbilityKindId);
         Assert.Empty(attack.MagicDisciplineIds);
-        Assert.Equal(AbilityKindIds.Skill, guard.AbilityKindId);
-        Assert.Empty(guard.MagicDisciplineIds);
         Assert.Equal(AbilityKindIds.Skill, tackle.AbilityKindId);
         Assert.Empty(tackle.MagicDisciplineIds);
+
+        // Vanilla class progression is intentionally blank until class skills are designed.
+        // Keeping this assertion beside the checked-in ability proof prevents a later content
+        // edit from silently reintroducing a class grant before its gameplay is approved.
+        Assert.All(
+            catalog.GetAll<ClassDefinition>(),
+            classDefinition => Assert.Empty(classDefinition.AbilityUnlocks));
     }
 
     [Fact]

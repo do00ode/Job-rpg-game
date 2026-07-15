@@ -32,7 +32,7 @@ James, the guide, the grid, and development controls. Startup details also appea
 **Output** panel:
 
 ```text
-Milestone 3.10 ready: loaded 21 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
+Milestone 3.10 ready: loaded 20 definitions with 0 data mod(s); new game ... starts at map.prologue.test-room.
 ```
 
 If content is invalid, startup prints every discovered problem and exits instead of giving
@@ -89,7 +89,7 @@ The 20 checked-in records cover every implemented category:
 | Category | Fixture purpose |
 |---|---|
 | Statistics | Bounds and dictionary references for HP, MP, strength, defense, and speed |
-| Abilities | One hero guard action and one enemy tackle action |
+| Abilities | James's intrinsic Attack and the enemy Tackle action |
 | Classes | Vanguard, Black Mage, and White Mage definitions |
 | Starting-class rule | Makes those three vanilla classes legal new-game choices |
 | Actor | Class-neutral James, the starting actor used by new-game creation |

@@ -6,10 +6,5 @@
 	"stat.max-hp": 12,
 	"stat.defense": 2
   },
-  "abilityUnlocks": [
-	{
-	  "level": 1,
-	  "abilityId": "ability.vanguard.guard"
-	}
-  ]
+  "abilityUnlocks": []
 }

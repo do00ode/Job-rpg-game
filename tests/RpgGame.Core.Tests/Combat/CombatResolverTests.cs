@@ -245,12 +245,27 @@ public sealed class CombatResolverTests
     [Fact]
     public void Resolve_NonphysicalAbilityContract_IsRejected()
     {
+        const string guardId = "ability.test.guard";
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatSnapshot ownedAbility = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => new CombatantSnapshot(
+                combatant.Placement,
+                combatant.Statistics,
+                [guardId],
+                combatant.CurrentHp));
+        AbilityDefinition guard = CombatTestFixture.Ability(guardId);
+        var resolver = new CombatResolver(new TestCatalog(guard));
 
-        AssertRejected(
-            battle,
-            new CombatCommand("party-0", CombatTestFixture.GuardId, ["enemy-0"]),
-            CombatCommandProblemCodes.AbilityContractUnsupported);
+        CombatCommandValidationException exception = Assert.Throws<
+            CombatCommandValidationException>(() => resolver.Resolve(
+                ownedAbility,
+                new CombatCommand("party-0", guardId, ["enemy-0"])));
+
+        Assert.Equal(
+            CombatCommandProblemCodes.AbilityContractUnsupported,
+            exception.ProblemCode);
     }
 
     [Fact]

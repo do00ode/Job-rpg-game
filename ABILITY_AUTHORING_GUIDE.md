@@ -97,8 +97,9 @@ Add its ID to an actor's `startingAbilityIds`:
 
 Use this only when the ability belongs to that character regardless of selected class. James
 is intentionally class-neutral, so class abilities normally belong on the class record.
-`ability.command.attack` is the deliberate exception: it is James's class-independent basic
-combat command, while Vanguard's Guard remains a Vanguard class unlock.
+`ability.command.attack` is James's class-independent basic combat command. The current
+vanilla classes deliberately ship with empty `abilityUnlocks`; future class abilities should
+still be connected through the class records when their gameplay is actually designed.
 
 ### Give it to an enemy
 

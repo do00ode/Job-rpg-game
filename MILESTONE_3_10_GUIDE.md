@@ -46,9 +46,9 @@ The base record `ability.command.attack` is a direct Skill using:
 | `power` | `4` |
 
 James lists Attack in `startingAbilityIds`. This makes it intrinsic to the hero regardless of
-whether the campaign chooses Vanguard, Black Mage, or White Mage. James remains class-neutral:
-Vanguard-specific Guard is still granted by the Vanguard class record, not hard-coded into the
-actor or resolver.
+whether the campaign chooses Vanguard, Black Mage, or White Mage. James remains class-neutral,
+and all current vanilla classes deliberately have empty `abilityUnlocks` arrays. Class skills
+can be authored later without changing the actor or resolver.
 
 This arrangement is also data-driven. Another authored actor may have a different intrinsic
 command list, and a mod-owned actor/class can reference any supported ability contract under
@@ -134,8 +134,9 @@ does not mean the party won or lost; battle outcome rules do not exist yet.
   contract.
 - Existing saves gain James's intrinsic Attack when content is resolved, just as other authored
   actor/class abilities are resolved from the current catalog.
-- Guard content still validates and appears in Vanguard availability, but this resolver rejects
-  it until Guard state and timing are designed.
+- Vanilla classes currently grant no abilities. The generic class-unlock and defensive
+  authoring contracts remain available for later content, but this resolver executes only the
+  physical-damage contract documented above.
 - Cost-bearing abilities remain unsupported because `stat.max-mp` is a maximum statistic, not
   mutable current MP.
 

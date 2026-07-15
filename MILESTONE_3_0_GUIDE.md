@@ -88,8 +88,9 @@ keeping the first occurrence, and resolves every included ID as an `AbilityDefin
 
 James remains class-neutral. At Milestone 3.0 his checked-in actor definition granted no
 intrinsic ability. Milestone 3.10 deliberately adds `ability.command.attack` as a universal
-actor starting ability; Vanguard still adds `ability.vanguard.guard`, while a Black Mage or
-White Mage James receives Attack without inheriting Vanguard-only Guard.
+actor starting ability. Every current vanilla class has an empty `abilityUnlocks` array, so
+Vanguard, Black Mage, and White Mage James all receive the same intrinsic Attack until class
+skills are deliberately authored in a later milestone.
 
 Milestone 3.05 evolves this flat list into a structured party projection with direct Skills
 and Magic discipline containers. The compatibility `AbilityIds` view still means the complete

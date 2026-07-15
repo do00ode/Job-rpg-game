@@ -38,13 +38,14 @@ it is a stable lookup key. A later localization file can map `actor.james.name` 
 without making display text part of identity.
 
 `startingAbilityIds` should contain only abilities James receives regardless of class.
-Vanguard's Guard belongs in `classes/vanguard.json`, not on James, because a Black Mage or
-White Mage James should not inherit Vanguard-only training.
+Milestone 3.10 adds `ability.command.attack` there because Attack is the universal basic
+command James should retain with every starting class. That intrinsic grant does not make
+James a Vanguard and does not change which classes can be selected.
 
-Milestone 3.10 adds `ability.command.attack` to James's `startingAbilityIds` for the opposite
-reason: Attack is the universal basic command James should retain with every starting class.
-That intrinsic grant does not make James a Vanguard and does not change which classes can be
-selected.
+All current vanilla classes intentionally have empty `abilityUnlocks` arrays. When class
+skills are designed later, grant them from the owning class record rather than adding them to
+James. This keeps the class choice meaningful without hard-coding Vanguard—or any other
+class—into actor identity or combat code.
 
 ## Adding a vanilla starting class
 

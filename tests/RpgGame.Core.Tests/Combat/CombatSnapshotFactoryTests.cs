@@ -72,9 +72,7 @@ public sealed class CombatSnapshotFactoryTests
             .Snapshot.GetRequiredCombatant("party-0");
 
         Assert.NotNull(james.PartyAbilityAvailability);
-        Assert.Equal(
-            [CombatTestFixture.AttackId, CombatTestFixture.GuardId],
-            james.DirectSkillIds);
+        Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
         Assert.Equal(james.PartyAbilityAvailability!.ExecutableAbilityIds, james.AbilityIds);
     }
@@ -98,7 +96,7 @@ public sealed class CombatSnapshotFactoryTests
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
         EnemyDefinition enemy = battle.Content.GetRequired<EnemyDefinition>(
             CombatTestFixture.GreenSlimeId);
-        enemy.AbilityIds.Insert(0, CombatTestFixture.GuardId);
+        enemy.AbilityIds.Insert(0, CombatTestFixture.AttackId);
 
         CombatSnapshot snapshot = new CombatSnapshotFactory(battle.Content).Create(
             battle.Campaign,
@@ -107,7 +105,7 @@ public sealed class CombatSnapshotFactoryTests
             battle.PartyPlacements);
 
         Assert.Equal(
-            [CombatTestFixture.GuardId, CombatTestFixture.TackleId],
+            [CombatTestFixture.AttackId, CombatTestFixture.TackleId],
             snapshot.GetRequiredCombatant("enemy-0").AbilityIds);
     }
 
@@ -387,7 +385,7 @@ public sealed class CombatSnapshotFactoryTests
             ((IList<CombatantSnapshot>)battle.Snapshot.Combatants).Clear());
 
         battle.Content.GetRequired<EnemyDefinition>(
-            CombatTestFixture.GreenSlimeId).AbilityIds.Add(CombatTestFixture.GuardId);
+            CombatTestFixture.GreenSlimeId).AbilityIds.Add(CombatTestFixture.AttackId);
         Assert.Equal([CombatTestFixture.TackleId], enemy.AbilityIds);
     }
 
