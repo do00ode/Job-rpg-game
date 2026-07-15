@@ -8,9 +8,9 @@ namespace RpgGame.Core.Combat;
 /// Applies one currently supported physical-damage command to an immutable combat snapshot.
 /// </summary>
 /// <remarks>
-/// This Milestone 3.10 resolver intentionally has no turn queue, AI, Guard, outcome, rewards,
-/// randomness, or Godot dependency. It owns only the rules needed to prove one complete action:
-/// validate intent, calculate deterministic damage, replace the target state, and emit facts.
+/// This resolver intentionally has no turn queue, AI, Guard, rewards, randomness, or Godot
+/// dependency. It owns only the rules needed to prove one complete action: validate intent,
+/// calculate deterministic damage, replace the target state, and emit battle-local facts.
 /// </remarks>
 public sealed class CombatResolver : ICombatResolver
 {
@@ -31,6 +31,15 @@ public sealed class CombatResolver : ICombatResolver
     {
         ArgumentNullException.ThrowIfNull(current);
         ArgumentNullException.ThrowIfNull(command);
+
+        BattleOutcome startingOutcome = current.Outcome;
+        if (startingOutcome != BattleOutcome.InProgress)
+        {
+            Reject(
+                CombatCommandProblemCodes.BattleAlreadyEnded,
+                $"Combat command cannot be resolved because the battle outcome is "
+                + $"'{startingOutcome}'.");
+        }
 
         LocatedCombatant actor = FindRequiredCombatant(
             current,
@@ -140,6 +149,15 @@ public sealed class CombatResolver : ICombatResolver
         if (nextHp == 0)
         {
             events.Add(new CombatantDefeated(target.Value.InstanceId));
+        }
+
+        // Outcome is derived from the replacement snapshot, never guessed from the selected
+        // target. This matters when a side contains several combatants: defeating one member is
+        // not a victory, while defeating its final living member emits exactly one terminal fact.
+        BattleOutcome nextOutcome = nextSnapshot.Outcome;
+        if (nextOutcome != BattleOutcome.InProgress)
+        {
+            events.Add(new BattleEnded(nextOutcome));
         }
 
         return new CombatResolution(nextSnapshot, events);

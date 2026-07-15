@@ -269,10 +269,25 @@ skills, current MP/resource payment, target retargeting, advanced AI, randomness
 defeat campaign outcomes, encounter clearing, loot rolls, rewards, and battle saves. See
 `MILESTONE_3_12_GUIDE.md`.
 
+### Milestone 3.13 — Battle outcome (implementation review pending)
+
+- Derive one closed `BattleOutcome` from the living combatants in each immutable snapshot.
+- Distinguish `InProgress`, `PartyVictory`, and `PartyDefeat` without duplicating outcome state.
+- Emit one typed `BattleEnded` event after the damage and defeat facts that end a battle.
+- Reject single actions and complete rounds submitted after a terminal outcome.
+
+Exit criteria: headless tests prove both terminal outcomes, stable event order, no terminal
+event for defeating a nonfinal combatant, rejection through both combat resolution entry
+points after battle end, and explicit failure for malformed both-sides-defeated snapshots.
+
+Explicitly excluded: Godot battle presentation, campaign flags, encounter clearing, rewards,
+loot rolls, experience, gold, battle saves, new abilities, Guard, current MP, statuses, and
+changes to content or save schemas. See `MILESTONE_3_13_GUIDE.md`.
+
 ### Remaining first-playable work
 
-- Connect party command collection to the pure round resolver and translate terminal battle
-  state into a narrow victory/defeat application result.
+- Connect party command collection to the pure round resolver and translate `BattleEnded`
+  into a narrow application result.
 - Keep the existing hero, starting classes, abilities, enemy, and fixed encounter as the small
   first-playable content set.
 - Add a minimal command menu and battle presentation that consumes domain events.

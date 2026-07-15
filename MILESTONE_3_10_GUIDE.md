@@ -126,8 +126,16 @@ DamageApplied
 CombatantDefeated
 ```
 
-Godot presentation can animate those facts later without recalculating damage. A defeated fact
-does not mean the party won or lost; battle outcome rules do not exist yet.
+Milestone 3.13 extends that order only when the target was the final living member of its side:
+
+```text
+DamageApplied
+CombatantDefeated
+BattleEnded
+```
+
+Godot presentation can animate those facts later without recalculating damage. Defeating a
+nonfinal combatant still emits no `BattleEnded`; see `MILESTONE_3_13_GUIDE.md`.
 
 ## Compatibility
 
@@ -191,9 +199,12 @@ new visible battle behavior is expected when running the game.
 ## Explicitly deferred
 
 - Guard execution and defensive state;
-- rounds, action queues, speed order, and repeated turn flow;
-- enemy AI and automatic command selection;
+- additional action effects beyond the implemented physical-damage contract;
 - current MP, resource payment, items, and status effects;
-- victory/defeat outcomes, encounter clearing, experience, loot rolls, and rewards;
+- campaign outcome application, encounter clearing, experience, loot rolls, and rewards;
 - campaign-state changes and battle saves;
 - Godot battle menus, targeting UI, animation, sound, and event presentation.
+
+Complete deterministic rounds and the basic enemy planner now exist in Milestone 3.12, while
+Milestone 3.13 adds the battle-local outcome. They compose this resolver without making it own
+UI, campaign, or reward behavior.

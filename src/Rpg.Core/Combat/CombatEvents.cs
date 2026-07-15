@@ -18,7 +18,31 @@ public sealed record DamageApplied(
 
 /// <summary>Reports that one combatant reached zero HP during the resolved action.</summary>
 /// <remarks>
-/// This is a fact about battle-local state only. It does not declare victory, defeat, rewards,
-/// encounter clearing, or any campaign-state change.
+/// This is a fact about one combatant. When the defeated combatant was the last living member of
+/// its side, a separate <see cref="BattleEnded"/> follows it to describe the battle outcome.
 /// </remarks>
 public sealed record CombatantDefeated(string CombatantId) : CombatEvent;
+
+/// <summary>Reports the one terminal outcome caused by the just-resolved action.</summary>
+/// <remarks>
+/// This event is emitted after the damage and combatant-defeated facts that caused it. It remains
+/// presentation-neutral and battle-local: victory rewards, encounter clearing, campaign flags,
+/// save changes, animation, and sound belong to later application or Godot milestones.
+/// </remarks>
+public sealed record BattleEnded : CombatEvent
+{
+    public BattleEnded(BattleOutcome outcome)
+    {
+        if (outcome == BattleOutcome.InProgress || !Enum.IsDefined(outcome))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(outcome),
+                outcome,
+                "A battle-ended event requires PartyVictory or PartyDefeat.");
+        }
+
+        Outcome = outcome;
+    }
+
+    public BattleOutcome Outcome { get; }
+}

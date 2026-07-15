@@ -379,14 +379,15 @@ minimum of one, rounds the final decimal down explicitly, and clamps applied dam
 target's remaining integer HP. Only the target slot is replaced; round number, combatant
 order, formation, statistics, abilities, unrelated HP, and the input snapshot are preserved.
 `DamageApplied` reports the authoritative before/after values so presentation never repeats
-the calculation. `CombatantDefeated` reports reaching zero without deciding a battle or
-campaign outcome.
+the calculation. `CombatantDefeated` reports one combatant reaching zero. Milestone 3.13 adds
+a separate `BattleEnded` fact only when that defeat removes the final living member of a side.
 
 Invalid runtime intent raises `CombatCommandValidationException` with a stable problem code
 instead of requiring a caller to parse text. Malformed catalog/snapshot invariants remain data
 errors. Resource-bearing abilities are rejected because current MP/resource state does not
-exist yet. Guard behavior, turn order, enemy AI, victory/defeat, rewards, campaign changes, and
-Godot presentation remain outside this resolver slice.
+exist yet. Guard behavior, rewards, campaign changes, and Godot presentation remain outside
+this resolver. Milestone 3.12 composes actions into ordered rounds and Milestone 3.13 derives
+the battle-local outcome without moving those responsibilities into presentation.
 
 ### Complete deterministic rounds
 
@@ -424,6 +425,33 @@ support without creating a ruleset registry or general AI framework.
 Round coordination and planning remain pure .NET and transient. They are not connected to the
 current Godot battle placeholder, do not modify saves, and do not reintroduce Guard or vanilla
 class abilities. See `MILESTONE_3_12_GUIDE.md`.
+
+### Battle outcome
+
+Milestone 3.13 makes the terminal query a closed core contract. `CombatSnapshot.Outcome`
+derives `InProgress`, `PartyVictory`, or `PartyDefeat` from current immutable HP. It is not a
+separately supplied constructor value, so an outcome cannot become stale when a resolver
+replaces combatant state.
+
+The single action that defeats a side returns events in causal order:
+
+```text
+DamageApplied
+CombatantDefeated
+BattleEnded
+```
+
+`CombatRoundResolver` carries those events forward unchanged and stops all remaining actions.
+Both `CombatResolver` and `CombatRoundResolver` reject new commands after a terminal outcome;
+callers therefore cannot create a second end event by resolving the terminal snapshot again.
+A snapshot in which both sides are defeated is rejected as malformed state because the
+current single-target rules cannot produce it and the requested three-value outcome has no
+draw result.
+
+Outcome remains encounter-lifetime data. `PartyVictory` does not grant items, roll a loot
+table, clear an encounter, set a `GameState` flag, or save a battle. A later application/Godot
+slice will consume `BattleEnded` and explicitly decide those campaign and presentation
+effects. See `MILESTONE_3_13_GUIDE.md`.
 
 ## Save and load
 

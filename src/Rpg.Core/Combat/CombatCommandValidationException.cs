@@ -8,6 +8,7 @@ namespace RpgGame.Core.Combat;
 /// </remarks>
 public static class CombatCommandProblemCodes
 {
+    public const string BattleAlreadyEnded = "combat.command.battle-already-ended";
     public const string ActorMissing = "combat.command.actor-missing";
     public const string ActorDefeated = "combat.command.actor-defeated";
     public const string AbilityNotOwned = "combat.command.ability-not-owned";

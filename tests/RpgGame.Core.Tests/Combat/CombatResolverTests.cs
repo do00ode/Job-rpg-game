@@ -7,6 +7,14 @@ namespace RpgGame.Core.Tests.Combat;
 public sealed class CombatResolverTests
 {
     [Fact]
+    public void CombatSnapshot_InitialBattleOutcomeIsInProgress()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+
+        Assert.Equal(BattleOutcome.InProgress, battle.Snapshot.Outcome);
+    }
+
+    [Fact]
     public void Resolve_Attack_ReturnsNewSnapshotAndDamageEventWithoutMutatingInput()
     {
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
@@ -79,6 +87,116 @@ public sealed class CombatResolverTests
     }
 
     [Fact]
+    public void Resolve_FinalEnemyDefeated_EmitsPartyVictoryAfterDamageAndDefeat()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatSnapshot finalEnemy = ReplaceCombatant(
+            battle.Snapshot,
+            "enemy-0",
+            combatant => combatant.WithCurrentHp(0));
+        finalEnemy = ReplaceCombatant(
+            finalEnemy,
+            "enemy-1",
+            combatant => combatant.WithCurrentHp(5));
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            finalEnemy,
+            Attack("party-0", "enemy-1"));
+
+        Assert.Equal(BattleOutcome.PartyVictory, resolution.Next.Outcome);
+        Assert.Collection(
+            resolution.Events,
+            combatEvent => Assert.IsType<DamageApplied>(combatEvent),
+            combatEvent => Assert.Equal(
+                "enemy-1",
+                Assert.IsType<CombatantDefeated>(combatEvent).CombatantId),
+            combatEvent => Assert.Equal(
+                BattleOutcome.PartyVictory,
+                Assert.IsType<BattleEnded>(combatEvent).Outcome));
+    }
+
+    [Fact]
+    public void Resolve_FinalPartyMemberDefeated_EmitsPartyDefeatAfterDamageAndDefeat()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatSnapshot vulnerableParty = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => combatant.WithCurrentHp(4));
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            vulnerableParty,
+            new CombatCommand(
+                "enemy-0",
+                CombatTestFixture.TackleId,
+                ["party-0"]));
+
+        Assert.Equal(BattleOutcome.PartyDefeat, resolution.Next.Outcome);
+        Assert.Collection(
+            resolution.Events,
+            combatEvent => Assert.IsType<DamageApplied>(combatEvent),
+            combatEvent => Assert.Equal(
+                "party-0",
+                Assert.IsType<CombatantDefeated>(combatEvent).CombatantId),
+            combatEvent => Assert.Equal(
+                BattleOutcome.PartyDefeat,
+                Assert.IsType<BattleEnded>(combatEvent).Outcome));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Resolve_CommandAfterBattleEnds_IsRejectedBeforeActorOrTargetChecks(
+        bool partyWon)
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatSnapshot terminal = battle.Snapshot;
+        string[] defeatedIds = partyWon
+            ? ["enemy-0", "enemy-1"]
+            : ["party-0"];
+        foreach (string instanceId in defeatedIds)
+        {
+            terminal = ReplaceCombatant(
+                terminal,
+                instanceId,
+                combatant => combatant.WithCurrentHp(0));
+        }
+
+        AssertRejected(
+            battle,
+            Attack("party-0", "enemy-0"),
+            CombatCommandProblemCodes.BattleAlreadyEnded,
+            terminal);
+    }
+
+    [Fact]
+    public void CombatSnapshot_BothSidesDefeatedCannotChooseAnArbitraryOutcome()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatSnapshot malformed = battle.Snapshot;
+        foreach (CombatantSnapshot combatant in battle.Snapshot.Combatants)
+        {
+            malformed = ReplaceCombatant(
+                malformed,
+                combatant.InstanceId,
+                current => current.WithCurrentHp(0));
+        }
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(
+            () => malformed.Outcome);
+
+        Assert.Contains("both sides", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(BattleOutcome.InProgress)]
+    [InlineData((BattleOutcome)99)]
+    public void BattleEnded_RejectsNonterminalOrUnknownOutcome(BattleOutcome outcome)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BattleEnded(outcome));
+    }
+
+    [Fact]
     public void Resolve_HighDefenseStillTakesMinimumOneDamage()
     {
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
@@ -144,12 +262,14 @@ public sealed class CombatResolverTests
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
         CombatSnapshot defeatedActor = ReplaceCombatant(
             battle.Snapshot,
-            "party-0",
+            "enemy-0",
             combatant => combatant.WithCurrentHp(0));
 
+        // enemy-1 remains alive, so this snapshot is still InProgress. That isolates the
+        // actor-defeated rule instead of correctly hitting the broader battle-ended guard.
         AssertRejected(
             battle,
-            Attack("party-0", "enemy-0"),
+            Attack("enemy-0", "party-0"),
             CombatCommandProblemCodes.ActorDefeated,
             defeatedActor);
     }

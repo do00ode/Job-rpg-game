@@ -30,13 +30,13 @@ public sealed class CombatRoundResolver : ICombatRoundResolver
         ArgumentNullException.ThrowIfNull(current);
         ArgumentNullException.ThrowIfNull(commands);
 
-        if (current.IsSideDefeated(BattleSide.Party)
-            || current.IsSideDefeated(BattleSide.Enemy))
+        BattleOutcome startingOutcome = current.Outcome;
+        if (startingOutcome != BattleOutcome.InProgress)
         {
             Reject(
                 CombatRoundProblemCodes.BattleAlreadyEnded,
-                $"Round {current.Round} cannot begin because at least one side is already "
-                + "defeated.");
+                $"Round {current.Round} cannot begin because the battle outcome is "
+                + $"'{startingOutcome}'.");
         }
 
         IReadOnlyDictionary<string, CombatantSnapshot> startingCombatants =
@@ -71,8 +71,7 @@ public sealed class CombatRoundResolver : ICombatRoundResolver
         var events = new List<CombatEvent>();
         foreach (PlannedCommand planned in orderedCommands)
         {
-            if (next.IsSideDefeated(BattleSide.Party)
-                || next.IsSideDefeated(BattleSide.Enemy))
+            if (next.Outcome != BattleOutcome.InProgress)
             {
                 break;
             }
@@ -93,8 +92,7 @@ public sealed class CombatRoundResolver : ICombatRoundResolver
 
         // Round means "the round accepting commands." Only create the next round number when
         // both sides survived and another round can actually begin.
-        if (!next.IsSideDefeated(BattleSide.Party)
-            && !next.IsSideDefeated(BattleSide.Enemy))
+        if (next.Outcome == BattleOutcome.InProgress)
         {
             if (next.Round == int.MaxValue)
             {

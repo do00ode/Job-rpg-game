@@ -41,6 +41,7 @@ public sealed class CombatRoundResolverTests
 
         Assert.True(current.IsSideDefeated(BattleSide.Enemy));
         Assert.False(current.IsSideDefeated(BattleSide.Party));
+        Assert.Equal(BattleOutcome.PartyVictory, current.Outcome);
         Assert.Equal(4, current.Round);
         Assert.Equal(80, current.GetRequiredCombatant("party-0").CurrentHp);
     }
@@ -138,9 +139,12 @@ public sealed class CombatRoundResolverTests
         DamageApplied damage = Assert.IsType<DamageApplied>(resolution.Events[0]);
         Assert.Equal("party-0", damage.ActingCombatantId);
         Assert.IsType<CombatantDefeated>(resolution.Events[1]);
-        Assert.Equal(2, resolution.Events.Count);
+        BattleEnded ended = Assert.IsType<BattleEnded>(resolution.Events[2]);
+        Assert.Equal(BattleOutcome.PartyVictory, ended.Outcome);
+        Assert.Equal(3, resolution.Events.Count);
         Assert.True(resolution.Next.IsSideDefeated(BattleSide.Enemy));
         Assert.False(resolution.Next.IsSideDefeated(BattleSide.Party));
+        Assert.Equal(BattleOutcome.PartyVictory, resolution.Next.Outcome);
         Assert.Equal(1, resolution.Next.Round);
         Assert.Equal(96, resolution.Next.GetRequiredCombatant("party-0").CurrentHp);
     }
@@ -161,9 +165,12 @@ public sealed class CombatRoundResolverTests
         DamageApplied damage = Assert.IsType<DamageApplied>(resolution.Events[0]);
         Assert.Equal("enemy-0", damage.ActingCombatantId);
         Assert.IsType<CombatantDefeated>(resolution.Events[1]);
-        Assert.Equal(2, resolution.Events.Count);
+        BattleEnded ended = Assert.IsType<BattleEnded>(resolution.Events[2]);
+        Assert.Equal(BattleOutcome.PartyDefeat, ended.Outcome);
+        Assert.Equal(3, resolution.Events.Count);
         Assert.True(resolution.Next.IsSideDefeated(BattleSide.Party));
         Assert.False(resolution.Next.IsSideDefeated(BattleSide.Enemy));
+        Assert.Equal(BattleOutcome.PartyDefeat, resolution.Next.Outcome);
         Assert.Equal(1, resolution.Next.Round);
         Assert.Equal(22, resolution.Next.GetRequiredCombatant("enemy-0").CurrentHp);
     }

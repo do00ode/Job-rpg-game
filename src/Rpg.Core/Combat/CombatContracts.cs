@@ -49,6 +49,19 @@ public interface IRandomSource
     int Next(int minInclusive, int maxExclusive);
 }
 
+/// <summary>Battle-local progress derived from which sides still have living combatants.</summary>
+/// <remarks>
+/// Outcome is transient combat state. It is not a content ID, a saved campaign flag, or a
+/// reward decision. Keeping the three currently meaningful values closed in code prevents
+/// presentation and future application layers from inventing incompatible string statuses.
+/// </remarks>
+public enum BattleOutcome
+{
+    InProgress,
+    PartyVictory,
+    PartyDefeat,
+}
+
 /// <summary>
 /// Complete immutable state at one point in a transient battle.
 /// </summary>
@@ -90,6 +103,39 @@ public sealed record CombatSnapshot
 
     /// <summary>Party combatants first, then enemies, each in supplied placement order.</summary>
     public IReadOnlyList<CombatantSnapshot> Combatants { get; }
+
+    /// <summary>
+    /// Gets the authoritative battle-local outcome derived from the current immutable HP state.
+    /// </summary>
+    /// <remarks>
+    /// Outcome is deliberately calculated rather than accepted as a constructor argument. A
+    /// separately stored value could say "in progress" after the final enemy reached zero HP.
+    /// Current single-target rules cannot defeat both sides at once; encountering such a snapshot
+    /// indicates malformed runtime state and is rejected instead of choosing an arbitrary winner.
+    /// </remarks>
+    public BattleOutcome Outcome
+    {
+        get
+        {
+            bool partyDefeated = IsSideDefeated(BattleSide.Party);
+            bool enemyDefeated = IsSideDefeated(BattleSide.Enemy);
+            if (partyDefeated && enemyDefeated)
+            {
+                throw new InvalidDataException(
+                    "A combat snapshot cannot determine an outcome because both sides are "
+                    + "defeated.");
+            }
+
+            if (enemyDefeated)
+            {
+                return BattleOutcome.PartyVictory;
+            }
+
+            return partyDefeated
+                ? BattleOutcome.PartyDefeat
+                : BattleOutcome.InProgress;
+        }
+    }
 
     /// <summary>Finds one combatant by deterministic battle-local identity.</summary>
     public CombatantSnapshot GetRequiredCombatant(string instanceId)

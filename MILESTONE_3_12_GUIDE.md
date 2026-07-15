@@ -97,7 +97,8 @@ until multiple controllable party members and a real battle menu exist.
 - Calling `ResolveRound` on an already terminal snapshot is rejected.
 
 There is no separate round-advance command, transient-effect cleanup phase, or round event.
-The existing `DamageApplied` and `CombatantDefeated` events remain in exact action order.
+The existing action events remain in exact action order. Milestone 3.13 now appends a typed
+`BattleEnded` event when an action defeats a side; see `MILESTONE_3_13_GUIDE.md`.
 
 ## Basic enemy planner
 
@@ -129,7 +130,7 @@ documentation must change together.
 - No random source is consumed, so identical snapshots and commands produce identical results.
 
 Explicitly deferred: Godot command UI, party input collection, automatic retargeting, resource
-costs, class skills, advanced AI profiles, status effects, victory/reward application,
+costs, class skills, advanced AI profiles, status effects, campaign victory/reward application,
 encounter clearing, loot rolls, battle saves, animation, and sound.
 
 ## Automated coverage
@@ -140,6 +141,7 @@ Focused tests prove:
 - Speed descending and ordinal instance-ID ties are deterministic;
 - a combatant defeated before its action is skipped;
 - defeating the final member of either side stops later actions;
+- terminal rounds preserve the typed `PartyVictory` or `PartyDefeat` outcome and end event;
 - only nonterminal results advance the round number;
 - missing, duplicate, unknown, and initially defeated command actors are rejected;
 - the checked-in slime plans Tackle as an ordinary command;

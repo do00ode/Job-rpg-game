@@ -38,6 +38,8 @@ a general-purpose RPG engine.
     validation, physical damage, combat state replacement, or combat domain events.
 20. Read `MILESTONE_3_12_GUIDE.md` before changing complete-round command collection,
     Speed ordering, defeated-actor skipping, terminal-side detection, or enemy planning.
+21. Read `MILESTONE_3_13_GUIDE.md` before changing battle outcome derivation, terminal
+    command rejection, or the typed battle-ended event.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.
