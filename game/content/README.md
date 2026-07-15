@@ -24,6 +24,8 @@ command. Every vanilla class currently has an empty `abilityUnlocks` array; clas
 will be added through those class records only after their gameplay is deliberately designed.
 Ability target, ruleset, and numeric parameters use the closed contracts documented in
 `ABILITY_AUTHORING_GUIDE.md`; arbitrary behavior strings no longer pass validation.
+The pure-core round coordinator can combine James's Attack with ordinary enemy Tackle commands
+using deterministic Speed/instance-ID order. This has no Godot battle-menu presentation yet.
 Green-slime drops live in
 `loot-tables/green-slime.json`; the enemy references that reusable definition rather than
 embedding reward data beside its combat statistics.

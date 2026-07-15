@@ -365,6 +365,11 @@ marks the transient combatant defeated. Current HP is runtime combat state, not 
 save/content field. Guard and resource costs remain validated authoring contracts but are not
 executed yet.
 
+Milestone 3.12 does not add an AI field or change this schema. Its basic enemy planner scans an
+enemy's existing `abilityIds` in authored order and selects the first cost-free ability using
+the currently executable physical contract. Target choice and Speed ordering are runtime core
+rules, not additional ability or enemy JSON properties.
+
 Cost fields remain part of the early DTO, but current resource spending is not implemented.
 New content should use null/zero until mutable current MP/resource ownership is defined. In
 particular, `stat.max-mp` is a maximum statistic and must not be treated as current MP.

@@ -251,10 +251,28 @@ Explicitly excluded: Guard execution, current MP or resource payment, rounds, sp
 enemy AI, victory, defeat outcomes, loot rolls, rewards, Godot battle UI, campaign-state
 changes, encounter clearing, and battle saves. See `MILESTONE_3_10_GUIDE.md`.
 
+### Milestone 3.12 — Complete deterministic rounds (implementation review pending)
+
+- Require exactly one ordinary command from every combatant alive at round start.
+- Order commands by Speed descending, then ordinal battle-local instance ID.
+- Skip a pending actor defeated by an earlier action and stop when either side is defeated.
+- Advance the round number only when both sides survive the complete command set.
+- Add a deterministic enemy planner using the first executable authored ability and the
+  lowest-current-HP living party target, with instance ID as the tie-breaker.
+
+Exit criteria: headless tests prove input command order cannot affect action order, Speed ties
+are stable, defeated actors lose pending actions, terminal sides stop later actions, base
+slimes plan ordinary Tackle commands, and nonterminal results advance exactly one round.
+
+Explicitly excluded: Godot command menus, automatic party-command collection, Guard, class
+skills, current MP/resource payment, target retargeting, advanced AI, randomness, victory or
+defeat campaign outcomes, encounter clearing, loot rolls, rewards, and battle saves. See
+`MILESTONE_3_12_GUIDE.md`.
+
 ### Remaining first-playable work
 
-- Extend the deterministic resolver with explicit action sequencing, speed-based turn order,
-  victory, and defeat—no generalized effect scripting or speculative class commands.
+- Connect party command collection to the pure round resolver and translate terminal battle
+  state into a narrow victory/defeat application result.
 - Keep the existing hero, starting classes, abilities, enemy, and fixed encounter as the small
   first-playable content set.
 - Add a minimal command menu and battle presentation that consumes domain events.

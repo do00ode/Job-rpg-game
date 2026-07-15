@@ -388,6 +388,43 @@ errors. Resource-bearing abilities are rejected because current MP/resource stat
 exist yet. Guard behavior, turn order, enemy AI, victory/defeat, rewards, campaign changes, and
 Godot presentation remain outside this resolver slice.
 
+### Complete deterministic rounds
+
+Milestone 3.12 composes the single-action resolver without moving its validation or damage
+formula. The future battle UI will collect one ordinary `CombatCommand` for each living party
+member. `EnemyCommandPlanner` supplies the same command type for each living enemy. Once every
+living combatant has exactly one command, `CombatRoundResolver` orders and executes them.
+
+```mermaid
+flowchart TD
+    Party["Collected party commands"] --> Round["CombatRoundResolver"]
+    AI["EnemyCommandPlanner commands"] --> Round
+    Round --> Action["CombatResolver per action"]
+    Action --> Result["Next snapshot + ordered events"]
+```
+
+Ordering uses resolved `stat.speed` descending, then battle-local instance ID ascending with
+ordinal comparison. It never uses content file order, dictionary iteration, display names, or
+Godot node order. Commands are collected from the starting snapshot, but each actor is reread
+from the newest immutable snapshot before acting. A combatant defeated by a faster action is
+skipped. Processing stops as soon as either `BattleSide` has no living combatants.
+
+If both sides survive all planned actions, the returned snapshot advances from round `N` to
+round `N + 1`. A terminal result retains round `N` because another round never begins. This
+terminal query remains battle-local: Milestone 3.12 does not award loot, clear an encounter,
+or write victory/defeat into `GameState`.
+
+The basic enemy policy scans `EnemyDefinition.AbilityIds` in authored order, skips contracts or
+costs the current resolver cannot execute, and uses the first usable ability. It selects the
+living party target with the lowest absolute current HP, then breaks equal-HP ties by ordinal
+instance ID. `CombatAbilityExecutionSupport` is the one small shared description used by both
+the planner and action resolver, preventing AI from selecting a command the resolver does not
+support without creating a ruleset registry or general AI framework.
+
+Round coordination and planning remain pure .NET and transient. They are not connected to the
+current Godot battle placeholder, do not modify saves, and do not reintroduce Guard or vanilla
+class abilities. See `MILESTONE_3_12_GUIDE.md`.
+
 ## Save and load
 
 `SaveEnvelope` separates the file format version from the internal state schema. Save
@@ -444,7 +481,10 @@ cover Skill/Magic gating, multi-discipline projection, code-owned target/ruleset
 contracts, duplicate grants, required JSON schema versions, and defensive hand-built catalogs.
 Loot-table content tests cover category-specific enemy schema versions, typed enemy/table/item
 references, probability and quantity boundaries, null handling, legacy inline-shape rejection,
-and namespaced mod tables without performing random rolls.
+and namespaced mod tables without performing random rolls. Milestones 3.10 and 3.12 add
+deterministic coverage for physical damage, immutable defeat state, complete command sets,
+Speed/instance-ID order, defeated-actor skipping, terminal-side stopping, and the basic enemy
+ability/target policy.
 
 ## Decisions intentionally deferred
 
@@ -453,7 +493,7 @@ and namespaced mod tables without performing random rolls.
 - dialogue choices, conditions, cutscene commands, and localization;
 - general map transitions and random/scalable encounter triggering details;
 - inventory stacking and equipment slot rules;
-- AI planning model;
+- advanced AI profiles, scoring, and authored behavior differences;
 - final save-slot UI and platform paths;
 - content hot reload and custom editor tooling;
 - a mod enable/disable or profile UI;

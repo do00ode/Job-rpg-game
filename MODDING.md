@@ -281,6 +281,13 @@ contract and granted through the normal actor/class availability rules receives 
 deterministic behavior. Cost-bearing abilities, Guard, and new effect strings remain
 non-executable; data still cannot supply code.
 
+Milestone 3.12's basic enemy planner reads a mod enemy's existing `abilityIds` in authored
+order and chooses the first entry the current resolver can execute. It then targets the living
+party combatant with the lowest absolute current HP, breaking ties by battle-local instance
+ID. Ability array order therefore matters for this deliberately simple policy, but mods still
+cannot provide AI scripts, formulas, priorities, or behavior callbacks. This runtime policy is
+additive and does not change the mod data-API version.
+
 Current additive mods also cannot patch a vanilla class's `abilityUnlocks` or
 `magicDisciplineUnlocks`. A mod that distributes a spell should grant it from a class owned by
 that mod. Extending vanilla progression needs a future explicit composition contract rather

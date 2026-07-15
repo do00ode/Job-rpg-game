@@ -36,6 +36,8 @@ a general-purpose RPG engine.
     or future reward-resolution behavior.
 19. Read `MILESTONE_3_10_GUIDE.md` before changing runtime HP invariants, combat-command
     validation, physical damage, combat state replacement, or combat domain events.
+20. Read `MILESTONE_3_12_GUIDE.md` before changing complete-round command collection,
+    Speed ordering, defeated-actor skipping, terminal-side detection, or enemy planning.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

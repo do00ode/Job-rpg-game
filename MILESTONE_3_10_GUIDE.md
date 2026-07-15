@@ -13,6 +13,8 @@ flowchart TD
 
 There is still no battle menu, turn loop, or enemy AI. Tests submit an explicit command so the
 core rule can be reviewed before Godot presentation is allowed to depend on it.
+Milestone 3.12 now composes this unchanged single-action rule into deterministic complete
+rounds; see `MILESTONE_3_12_GUIDE.md` for command collection, ordering, and enemy planning.
 
 ## The important HP correction
 

@@ -62,7 +62,7 @@ public sealed class CombatResolver : ICombatResolver
 
         // Resource pools such as current MP do not exist yet. Even a zero-valued authored cost
         // with a resource ID is rejected so the resolver never pretends it paid a resource.
-        if (ability.CostStatisticId is not null || ability.CostAmount != 0)
+        if (!CombatAbilityExecutionSupport.HasSupportedCost(ability))
         {
             Reject(
                 CombatCommandProblemCodes.AbilityCostUnsupported,
@@ -100,14 +100,7 @@ public sealed class CombatResolver : ICombatResolver
                 + $"the '{actor.Value.Side}' side.");
         }
 
-        if (!string.Equals(
-                ability.TargetingId,
-                AbilityTargetingIds.SingleEnemy,
-                StringComparison.Ordinal)
-            || !string.Equals(
-                ability.RulesetId,
-                AbilityRulesetIds.PhysicalDamage,
-                StringComparison.Ordinal))
+        if (!CombatAbilityExecutionSupport.HasSupportedContract(ability))
         {
             Reject(
                 CombatCommandProblemCodes.AbilityContractUnsupported,

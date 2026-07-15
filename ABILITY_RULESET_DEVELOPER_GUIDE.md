@@ -19,6 +19,9 @@ from ability JSON. That boundary keeps community data deterministic, testable, a
 | Content contract and actionable diagnostics | `ContentValidator` |
 | Learned Skill/Magic availability | `AbilityAvailabilityResolver` |
 | State changes and domain events | Plain .NET `CombatResolver` |
+| Current executable-contract agreement | `CombatAbilityExecutionSupport` |
+| Basic enemy ability/target choice | `EnemyCommandPlanner` |
+| Complete deterministic action order | `CombatRoundResolver` |
 | Animation, sound, menus, and target highlights | Godot presentation under `src/Rpg.Game` |
 
 Do not make a Godot node calculate damage or let a ruleset locate scene objects.
@@ -41,10 +44,13 @@ Do not make a Godot node calculate damage or let a ruleset locate scene objects.
 6. Extend `CombatResolver` in `src/Rpg.Core/Combat`. Receive an explicit `CombatCommand`,
    return a new snapshot plus typed domain events, and inject any randomness through
    `IRandomSource`. Do not bypass its actor/ownership/target/cost validation.
-7. Add deterministic resolver tests before connecting Godot presentation.
-8. Let `src/Rpg.Game` translate domain events such as `DamageApplied` into visuals. Never put
+7. Update `CombatAbilityExecutionSupport` only after the resolver truly executes the new
+   target/ruleset/cost combination. The basic enemy planner uses this narrow shared answer so
+   it cannot select a contract that command execution still rejects.
+8. Add deterministic resolver, round, and enemy-planner tests before connecting presentation.
+9. Let `src/Rpg.Game` translate domain events such as `DamageApplied` into visuals. Never put
    node paths, animations, sounds, or resource paths into the core ruleset.
-9. Update `CONTENT_SCHEMA.md`, `ABILITY_AUTHORING_GUIDE.md`, and mod documentation in the same
+10. Update `CONTENT_SCHEMA.md`, `ABILITY_AUTHORING_GUIDE.md`, and mod documentation in the same
    change. Decide whether the stricter public content contract requires a mod data-API change.
 
 ## Parameter design rules

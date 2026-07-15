@@ -16,6 +16,31 @@ public interface ICombatResolver
 }
 
 /// <summary>
+/// Pure coordinator for resolving one complete, already collected set of combat commands.
+/// </summary>
+/// <remarks>
+/// Every combatant alive at the beginning of the round must have exactly one command. The
+/// coordinator owns deterministic ordering and round boundaries; individual action legality
+/// and effects remain owned by <see cref="ICombatResolver"/>.
+/// </remarks>
+public interface ICombatRoundResolver
+{
+    CombatResolution ResolveRound(
+        CombatSnapshot current,
+        IReadOnlyList<CombatCommand> commands);
+}
+
+/// <summary>Creates an ordinary combat command for one living enemy combatant.</summary>
+/// <remarks>
+/// The planner chooses intent only. It does not resolve damage, mutate the snapshot, or receive
+/// a special AI-only command type, so enemy and player actions pass through identical rules.
+/// </remarks>
+public interface IEnemyCommandPlanner
+{
+    CombatCommand Plan(CombatSnapshot current, string enemyInstanceId);
+}
+
+/// <summary>
 /// Random-number boundary retained for future deterministic combat rules.
 /// The current physical-damage formula does not consume randomness.
 /// </summary>
@@ -59,7 +84,7 @@ public sealed record CombatSnapshot
     }
 
     /// <summary>
-    /// Initial snapshots start at one. Turn advancement remains deliberately unimplemented.
+    /// Initial snapshots start at one. A completed nonterminal round advances this by one.
     /// </summary>
     public int Round { get; }
 
@@ -77,6 +102,16 @@ public sealed record CombatSnapshot
             ?? throw new KeyNotFoundException(
                 $"Combatant instance '{instanceId}' does not exist in this battle snapshot.");
     }
+
+    /// <summary>
+    /// Returns true when a side has no living combatants in this transient battle state.
+    /// </summary>
+    /// <remarks>
+    /// This is a battle-lifetime query, not a campaign victory flag. A later battle/application
+    /// boundary may translate the terminal state into rewards or persistent progress.
+    /// </remarks>
+    public bool IsSideDefeated(BattleSide side) => !Combatants.Any(
+        combatant => combatant.Side == side && !combatant.IsDefeated);
 }
 
 /// <summary>
@@ -263,7 +298,7 @@ public sealed record CombatCommand
 }
 
 /// <summary>
-/// Immutable result of one accepted combat command.
+/// Immutable result of one accepted combat command or one complete combat round.
 /// </summary>
 public sealed record CombatResolution
 {

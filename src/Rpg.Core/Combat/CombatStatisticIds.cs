@@ -16,4 +16,9 @@ public static class CombatStatisticIds
     public const string Strength = "stat.strength";
 
     public const string Defense = "stat.defense";
+
+    /// <summary>
+    /// Higher values act first during a deterministic round; ties use instance ID order.
+    /// </summary>
+    public const string Speed = "stat.speed";
 }
