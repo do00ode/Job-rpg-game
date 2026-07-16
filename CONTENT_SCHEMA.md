@@ -244,6 +244,7 @@ This keeps common inventory/shop data in exactly one place.
 | `itemId` | ID | Unique reference to its item record. |
 | `slotId` | ID | Stable game-owned equipment slot. |
 | `statisticModifiers` | object of ID → integer | Keys reference statistics. |
+| `attack` | integer | Nonnegative direct weapon offensive value. A positive value is legal only for `slot.weapon.*`; it is not a Strength modifier. |
 | `weaponDamagePercentages` | object of damage-type ID → integer | Optional. A nonempty profile is legal only for `slot.weapon.*`; every value is positive and the total is exactly `100`. |
 | `grantedAbilityIds` | ID array | References abilities. |
 
@@ -265,15 +266,20 @@ This keeps common inventory/shop data in exactly one place.
   "id": "equipment.weapon.iron-sword",
   "itemId": "item.equipment.iron-sword",
   "slotId": "slot.weapon.main-hand",
-  "statisticModifiers": { "stat.strength": 3 },
+  "statisticModifiers": {},
+  "attack": 4,
   "weaponDamagePercentages": { "damage-type.slash": 100 },
   "grantedAbilityIds": []
 }
 ```
 
-Weapon profiles may mix Slash, Energy, Fire, Ice, and Lightning. They are validated authoring
-data only until persistent equipment and active weapon selection exist. Omission remains
-compatible and reserves an Energy fallback for that later integration.
+Weapon profiles may mix Slash, Energy, Fire, Ice, and Lightning. Milestone 4.8 activates only
+an equipped weapon's single 100% profile for intrinsic `ability.command.attack`; a mixed profile
+remains valid content but cannot be equipped for battle until multi-component damage exists.
+Omission remains compatible and leaves Attack on its authored/legacy damage type.
+
+`attack` is weapon damage, while `statisticModifiers` remains the separate future mechanism for
+armor/accessory-style statistic bonuses. Basic weapons must use `attack`, not `stat.strength`.
 
 ### Loot table
 

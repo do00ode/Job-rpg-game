@@ -439,6 +439,20 @@ Explicitly excluded: revive, area healing, enemy healer AI, healing items, regen
 status cleansing, overheal, magical-stat scaling, animation, and sound. See
 `MILESTONE_4_7_GUIDE.md`.
 
+### Milestone 4.8 - Equipment ownership, equipped slots, and weapon Attack
+
+- Store equipped inventory item IDs on actor progress and preserve them through save/load.
+- Validate owned, authored equipment through core equip/unequip use cases.
+- Give Iron Sword Attack 4 without a Strength modifier.
+- Apply weapon Attack and a supported single weapon damage profile to intrinsic basic Attack.
+
+Exit criteria: an owned weapon can be equipped in `slot.weapon.main-hand`; basic Attack uses
+Strength + weapon Attack + authored power - Defense; and old saves load with empty equipment.
+
+Explicitly excluded: equipment-menu UI, shops, battle items, dual wielding, two-handed weapons,
+multi-component weapon damage, weapon-based skills beyond Attack, armor affinities, per-instance
+equipment uniqueness, upgrades, affixes, and special accessories. See `MILESTONE_4_8_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

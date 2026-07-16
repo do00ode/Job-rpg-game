@@ -41,6 +41,7 @@ public sealed class NewGameFactoryTests
         Assert.Equal("class.martial.vanguard", progress.ClassId);
         Assert.Equal(1, progress.Level);
         Assert.Equal(0, progress.Experience);
+        Assert.Empty(progress.EquippedItems);
     }
 
     [Fact]

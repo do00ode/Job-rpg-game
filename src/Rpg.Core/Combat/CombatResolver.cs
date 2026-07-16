@@ -14,6 +14,7 @@ namespace RpgGame.Core.Combat;
 /// </remarks>
 public sealed class CombatResolver : ICombatResolver
 {
+    private const string BasicAttackAbilityId = "ability.command.attack";
     private readonly IContentCatalog _content;
 
     public CombatResolver(IContentCatalog content)
@@ -148,7 +149,10 @@ public sealed class CombatResolver : ICombatResolver
         }
 
         decimal power = RequirePositivePower(ability);
-        string damageTypeId = RequireDamageTypeId(ability);
+        bool isBasicAttack = string.Equals(ability.Id, BasicAttackAbilityId, StringComparison.Ordinal);
+        string damageTypeId = isBasicAttack && actor.Value.EquippedWeaponDamageTypeId is not null
+            ? actor.Value.EquippedWeaponDamageTypeId
+            : RequireDamageTypeId(ability);
         int strength = RequireStatistic(actor.Value, CombatStatisticIds.Strength);
         int defense = RequireStatistic(target.Value, CombatStatisticIds.Defense);
         int damagePercentModifier = target.Value.DamageTypePercentModifiers.TryGetValue(
@@ -158,6 +162,7 @@ public sealed class CombatResolver : ICombatResolver
             : 0;
         int appliedDamage = CalculateAppliedDamage(
             strength,
+            isBasicAttack ? actor.Value.EquippedWeaponAttack : 0,
             power,
             defense,
             target.Value.CurrentHp,
@@ -379,6 +384,7 @@ public sealed class CombatResolver : ICombatResolver
 
     private static int CalculateAppliedDamage(
         int attackerStrength,
+        int weaponAttack,
         decimal authoredPower,
         int defenderDefense,
         int remainingHp,
@@ -399,7 +405,7 @@ public sealed class CombatResolver : ICombatResolver
         // round down once. A positive but heavily resisted hit still deals one damage. Comparing
         // against the amount needed for defeat first keeps decimal.MaxValue power overflow-safe.
         decimal multiplier = (100m + damagePercentModifier) / 100m;
-        decimal statisticDifference = (decimal)attackerStrength - defenderDefense;
+        decimal statisticDifference = (decimal)attackerStrength + weaponAttack - defenderDefense;
         decimal baseDamageNeededToDefeat = remainingHp / multiplier;
         decimal powerNeededToDefeat = baseDamageNeededToDefeat - statisticDifference;
         if (authoredPower >= powerNeededToDefeat)

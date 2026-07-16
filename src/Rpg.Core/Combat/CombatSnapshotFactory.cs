@@ -97,12 +97,15 @@ public sealed class CombatSnapshotFactory
             int maximumHp = RequirePositiveMaximumHp(placement.InstanceId, statistics);
             PartyAbilityAvailability abilityAvailability =
                 _abilityResolver.ResolvePartyActor(progress);
+            EquippedWeaponSnapshot weapon = ResolveEquippedWeapon(campaign, progress);
 
             combatants.Add(new CombatantSnapshot(
                 placement,
                 statistics,
                 abilityAvailability,
-                maximumHp));
+                maximumHp,
+                equippedWeaponAttack: weapon.Attack,
+                equippedWeaponDamageTypeId: weapon.DamageTypeId));
         }
 
         foreach (string activeActorId in activePartyIds)
@@ -204,6 +207,63 @@ public sealed class CombatSnapshotFactory
                 $"Active-party actor '{actorId}' has {matches.Count} progress records; "
                 + "exactly one is required."),
         };
+    }
+
+    private EquippedWeaponSnapshot ResolveEquippedWeapon(
+        GameState campaign,
+        ActorProgressState progress)
+    {
+        IReadOnlyDictionary<string, string> equippedItems = progress.EquippedItems
+            ?? throw new InvalidDataException(
+                $"Actor '{progress.ActorId}' has a null equipped-item map.");
+        if (!equippedItems.TryGetValue(Equipment.EquipmentSlotIds.MainHandWeapon, out string? itemId))
+        {
+            return EquippedWeaponSnapshot.None;
+        }
+
+        if (string.IsNullOrWhiteSpace(itemId)
+            || !campaign.Inventory.TryGetValue(itemId, out int quantity)
+            || quantity <= 0)
+        {
+            throw new InvalidDataException(
+                $"Actor '{progress.ActorId}' equips weapon item '{itemId ?? "<null>"}' but does not own it.");
+        }
+
+        EquipmentDefinition[] definitions = _content.GetAll<EquipmentDefinition>()
+            .Where(equipment => string.Equals(equipment.ItemId, itemId, StringComparison.Ordinal))
+            .ToArray();
+        if (definitions.Length != 1)
+        {
+            throw new InvalidDataException(
+                $"Equipped item '{itemId}' must resolve to exactly one equipment definition.");
+        }
+
+        EquipmentDefinition weapon = definitions[0];
+        if (!string.Equals(weapon.SlotId, Equipment.EquipmentSlotIds.MainHandWeapon, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                $"Equipped item '{itemId}' is not compatible with the main-hand weapon slot.");
+        }
+
+        IReadOnlyDictionary<string, int> profile = weapon.WeaponDamagePercentages
+            ?? throw new InvalidDataException($"Weapon '{weapon.Id}' has a null damage profile.");
+        if (profile.Count == 0)
+        {
+            return new EquippedWeaponSnapshot(weapon.Attack, null);
+        }
+
+        if (profile.Count != 1 || profile.Single().Value != 100)
+        {
+            throw new InvalidDataException(
+                $"Weapon '{weapon.Id}' has a multi-component damage profile, which basic Attack does not support yet.");
+        }
+
+        return new EquippedWeaponSnapshot(weapon.Attack, profile.Single().Key);
+    }
+
+    private sealed record EquippedWeaponSnapshot(int Attack, string? DamageTypeId)
+    {
+        public static EquippedWeaponSnapshot None { get; } = new(0, null);
     }
 
     private void ValidateAbilityReferences(

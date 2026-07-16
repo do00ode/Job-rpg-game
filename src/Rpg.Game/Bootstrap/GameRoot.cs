@@ -5,6 +5,7 @@ using RpgGame.Core.Combat.Formation;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Content.Loading;
+using RpgGame.Core.Equipment;
 using RpgGame.Core.Inventory;
 using RpgGame.Core.Loot;
 using RpgGame.Core.Mods;
@@ -35,7 +36,9 @@ namespace RpgGame.Bootstrap;
 /// </remarks>
 public partial class GameRoot : Node, IExplorationDevelopmentCommands
 {
-    private const string GameVersion = "0.4.2-victory-rewards";
+    private const string GameVersion = "0.4.8-equipment";
+    private const string JamesId = "actor.hero.james";
+    private const string IronSwordItemId = "item.equipment.iron-sword";
     private const string TestRoomScenePath = "res://game/scenes/exploration/TestRoom.tscn";
     private const string BattleScenePath = "res://game/scenes/encounters/Battle.tscn";
     private const string RewardSummaryScenePath =
@@ -116,6 +119,15 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         GameState initialState = new NewGameFactory(Content).Create(
             DefaultGameSetup.CreateRequest(selectedClassId));
         Session.ReplaceState(initialState);
+
+        // Temporary starter content keeps the equipment/combat slice manually playable until
+        // Milestone 4.9 provides an equipment menu. The item remains an ordinary inventory stack.
+        var inventory = new InventoryService(Content, Session);
+        inventory.AddItem(IronSwordItemId, 1);
+        new EquipmentService(Content, Session).EquipItem(
+            JamesId,
+            IronSwordItemId,
+            EquipmentSlotIds.MainHandWeapon);
     }
 
     /// <summary>

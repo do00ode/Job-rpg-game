@@ -40,6 +40,11 @@ public interface IGameSession
     /// </summary>
     void UpdateInventory(IReadOnlyDictionary<string, int> inventory);
 
+    /// <summary>
+    /// Replaces one actor's persistent progress after a feature-specific use case validates it.
+    /// </summary>
+    void UpdateActorProgress(string actorId, ActorProgressState progress);
+
     /// <summary>Returns a persistent flag, treating an absent key as false.</summary>
     bool GetEventFlag(string flagId);
 

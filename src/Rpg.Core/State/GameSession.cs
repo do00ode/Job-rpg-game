@@ -85,6 +85,38 @@ public sealed class GameSession : IGameSession
     }
 
     /// <inheritdoc />
+    public void UpdateActorProgress(string actorId, ActorProgressState progress)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(actorId);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        if (!Current.ActorProgress.TryGetValue(actorId, out ActorProgressState? existing))
+        {
+            throw new KeyNotFoundException($"Actor progress for '{actorId}' does not exist.");
+        }
+
+        if (!string.Equals(progress.ActorId, actorId, StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"Replacement progress belongs to '{progress.ActorId}', not '{actorId}'.",
+                nameof(progress));
+        }
+
+        if (existing == progress)
+        {
+            return;
+        }
+
+        var replacement = new Dictionary<string, ActorProgressState>(
+            Current.ActorProgress,
+            StringComparer.Ordinal)
+        {
+            [actorId] = progress,
+        };
+        Publish(Current with { ActorProgress = replacement });
+    }
+
+    /// <inheritdoc />
     public bool GetEventFlag(string flagId)
     {
         ValidateFlagId(flagId);

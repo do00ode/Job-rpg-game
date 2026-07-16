@@ -299,6 +299,18 @@ internal sealed class ContentValidator
             equipment.WeaponDamagePercentages);
         ValidateWeaponDamagePercentages(item, equipment, weaponDamagePercentages);
 
+        if (equipment.Attack < 0)
+        {
+            Add(item, "$.attack", "equipment.attack-negative",
+                $"Equipment attack must be non-negative; received {equipment.Attack}.");
+        }
+        else if (equipment.Attack > 0
+                 && !equipment.SlotId.StartsWith("slot.weapon.", StringComparison.Ordinal))
+        {
+            Add(item, "$.attack", "equipment.attack-on-nonweapon",
+                "Only equipment in a 'slot.weapon.' slot may declare attack.");
+        }
+
         IReadOnlyList<string> grantedAbilityIds = RequireList(
             item,
             "$.grantedAbilityIds",

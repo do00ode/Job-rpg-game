@@ -1,4 +1,5 @@
 using RpgGame.Core.Inventory;
+using RpgGame.Core.Equipment;
 using RpgGame.Core.Persistence;
 using RpgGame.Core.State;
 using Xunit;
@@ -53,6 +54,10 @@ public sealed class SaveRoundTripTests
             var inventory = new InventoryService(content, session);
             inventory.AddItem("item.consumable.potion", 3);
             inventory.AddItem("item.equipment.iron-sword", 1);
+            new EquipmentService(content, session).EquipItem(
+                "actor.hero.james",
+                "item.equipment.iron-sword",
+                EquipmentSlotIds.MainHandWeapon);
             GameState original = session.Current;
 
             var serializer = new SaveJsonSerializer();
@@ -70,6 +75,10 @@ public sealed class SaveRoundTripTests
             Assert.True(loaded.EventFlags["flag.encounter.forest.slimes-01.cleared"]);
             Assert.Equal(3, loaded.Inventory["item.consumable.potion"]);
             Assert.Equal(1, loaded.Inventory["item.equipment.iron-sword"]);
+            Assert.Equal(
+                "item.equipment.iron-sword",
+                loaded.ActorProgress["actor.hero.james"].EquippedItems[
+                    EquipmentSlotIds.MainHandWeapon]);
 
             // A second successful write copies the old primary to slot_1.json.bak before
             // replacing it, providing a last-known-good recovery file.
@@ -119,7 +128,13 @@ public sealed class SaveRoundTripTests
 
         foreach (string actorId in expected.ActorProgress.Keys)
         {
-            Assert.Equal(expected.ActorProgress[actorId], actual.ActorProgress[actorId]);
+            ActorProgressState expectedProgress = expected.ActorProgress[actorId];
+            ActorProgressState actualProgress = actual.ActorProgress[actorId];
+            Assert.Equal(expectedProgress.ActorId, actualProgress.ActorId);
+            Assert.Equal(expectedProgress.ClassId, actualProgress.ClassId);
+            Assert.Equal(expectedProgress.Level, actualProgress.Level);
+            Assert.Equal(expectedProgress.Experience, actualProgress.Experience);
+            Assert.Equal(expectedProgress.EquippedItems, actualProgress.EquippedItems);
         }
     }
 }

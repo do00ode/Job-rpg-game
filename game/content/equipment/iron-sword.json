@@ -3,9 +3,8 @@
   "id": "equipment.weapon.iron-sword",
   "itemId": "item.equipment.iron-sword",
   "slotId": "slot.weapon.main-hand",
-  "statisticModifiers": {
-	"stat.strength": 3
-  },
+  "statisticModifiers": {},
+  "attack": 4,
   "weaponDamagePercentages": {
 	"damage-type.slash": 100
   },

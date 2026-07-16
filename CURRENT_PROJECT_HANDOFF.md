@@ -1,9 +1,25 @@
 # Current Project Handoff
 
-> Update: Milestones 4.2 through 4.7 are now implemented after this historical 4.1 handoff.
-> The current working tree includes the uncommitted Milestone 4.7 healing and ally-targeting
-> work. Do not rely on the milestone status, validation totals, or recommended-next-milestone
-> statements below without checking the current `ROADMAP.md` and `git status`.
+> Current update: Milestone 4.8 is implemented locally and intentionally uncommitted for review.
+> `main` is at `9be497b Add healing and ally targeting`; the sections below are retained only as
+> a historical Milestone 4.1 record and must not be treated as the current repository state.
+
+## Current Milestone 4.8 summary
+
+- `ActorProgressState.EquippedItems` persistently maps slots to owned inventory item IDs;
+  omitted old-save maps deserialize empty.
+- `EquipmentService` validates owner, inventory, equipment category, and authored slot, then
+  updates actor progress through `IGameSession`. Empty-slot unequip is a no-op.
+- The supported current slot is `slot.weapon.main-hand`. James starts with Iron Sword owned and
+  equipped through bootstrap only until 4.9 adds a menu.
+- Iron Sword is Attack 4 with no Strength modifier. Only intrinsic basic Attack uses equipped
+  weapon Attack and a single 100% weapon damage profile. Mixed profiles remain unsupported in
+  battle; all other skills, magic, healing, and enemy attacks are unaffected.
+- Local validation: core tests pass with 348 tests; base and base-plus-mod content validation
+  pass (27 and 30 definitions); `dotnet build RpgGame.sln --no-restore` succeeds with 0 warnings
+  and 0 errors; Godot 4.7 headless editor validation exits successfully.
+
+## Historical 4.1 record
 
 ## 1. Repository state and completed milestone
 

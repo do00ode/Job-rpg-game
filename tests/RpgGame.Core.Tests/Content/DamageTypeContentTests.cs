@@ -1,3 +1,4 @@
+using RpgGame.Core.Combat;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Content.Loading;
 using Xunit;
@@ -22,6 +23,8 @@ public sealed class DamageTypeContentTests
         Assert.Equal(
             new[] { KeyValuePair.Create(DamageTypeIds.Slash, 100) },
             sword.WeaponDamagePercentages.ToArray());
+        Assert.Equal(4, sword.Attack);
+        Assert.False(sword.StatisticModifiers.ContainsKey(CombatStatisticIds.Strength));
     }
 
     [Fact]
@@ -128,6 +131,19 @@ public sealed class DamageTypeContentTests
         AssertProblem(result, expectedProblemCode);
     }
 
+    [Theory]
+    [InlineData("slot.weapon.main-hand", -1, "equipment.attack-negative")]
+    [InlineData("slot.armor.body", 1, "equipment.attack-on-nonweapon")]
+    public void WeaponAttack_InvalidAuthoredContractIsRejected(
+        string slotId,
+        int attack,
+        string expectedProblemCode)
+    {
+        ContentLoadResult result = Load(ItemDocument(), EquipmentDocument(slotId, "{}", attack));
+
+        AssertProblem(result, expectedProblemCode);
+    }
+
     [Fact]
     public void EnemyDamageModifiers_UnknownTypeAndValueBelowImmunityAreRejected()
     {
@@ -216,7 +232,10 @@ public sealed class DamageTypeContentTests
         }
         """);
 
-    private static ContentDocument EquipmentDocument(string slotId, string profileJson) => new(
+    private static ContentDocument EquipmentDocument(
+        string slotId,
+        string profileJson,
+        int attack = 0) => new(
         "equipment/test-weapon.json",
         $$"""
         {
@@ -225,6 +244,7 @@ public sealed class DamageTypeContentTests
           "itemId": "item.test.weapon",
           "slotId": "{{slotId}}",
           "statisticModifiers": {},
+          "attack": {{attack}},
           "weaponDamagePercentages": {{profileJson}},
           "grantedAbilityIds": []
         }

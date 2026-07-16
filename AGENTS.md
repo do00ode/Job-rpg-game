@@ -61,6 +61,8 @@ a general-purpose RPG engine.
     their class ability unlocks, or their starter magic-discipline access.
 31. Read `MILESTONE_4_7_GUIDE.md` before changing healing, ally targeting, Cure, or
     `HealingApplied` events.
+32. Read `MILESTONE_4_8_GUIDE.md` before changing equipment ownership, equipped slots,
+    weapon Attack, or the intrinsic basic Attack weapon profile.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

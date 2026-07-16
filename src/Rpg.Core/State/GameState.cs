@@ -93,8 +93,8 @@ public sealed record MapLocationState
 /// <remarks>
 /// Base statistics and starting values still come from ActorDefinition. This state records
 /// only what can differ between playthroughs. Inventory is campaign-owned by
-/// <see cref="GameState.Inventory"/>; actor equipment fields remain deferred until that
-/// system's actual requirements are known.
+/// <see cref="GameState.Inventory"/>; equipped items are actor-owned references into that
+/// campaign inventory.
 /// </remarks>
 public sealed record ActorProgressState
 {
@@ -109,6 +109,12 @@ public sealed record ActorProgressState
 
     /// <summary>Total or in-level experience; the eventual progression rule will define it.</summary>
     public int Experience { get; init; }
+
+    /// <summary>
+    /// Equipped inventory item IDs keyed by stable equipment slot ID. An absent slot is empty.
+    /// Items remain campaign-owned inventory stacks; equipping never removes or duplicates them.
+    /// </summary>
+    public Dictionary<string, string> EquippedItems { get; init; } = new(StringComparer.Ordinal);
 
     /// <summary>Unknown future actor-progress fields retained for compatibility.</summary>
     [JsonExtensionData]

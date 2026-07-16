@@ -178,7 +178,9 @@ public sealed record CombatantSnapshot
         IReadOnlyList<string> abilityIds,
         int currentHp,
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers = null,
-        int? currentMp = null)
+        int? currentMp = null,
+        int equippedWeaponAttack = 0,
+        string? equippedWeaponDamageTypeId = null)
         : this(
             placement,
             statistics,
@@ -186,7 +188,9 @@ public sealed record CombatantSnapshot
             currentHp,
             partyAbilityAvailability: null,
             damageTypePercentModifiers,
-            currentMp)
+            currentMp,
+            equippedWeaponAttack,
+            equippedWeaponDamageTypeId)
     {
     }
 
@@ -196,7 +200,9 @@ public sealed record CombatantSnapshot
         PartyAbilityAvailability partyAbilityAvailability,
         int currentHp,
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers = null,
-        int? currentMp = null)
+        int? currentMp = null,
+        int equippedWeaponAttack = 0,
+        string? equippedWeaponDamageTypeId = null)
         : this(
             placement,
             statistics,
@@ -205,7 +211,9 @@ public sealed record CombatantSnapshot
             currentHp,
             partyAbilityAvailability,
             damageTypePercentModifiers,
-            currentMp)
+            currentMp,
+            equippedWeaponAttack,
+            equippedWeaponDamageTypeId)
     {
     }
 
@@ -216,7 +224,9 @@ public sealed record CombatantSnapshot
         int currentHp,
         PartyAbilityAvailability? partyAbilityAvailability,
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers,
-        int? currentMp)
+        int? currentMp,
+        int equippedWeaponAttack,
+        string? equippedWeaponDamageTypeId)
     {
         ArgumentNullException.ThrowIfNull(placement);
         ArgumentNullException.ThrowIfNull(statistics);
@@ -291,6 +301,23 @@ public sealed record CombatantSnapshot
                 nameof(abilityIds));
         }
 
+        if (equippedWeaponAttack < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(equippedWeaponAttack),
+                equippedWeaponAttack,
+                "Equipped weapon attack cannot be negative.");
+        }
+
+        if (equippedWeaponDamageTypeId is not null
+            && !DamageTypeIds.IsSupported(equippedWeaponDamageTypeId))
+        {
+            throw new ArgumentException(
+                $"Combatant '{placement.InstanceId}' has unsupported equipped weapon damage type "
+                + $"'{equippedWeaponDamageTypeId}'.",
+                nameof(equippedWeaponDamageTypeId));
+        }
+
         var statisticCopy = new SortedDictionary<string, int>(StringComparer.Ordinal);
         foreach ((string statisticId, int value) in statistics)
         {
@@ -330,6 +357,8 @@ public sealed record CombatantSnapshot
         PartyAbilityAvailability = partyAbilityAvailability;
         CurrentHp = currentHp;
         CurrentMp = resolvedCurrentMp;
+        EquippedWeaponAttack = equippedWeaponAttack;
+        EquippedWeaponDamageTypeId = equippedWeaponDamageTypeId;
     }
 
     public FormationPlacement Placement { get; }
@@ -366,6 +395,15 @@ public sealed record CombatantSnapshot
     /// </summary>
     public int CurrentMp { get; }
 
+    /// <summary>Weapon-only offensive value copied from persistent equipped state at battle start.</summary>
+    public int EquippedWeaponAttack { get; }
+
+    /// <summary>
+    /// Single supported damage type from the equipped weapon profile, or null when basic Attack
+    /// should use its authored/legacy default.
+    /// </summary>
+    public string? EquippedWeaponDamageTypeId { get; }
+
     public string InstanceId => Placement.InstanceId;
 
     public string DefinitionId => Placement.DefinitionId;
@@ -401,14 +439,18 @@ public sealed record CombatantSnapshot
                 AbilityIds,
                 currentHp,
                 DamageTypePercentModifiers,
-                CurrentMp)
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
                 PartyAbilityAvailability,
                 currentHp,
                 DamageTypePercentModifiers,
-                CurrentMp);
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId);
 
     /// <summary>
     /// Creates a replacement state with different current MP while preserving every other
@@ -422,14 +464,18 @@ public sealed record CombatantSnapshot
                 AbilityIds,
                 CurrentHp,
                 DamageTypePercentModifiers,
-                currentMp)
+                currentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
                 PartyAbilityAvailability,
                 CurrentHp,
                 DamageTypePercentModifiers,
-                currentMp);
+                currentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId);
 }
 
 /// <summary>

@@ -35,7 +35,14 @@ public sealed class SaveCompatibilityTests
                   "facing": "south"
                 },
                 "activePartyActorIds": [],
-                "actorProgress": {},
+                "actorProgress": {
+                  "actor.hero.james": {
+                    "actorId": "actor.hero.james",
+                    "classId": "class.martial.vanguard",
+                    "level": 1,
+                    "experience": 0
+                  }
+                },
                 "eventFlags": {},
                 "futureField": { "value": 42 }
               }
@@ -51,6 +58,7 @@ public sealed class SaveCompatibilityTests
         // default without requiring a format-version migration.
         Assert.Empty(save.EnabledMods);
         Assert.Empty(save.State.Inventory);
+        Assert.Empty(save.State.ActorProgress["actor.hero.james"].EquippedItems);
 
         // Verify the unknown field was captured during deserialization.
         Dictionary<string, JsonElement> extensionData = save.State.ExtensionData

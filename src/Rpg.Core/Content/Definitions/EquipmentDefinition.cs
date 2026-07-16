@@ -19,11 +19,13 @@ public sealed record EquipmentDefinition : ContentDefinition
     /// Weapon damage composition keyed by code-owned damage type ID. Values are whole
     /// percentages and a nonempty profile must total exactly 100.
     /// </summary>
-    /// <remarks>
-    /// This milestone validates and exposes the authored profile but does not apply it because
-    /// persistent equipment ownership and active weapon selection do not exist yet.
-    /// </remarks>
     public Dictionary<string, int> WeaponDamagePercentages { get; init; } = [];
+
+    /// <summary>
+    /// Direct offensive value used by the intrinsic basic Attack when this is an equipped weapon.
+    /// This is intentionally separate from statistic modifiers such as Strength.
+    /// </summary>
+    public int Attack { get; init; }
 
     /// <summary>Abilities available only while this equipment is active.</summary>
     public List<string> GrantedAbilityIds { get; init; } = [];

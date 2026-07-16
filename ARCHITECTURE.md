@@ -437,11 +437,13 @@ combatant.
 ```mermaid
 flowchart TD
     Command["Snapshot + explicit command"] --> Validate["Validate actor, ability, target"]
-    Validate --> Resolve["Strength + power - Defense"]
+    Validate --> Resolve["Strength + weapon Attack + power - Defense"]
     Resolve --> Result["New snapshot + typed events"]
 ```
 
-Physical damage uses decimal authored power and integer statistics. The formula takes a
+Physical damage uses decimal authored power and integer statistics. Intrinsic
+`ability.command.attack` additionally receives its party combatant's equipped weapon Attack;
+other physical abilities, enemy Tackle, magic, and healing do not. The formula takes a
 minimum of one, applies the target snapshot's signed whole-percent modifier for the ability's
 code-owned damage type, rounds the final decimal down explicitly, and clamps applied damage to
 the target's remaining integer HP. `-100` is immunity; omitted types are neutral. Only the
@@ -459,6 +461,28 @@ before the effect event. Other resource IDs remain rejected. Guard behavior, rew
 changes, and Godot presentation remain outside this resolver. Milestone 3.12 composes actions
 into ordered rounds and Milestone 3.13 derives the battle-local outcome without moving those
 responsibilities into presentation.
+
+### Persistent equipment and basic weapon Attack
+
+Milestone 4.8 stores each actor's equipped inventory item IDs in
+`ActorProgressState.EquippedItems`, keyed by stable slot ID. `EquipmentService` resolves an
+owned item to its one `EquipmentDefinition`, verifies the authored slot, and publishes a single
+replacement actor-progress state through `IGameSession`. Equipping never removes an inventory
+stack; clearing an empty slot is a no-op. The starter slice supports
+`slot.weapon.main-hand` only. Older saves omit the additive map and deserialize as empty.
+
+`CombatSnapshotFactory` copies the equipped main-hand weapon into transient `CombatantSnapshot`
+fields (`EquippedWeaponAttack` and an optional single damage type). The combat resolver does not
+read campaign state. For basic Attack only, base damage is:
+
+```text
+max(1, Strength + WeaponAttack + AbilityPower - Defense)
+```
+
+Weapon Attack is deliberately not a Strength modifier. Iron Sword has Attack 4 and no Strength
+bonus. A single 100% weapon profile overrides Attack's authored damage type; no weapon retains
+the authored/legacy type. Mixed weapon profiles are valid authoring data but are rejected at
+battle construction until component splitting is explicitly designed.
 
 ### Complete deterministic rounds
 
