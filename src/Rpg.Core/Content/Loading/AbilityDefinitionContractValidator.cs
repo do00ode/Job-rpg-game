@@ -42,7 +42,7 @@ internal static class AbilityDefinitionContractValidator
             Add(problems, "$.targetingId", "ability.targeting-unsupported",
                 $"Unsupported targeting ID '{ability.TargetingId}'. Supported values are "
                 + $"'{AbilityTargetingIds.Self}', '{AbilityTargetingIds.SingleEnemy}', and "
-                + $"'{AbilityTargetingIds.SingleAlly}'.");
+                + $"'{AbilityTargetingIds.SingleAlly}', and '{AbilityTargetingIds.SingleCombatant}'.");
         }
 
         if (!rulesetHasValidShape)
@@ -63,11 +63,12 @@ internal static class AbilityDefinitionContractValidator
                 ValidateGuardParameters(problems, numericParameters);
                 break;
             case AbilityRulesetIds.PhysicalDamage:
-                ValidateRulesetTargeting(
+                ValidateRulesetTargetings(
                     problems,
                     ability,
                     targetingHasValidShape,
-                    AbilityTargetingIds.SingleEnemy);
+                    AbilityTargetingIds.SingleEnemy,
+                    AbilityTargetingIds.SingleCombatant);
                 ValidatePhysicalDamageParameters(problems, numericParameters);
                 break;
             case AbilityRulesetIds.FlatHealing:
@@ -165,6 +166,23 @@ internal static class AbilityDefinitionContractValidator
         }
     }
 
+    private static void ValidateRulesetTargetings(
+        ICollection<AbilityContractProblem> problems,
+        AbilityDefinition ability,
+        bool targetingHasValidShape,
+        params string[] supportedTargetingIds)
+    {
+        if (targetingHasValidShape
+            && IsSupportedTargeting(ability.TargetingId)
+            && !supportedTargetingIds.Contains(ability.TargetingId, StringComparer.Ordinal))
+        {
+            Add(problems, "$.targetingId", "ability.ruleset-targeting-mismatch",
+                $"Ruleset '{ability.RulesetId}' requires one of "
+                + string.Join(", ", supportedTargetingIds.Select(id => $"'{id}'"))
+                + $", not '{ability.TargetingId}'.");
+        }
+    }
+
     private static void ValidateFlatHealingParameters(
         ICollection<AbilityContractProblem> problems,
         IReadOnlyDictionary<string, decimal> numericParameters)
@@ -214,7 +232,8 @@ internal static class AbilityDefinitionContractValidator
     private static bool IsSupportedTargeting(string? targetingId) => targetingId is
         AbilityTargetingIds.Self or
         AbilityTargetingIds.SingleEnemy or
-        AbilityTargetingIds.SingleAlly;
+        AbilityTargetingIds.SingleAlly or
+        AbilityTargetingIds.SingleCombatant;
 
     private static bool HasStablePrefix(string? value, string prefix) =>
         ContentId.IsValid(value)

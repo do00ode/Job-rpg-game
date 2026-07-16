@@ -23,7 +23,8 @@ content state.
 ## Targeting
 
 `target.enemy.single` opens the living-enemy selector. `target.ally.single` opens the living
-ally selector. `target.self` is routed immediately to the acting combatant and never opens
+ally selector. `target.combatant.single` opens a selector for every living combatant, including
+the acting combatant. `target.self` is routed immediately to the acting combatant and never opens
 selection. Guard remains deliberately deferred, so no self command is currently selectable.
 
 Menu/Cancel returns from a magic submenu to the top-level menu, or from target selection to

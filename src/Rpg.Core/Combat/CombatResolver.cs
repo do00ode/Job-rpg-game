@@ -141,7 +141,8 @@ public sealed class CombatResolver : ICombatResolver
 		LocatedCombatant target,
 		AbilityDefinition ability)
 	{
-		if (target.Value.Side == actor.Value.Side)
+		if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal)
+			&& target.Value.Side == actor.Value.Side)
 		{
 			Reject(
 				CombatCommandProblemCodes.TargetSameSide,

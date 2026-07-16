@@ -23,6 +23,10 @@ public partial class BattleController : Control
     private Label _battlefieldLabel = null!;
     private TextureRect _battlefieldBackground = null!;
     private Button _gridDebugToggle = null!;
+    private Button _battleLogDebugToggle = null!;
+    private PanelContainer _battleLogWindow = null!;
+    private Button _battleLogCloseButton = null!;
+    private VBoxContainer _battleLogHost = null!;
     private BattleFormationView _formationView = null!;
     private VBoxContainer _partyStatus = null!;
     private VBoxContainer _enemyStatus = null!;
@@ -57,6 +61,8 @@ public partial class BattleController : Control
     private Button? _focusedCommandButton;
     private BattleInputPhase _phase = BattleInputPhase.Uninitialized;
     private bool _completionRequested;
+    private bool _showFormationGrid = true;
+    private bool _showBattleLog;
 
     /// <summary>
     /// Raised only after the player confirms a core-authored victory or defeat outcome.
@@ -69,6 +75,10 @@ public partial class BattleController : Control
         _battlefieldLabel = GetNode<Label>("Margin/VBox/BattlefieldId");
         _battlefieldBackground = GetNode<TextureRect>("BattlefieldBackground");
         _gridDebugToggle = GetNode<Button>("GridDebugToggle");
+        _battleLogDebugToggle = GetNode<Button>("BattleLogDebugToggle");
+        _battleLogWindow = GetNode<PanelContainer>("BattleLogWindow");
+        _battleLogCloseButton = GetNode<Button>("BattleLogWindow/Margin/VBox/Header/Close");
+        _battleLogHost = GetNode<VBoxContainer>("BattleLogWindow/Margin/VBox/LogHost");
         _formationView = GetNode<BattleFormationView>("Margin/VBox/FormationView");
         _partyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/PartyStatus");
         _enemyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/EnemyStatus");
@@ -84,42 +94,73 @@ public partial class BattleController : Control
         _inputHint = GetNode<Label>("Margin/VBox/InputHint");
 
         _continueButton.Pressed += RequestCompletion;
-        _gridDebugToggle.Toggled += ToggleFormationGrid;
+        _battleLogCloseButton.Pressed += ToggleBattleLog;
         ConfigureLowerBattlePanel();
+        SetProcessInput(true);
         SetProcessUnhandledInput(false);
     }
 
     private void ConfigureLowerBattlePanel()
     {
-        var stack = (VBoxContainer)_commandMenu.GetParent().GetParent();
+        var statusRow = (HBoxContainer)_partyStatus.GetParent();
+        var stack = (VBoxContainer)statusRow.GetParent();
         var commandArea = (VBoxContainer)_commandMenu.GetParent();
         var lowerPanel = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(0.0f, 112.0f),
+            CustomMinimumSize = new Vector2(0.0f, 148.0f),
             SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
         };
-        lowerPanel.AddThemeConstantOverride("separation", 10);
+        lowerPanel.AddThemeConstantOverride("separation", 12);
         stack.AddChild(lowerPanel);
-        stack.MoveChild(lowerPanel, commandArea.GetIndex());
+        stack.MoveChild(lowerPanel, statusRow.GetIndex());
 
-        _eventLog.Reparent(lowerPanel);
+        var enemyPanel = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(300.0f, 0.0f),
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        enemyPanel.AddThemeConstantOverride("separation", 3);
+        lowerPanel.AddChild(enemyPanel);
+
+        _enemyStatus.Reparent(enemyPanel);
+        _eventLog.Reparent(_battleLogHost);
         commandArea.Reparent(lowerPanel);
-        lowerPanel.MoveChild(_eventLog, 0);
-        lowerPanel.MoveChild(commandArea, 1);
+        var spacer = new Control
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        lowerPanel.AddChild(spacer);
+        _partyStatus.Reparent(lowerPanel);
+        statusRow.Visible = false;
 
-        _eventLog.CustomMinimumSize = new Vector2(0.0f, 104.0f);
-        _eventLog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _enemyStatus.CustomMinimumSize = new Vector2(300.0f, 0.0f);
+        _partyStatus.CustomMinimumSize = new Vector2(290.0f, 0.0f);
+        _eventLog.CustomMinimumSize = new Vector2(580.0f, 220.0f);
         _eventLog.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-        _eventLog.SizeFlagsStretchRatio = 1.0f;
-        commandArea.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _eventLog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        commandArea.CustomMinimumSize = new Vector2(270.0f, 0.0f);
+        commandArea.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         commandArea.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-        commandArea.SizeFlagsStretchRatio = 1.35f;
     }
 
-    private void ToggleFormationGrid(bool showGrid)
+    private void ToggleFormationGrid()
     {
-        _formationView.SetGridVisible(showGrid);
-        _gridDebugToggle.Text = showGrid ? "Hide Grid (Debug)" : "Show Grid (Debug)";
+        _showFormationGrid = !_showFormationGrid;
+        _formationView.SetGridVisible(_showFormationGrid);
+        _encounterLabel.Visible = _showFormationGrid;
+        _battlefieldLabel.Visible = _showFormationGrid;
+        _gridDebugToggle.Text = _showFormationGrid
+            ? "Hide Grid (Debug)"
+            : "Show Grid (Debug)";
+    }
+
+    private void ToggleBattleLog()
+    {
+        _showBattleLog = !_showBattleLog;
+        _battleLogWindow.Visible = _showBattleLog;
+        _battleLogDebugToggle.Text = _showBattleLog
+            ? "Hide Log (Debug)"
+            : "Show Log (Debug)";
     }
 
     /// <summary>
@@ -216,9 +257,38 @@ public partial class BattleController : Control
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_phase is BattleInputPhase.Uninitialized or BattleInputPhase.Resolving
-            || _completionRequested
+        if (_completionRequested
             || @event is not InputEventKey { Pressed: true, Echo: false } keyEvent)
+        {
+            return;
+        }
+
+        if (_gridDebugToggle.HasFocus()
+            && keyEvent.IsActionPressed(GameInputActions.Interact))
+        {
+            ToggleFormationGrid();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_battleLogDebugToggle.HasFocus()
+            && keyEvent.IsActionPressed(GameInputActions.Interact))
+        {
+            ToggleBattleLog();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_showBattleLog
+            && (keyEvent.IsActionPressed(GameInputActions.Interact)
+                || keyEvent.IsActionPressed(GameInputActions.Menu)))
+        {
+            ToggleBattleLog();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_phase is BattleInputPhase.Uninitialized or BattleInputPhase.Resolving)
         {
             return;
         }
@@ -297,6 +367,43 @@ public partial class BattleController : Control
             GetViewport().SetInputAsHandled();
             ResolveSelectedAbility(_selectedTargetId);
         }
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event is not InputEventMouseButton
+            {
+                Pressed: true,
+                ButtonIndex: MouseButton.Left,
+            } mouseButton
+            )
+        {
+            return;
+        }
+
+        if (_battleLogDebugToggle.GetGlobalRect().HasPoint(mouseButton.Position))
+        {
+            ToggleBattleLog();
+            _battleLogDebugToggle.GrabFocus();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_showBattleLog && _battleLogCloseButton.GetGlobalRect().HasPoint(mouseButton.Position))
+        {
+            ToggleBattleLog();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (!_gridDebugToggle.GetGlobalRect().HasPoint(mouseButton.Position))
+        {
+            return;
+        }
+
+        ToggleFormationGrid();
+        _gridDebugToggle.GrabFocus();
+        GetViewport().SetInputAsHandled();
     }
 
     private void CreateCombatantControls(CombatSnapshot snapshot)
@@ -461,6 +568,12 @@ public partial class BattleController : Control
             return;
         }
 
+        if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleCombatant, StringComparison.Ordinal))
+        {
+            BeginTargetSelection(null);
+            return;
+        }
+
         if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleAlly, StringComparison.Ordinal))
         {
             BeginTargetSelection(BattleSide.Party);
@@ -477,7 +590,7 @@ public partial class BattleController : Control
             $"Battle command UI does not support targeting contract '{ability.TargetingId}'.");
     }
 
-    private void BeginTargetSelection(BattleSide targetSide)
+    private void BeginTargetSelection(BattleSide? targetSide)
     {
         if (_phase is not (BattleInputPhase.Command or BattleInputPhase.MagicSelection)
             || _selectedAbilityId is null)
@@ -489,14 +602,17 @@ public partial class BattleController : Control
         if (livingTargets.Length == 0)
         {
             throw new InvalidOperationException(
-                $"An in-progress battle must have at least one living {targetSide} target.");
+                "An in-progress battle must have at least one living legal target.");
         }
 
         _phase = BattleInputPhase.TargetSelection;
         _selectedTargetId = livingTargets[0];
-        AppendLog(targetSide == BattleSide.Enemy
-            ? "Choose an enemy target."
-            : "Choose an ally target.");
+        AppendLog(targetSide switch
+        {
+            BattleSide.Enemy => "Choose an enemy target.",
+            BattleSide.Party => "Choose an ally target.",
+            _ => "Choose a combatant target.",
+        });
         RefreshPresentation();
         _targetButtonByInstanceId[_selectedTargetId].GrabFocus();
     }
@@ -523,7 +639,7 @@ public partial class BattleController : Control
 
     private void CycleTarget(int offset)
     {
-        string[] livingTargets = GetLivingTargetIds(RequireSelectedTargetSide());
+        string[] livingTargets = GetLivingTargetIds(GetSelectedTargetSide());
         if (livingTargets.Length == 0)
         {
             return;
@@ -543,8 +659,7 @@ public partial class BattleController : Control
     private void SelectFocusedTarget(string instanceId)
     {
         if (_phase == BattleInputPhase.TargetSelection
-            && !RequireSnapshot().GetRequiredCombatant(instanceId).IsDefeated
-            && RequireSnapshot().GetRequiredCombatant(instanceId).Side == RequireSelectedTargetSide())
+            && IsLegalSelectedTarget(RequireSnapshot().GetRequiredCombatant(instanceId)))
         {
             _selectedTargetId = instanceId;
             RefreshPresentation();
@@ -559,12 +674,7 @@ public partial class BattleController : Control
         }
 
         CombatantSnapshot target = RequireSnapshot().GetRequiredCombatant(instanceId);
-        if (target.IsDefeated)
-        {
-            return;
-        }
-
-        if (target.Side != RequireSelectedTargetSide())
+        if (!IsLegalSelectedTarget(target))
         {
             return;
         }
@@ -599,6 +709,19 @@ public partial class BattleController : Control
             {
                 throw new InvalidOperationException(
                     $"Selected target '{target.InstanceId}' is not a living enemy.");
+            }
+        }
+        else if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleCombatant, StringComparison.Ordinal))
+        {
+            if (_phase != BattleInputPhase.TargetSelection)
+            {
+                return;
+            }
+
+            if (current.GetRequiredCombatant(targetId).IsDefeated)
+            {
+                throw new InvalidOperationException(
+                    $"Selected target '{targetId}' is defeated.");
             }
         }
         else if (string.Equals(ability.TargetingId, AbilityTargetingIds.Self, StringComparison.Ordinal)
@@ -790,10 +913,11 @@ public partial class BattleController : Control
         foreach (CombatantSnapshot combatant in snapshot.Combatants)
         {
             string defeatedSuffix = combatant.IsDefeated ? " - defeated" : string.Empty;
-            _hpLabelByInstanceId[combatant.InstanceId].Text =
-                $"{DisplayName(combatant.InstanceId)}: "
-                + $"{combatant.CurrentHp}/{combatant.MaximumHp} HP | "
-                + $"{combatant.CurrentMp}/{combatant.MaximumMp} MP{defeatedSuffix}";
+            _hpLabelByInstanceId[combatant.InstanceId].Text = combatant.Side == BattleSide.Enemy
+                ? $"{DisplayName(combatant.InstanceId)}{defeatedSuffix}"
+                : $"{DisplayName(combatant.InstanceId)}: "
+                    + $"{combatant.CurrentHp}/{combatant.MaximumHp} HP | "
+                    + $"{combatant.CurrentMp}/{combatant.MaximumMp} MP{defeatedSuffix}";
 
             if (_targetButtonByInstanceId.TryGetValue(
                     combatant.InstanceId,
@@ -804,7 +928,7 @@ public partial class BattleController : Control
                     + $"{combatant.CurrentHp}/{combatant.MaximumHp}";
                 targetButton.Disabled = combatant.IsDefeated
                     || _phase != BattleInputPhase.TargetSelection
-                    || combatant.Side != RequireSelectedTargetSideOrDefault();
+                    || !IsLegalSelectedTarget(combatant);
             }
         }
 
@@ -814,17 +938,24 @@ public partial class BattleController : Control
         _targetButtons.Visible = _phase == BattleInputPhase.TargetSelection;
         _formationView.SetTargetedCombatant(
             _phase == BattleInputPhase.TargetSelection ? _selectedTargetId : null);
+        _formationView.SetHighlightedCombatant(_phase switch
+        {
+            BattleInputPhase.TargetSelection => _selectedTargetId,
+            BattleInputPhase.Command or BattleInputPhase.MagicSelection =>
+                CombatTimeline.SelectReadyActor(snapshot, RequireContent()).InstanceId,
+            _ => null,
+        });
         _continueButton.Visible = _phase == BattleInputPhase.Completed;
         _resultLabel.Visible = _phase == BattleInputPhase.Completed;
 
         _phaseLabel.Text = _phase switch
         {
-            BattleInputPhase.Command => $"{DisplayName(CombatTimeline.SelectReadyActor(snapshot, RequireContent()).InstanceId)}'s turn: choose a command.",
+            BattleInputPhase.Command => string.Empty,
             BattleInputPhase.MagicSelection =>
                 $"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
             BattleInputPhase.TargetSelection =>
                 $"{ShortDefinitionName(_selectedAbilityId ?? "ability")}: choose a living "
-                + $"{TargetSideLabel(RequireSelectedTargetSide())}.",
+                + $"{TargetSelectionLabel()}.",
             BattleInputPhase.Resolving => "Resolving the next turn...",
             BattleInputPhase.Completed => "Battle ended.",
             _ => string.Empty,
@@ -888,12 +1019,12 @@ public partial class BattleController : Control
         };
     }
 
-    private string[] GetLivingTargetIds(BattleSide side) => RequireSnapshot().Combatants
-        .Where(combatant => combatant.Side == side && !combatant.IsDefeated)
+    private string[] GetLivingTargetIds(BattleSide? side) => RequireSnapshot().Combatants
+        .Where(combatant => (side is null || combatant.Side == side) && !combatant.IsDefeated)
         .Select(combatant => combatant.InstanceId)
         .ToArray();
 
-    private BattleSide RequireSelectedTargetSide()
+    private BattleSide? GetSelectedTargetSide()
     {
         AbilityDefinition ability = RequireContent().GetRequired<AbilityDefinition>(
             _selectedAbilityId
@@ -902,17 +1033,29 @@ public partial class BattleController : Control
         {
             AbilityTargetingIds.SingleEnemy => BattleSide.Enemy,
             AbilityTargetingIds.SingleAlly => BattleSide.Party,
+            AbilityTargetingIds.SingleCombatant => null,
             _ => throw new InvalidOperationException(
                 $"Ability '{ability.Id}' does not use an explicit target selection."),
         };
     }
 
-    private BattleSide RequireSelectedTargetSideOrDefault() =>
-        _selectedAbilityId is null ? BattleSide.Enemy : RequireSelectedTargetSide();
+    private bool IsLegalSelectedTarget(CombatantSnapshot combatant)
+    {
+        if (combatant.IsDefeated)
+        {
+            return false;
+        }
 
-    private static string TargetSideLabel(BattleSide side) => side == BattleSide.Enemy
-        ? "enemy"
-        : "ally";
+        BattleSide? targetSide = GetSelectedTargetSide();
+        return targetSide is null || combatant.Side == targetSide;
+    }
+
+    private string TargetSelectionLabel() => GetSelectedTargetSide() switch
+    {
+        BattleSide.Enemy => "enemy",
+        BattleSide.Party => "ally",
+        _ => "combatant",
+    };
 
     private string DisplayName(string instanceId) => _formationView.GetDisplayLabel(instanceId);
 

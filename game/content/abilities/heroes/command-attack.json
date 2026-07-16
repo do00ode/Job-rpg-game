@@ -5,7 +5,7 @@
   "descriptionKey": "ability.attack.description",
   "abilityKindId": "ability-kind.skill",
   "magicDisciplineIds": [],
-  "targetingId": "target.enemy.single",
+  "targetingId": "target.combatant.single",
   "costStatisticId": null,
   "costAmount": 0,
   "rulesetId": "rules.damage.physical",

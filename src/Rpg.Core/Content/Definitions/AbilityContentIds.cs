@@ -18,6 +18,9 @@ public static class AbilityTargetingIds
 
     /// <summary>Exactly one living combatant on the acting combatant's side is selected.</summary>
     public const string SingleAlly = "target.ally.single";
+
+    /// <summary>Exactly one living combatant on either side is selected.</summary>
+    public const string SingleCombatant = "target.combatant.single";
 }
 
 /// <summary>

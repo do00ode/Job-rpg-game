@@ -8,7 +8,7 @@ the other implemented kind and is covered in `MAGIC_AUTHORING_GUIDE.md`.
 
 The repository can load, validate, grant, and place ability IDs into a combat snapshot.
 Milestone 3.10 can also execute one narrow family in pure core tests: a free
-`target.enemy.single` + `rules.damage.physical` ability. There is still no Godot battle menu,
+`target.enemy.single` or `target.combatant.single` + `rules.damage.physical` ability. There is still no Godot battle menu,
 animation, MP use, Guard execution, or automatic turn flow. Adding JSON selects only behavior
 the trusted C# resolver already supports; it never creates a new mechanic by itself.
 
@@ -20,6 +20,7 @@ The game accepts only code-owned target and ruleset contracts that it understand
 |---|---|---|---|
 | `target.self` | `rules.defense.guard` | `damage-reduction` | Greater than `0` and at most `1`; validated but not executed yet |
 | `target.enemy.single` | `rules.damage.physical` | `power` | Greater than `0`; executable with supported MP costs |
+| `target.combatant.single` | `rules.damage.physical` | `power` | Greater than `0`; may select any living combatant, including the actor |
 | `target.ally.single` | `rules.healing.flat` | `power` | Positive whole-number HP restoration; executable with supported MP costs |
 
 For example, `0.25` means a 25% reduction. The Guard authoring contract is validated now so

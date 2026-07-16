@@ -61,7 +61,8 @@ public static class CombatAbilityExecutionSupport
         IsPhysicalDamage(ability);
 
     private static bool IsPhysicalDamage(AbilityDefinition ability) =>
-        string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal)
+        (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal)
+            || string.Equals(ability.TargetingId, AbilityTargetingIds.SingleCombatant, StringComparison.Ordinal))
         && string.Equals(ability.RulesetId, AbilityRulesetIds.PhysicalDamage, StringComparison.Ordinal);
 
     private static bool IsFlatHealing(AbilityDefinition ability) =>

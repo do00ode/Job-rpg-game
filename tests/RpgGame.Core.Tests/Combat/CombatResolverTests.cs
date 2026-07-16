@@ -483,10 +483,27 @@ public sealed class CombatResolverTests
     {
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
 
-        AssertRejected(
-            battle,
-            Attack("party-0", "party-0"),
-            CombatCommandProblemCodes.TargetSameSide);
+        CombatCommandValidationException exception = Assert.Throws<CombatCommandValidationException>(
+            () => new CombatResolver(new TestCatalog(PhysicalAbility(CombatTestFixture.AttackId, 4m))).Resolve(
+                battle.Snapshot,
+                Attack("party-0", "party-0")));
+
+        Assert.Equal(CombatCommandProblemCodes.TargetSameSide, exception.ProblemCode);
+    }
+
+    [Fact]
+    public void Resolve_BasicAttackCanTargetActingCombatant()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatantSnapshot originalActor = battle.Snapshot.GetRequiredCombatant("party-0");
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            battle.Snapshot,
+            Attack("party-0", "party-0"));
+
+        DamageApplied damage = Assert.IsType<DamageApplied>(Assert.Single(resolution.Events));
+        Assert.Equal("party-0", damage.TargetCombatantId);
+        Assert.True(resolution.Next.GetRequiredCombatant("party-0").CurrentHp < originalActor.CurrentHp);
     }
 
     [Fact]

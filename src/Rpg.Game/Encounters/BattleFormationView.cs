@@ -25,10 +25,23 @@ public partial class BattleFormationView : Control
     private IReadOnlySet<string> _defeatedCombatantIds =
         new HashSet<string>(StringComparer.Ordinal);
     private string? _targetedCombatantId;
+    private string? _highlightedCombatantId;
+    private double _targetPulseTime;
     private bool _gridVisible = true;
     private bool _initialized;
 
     public override void _Ready() => Resized += OnResized;
+
+    public override void _Process(double delta)
+    {
+        if (string.IsNullOrWhiteSpace(_highlightedCombatantId))
+        {
+            return;
+        }
+
+        _targetPulseTime += delta;
+        QueueRedraw();
+    }
 
     /// <summary>Receives placements already built and validated by plain .NET core rules.</summary>
     public void Initialize(
@@ -130,10 +143,25 @@ public partial class BattleFormationView : Control
         }
     }
 
+    /// <summary>Applies the active-turn pulse without showing a target-selection cursor.</summary>
+    public void SetHighlightedCombatant(string? instanceId)
+    {
+        _highlightedCombatantId = instanceId;
+        if (_initialized)
+        {
+            QueueRedraw();
+        }
+    }
+
     /// <summary>Shows or hides the logical formation grid for presentation debugging.</summary>
     public void SetGridVisible(bool visible)
     {
         _gridVisible = visible;
+        if (_initialized)
+        {
+            RefreshLayoutLabels();
+        }
+
         QueueRedraw();
     }
 
@@ -254,7 +282,7 @@ public partial class BattleFormationView : Control
         Rect2 destination = new(
             occupied.Position + ((occupied.Size - size) / 2.0f),
             size);
-        DrawTextureRect(texture, destination, false);
+        DrawTextureRect(texture, destination, false, new Color(1.0f, 1.0f, 1.0f, GetHighlightAlpha(placement)));
     }
 
     private void DrawTargetCursor()
@@ -352,8 +380,14 @@ public partial class BattleFormationView : Control
         DrawTextureRect(
             texture,
             new Rect2(occupied.Position + ((occupied.Size - size) / 2.0f), size),
-            false);
+            false,
+            new Color(1.0f, 1.0f, 1.0f, GetHighlightAlpha(placement)));
     }
+
+    private float GetHighlightAlpha(FormationPlacement placement) =>
+        string.Equals(placement.InstanceId, _highlightedCombatantId, StringComparison.Ordinal)
+            ? 0.68f + (0.32f * ((Mathf.Sin((float)_targetPulseTime * 3.0f) + 1.0f) / 2.0f))
+            : 1.0f;
 
     private void RefreshLayoutLabels()
     {
@@ -364,7 +398,11 @@ public partial class BattleFormationView : Control
         }
 
         _layoutLabels.Clear();
-        CreateGridLabels();
+        if (_gridVisible)
+        {
+            CreateGridLabels();
+        }
+
         foreach (FormationPlacement placement in _enemyPlacements.Concat(_partyPlacements))
         {
             if (_defeatedCombatantIds.Contains(placement.InstanceId))
@@ -519,9 +557,9 @@ public partial class BattleFormationView : Control
         float availableWidth = Mathf.Max(1.0f, Size.X - (outerMargin * 2.0f) - gridGap);
         float cellWidth = availableWidth / (
             BattleFormationRules.EnemyColumnCount + BattleFormationRules.PartyColumnCount);
-        float gridTop = 20.0f;
-        float cellHeight = Mathf.Max(16.0f, (Mathf.Max(gridTop + 4.0f, Size.Y) - gridTop - 4.0f)
-            / BattleFormationRules.RowCount);
+        float gridHeight = Mathf.Min(220.0f, Mathf.Max(64.0f, Size.Y - 24.0f));
+        float gridTop = Mathf.Max(20.0f, Size.Y - gridHeight - 4.0f);
+        float cellHeight = gridHeight / BattleFormationRules.RowCount;
         float partyLeft = outerMargin + (BattleFormationRules.EnemyColumnCount * cellWidth) + gridGap;
         return new FormationLayout(cellWidth, cellHeight, gridTop, outerMargin, partyLeft);
     }
