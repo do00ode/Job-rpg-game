@@ -261,10 +261,10 @@ public partial class ExplorationSceneController : Node2D
 
 		if (TryGetMovement(keyEvent, out Vector2I delta, out string facing))
 		{
-			BeginHeldMovement(keyEvent, delta, facing);
 			// A successful step may synchronously ask GameRoot to remove this scene. Mark the
 			// input handled while this Node still owns a viewport, then perform the move.
 			GetViewport().SetInputAsHandled();
+			BeginHeldMovement(keyEvent, delta, facing);
 			return;
 		}
 
