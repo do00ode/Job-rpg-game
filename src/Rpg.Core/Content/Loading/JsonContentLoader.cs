@@ -15,13 +15,22 @@ public sealed class JsonContentLoader
     /// Loads an entire source in deterministic path order. A bad file does not stop the pass,
     /// allowing the author to fix several related problems after one run.
     /// </summary>
-    public ContentLoadResult Load(IContentSource source) => Load([source]);
+    public ContentLoadResult Load(IContentSource source) => Load([source], null);
 
     /// <summary>
     /// Loads built-in content and dependency-ordered mod sources into one validated catalog.
     /// Sources cannot replace records: globally duplicate IDs remain errors.
     /// </summary>
-    public ContentLoadResult Load(IEnumerable<IContentSource> sources)
+    public ContentLoadResult Load(IEnumerable<IContentSource> sources) =>
+        Load(sources, null);
+
+    /// <summary>
+    /// Loads content and optionally validates every authored localization reference against
+    /// the supplied base locale.
+    /// </summary>
+    public ContentLoadResult Load(
+        IEnumerable<IContentSource> sources,
+        LocalizationCatalog? baseLocalization)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
@@ -180,7 +189,8 @@ public sealed class JsonContentLoader
         problems.AddRange(ContentValidator.Validate(
             loaded,
             candidateCatalog,
-            dependencyIdsBySource));
+            dependencyIdsBySource,
+            baseLocalization));
 
         IReadOnlyList<ContentProblem> orderedProblems = problems
             .OrderBy(problem => problem.FilePath, StringComparer.Ordinal)

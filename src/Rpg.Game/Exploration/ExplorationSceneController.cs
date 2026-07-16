@@ -31,6 +31,7 @@ public partial class ExplorationSceneController : Node2D
 	private Label _instructions = null!;
 	private Label _developmentStatus = null!;
 	private IContentCatalog? _content;
+	private LocalizedTextCatalog? _text;
 	private IGameSession? _session;
 	private IExplorationDevelopmentCommands? _developmentCommands;
 	private InputBindingService? _inputBindings;
@@ -97,6 +98,7 @@ public partial class ExplorationSceneController : Node2D
 		}
 
         _content = content;
+		_text = text;
 		_session = session;
 		_developmentCommands = developmentCommands;
 		_inputBindings = inputBindings;
@@ -368,7 +370,7 @@ public partial class ExplorationSceneController : Node2D
 		ExplorationInteractionResult result = _guide.Interact(session);
 		DialogueDefinition dialogue = RequireContent()
 			.GetRequired<DialogueDefinition>(result.DialogueId);
-		_dialogue.ShowDialogue(dialogue);
+		_dialogue.ShowDialogue(dialogue, RequireText());
 	}
 
 	private void OnSessionStateChanged(object? sender, EventArgs eventArgs) =>
@@ -523,6 +525,9 @@ public partial class ExplorationSceneController : Node2D
 		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
 
 	private IContentCatalog RequireContent() => _content
+		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
+
+	private LocalizedTextCatalog RequireText() => _text
 		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
 
 	private IExplorationDevelopmentCommands RequireDevelopmentCommands() =>

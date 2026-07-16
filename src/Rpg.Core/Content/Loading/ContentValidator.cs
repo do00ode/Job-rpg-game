@@ -20,11 +20,13 @@ internal sealed class ContentValidator
     private readonly Dictionary<string, string> _pathById;
     private readonly Dictionary<string, string> _sourceById;
     private readonly IReadOnlyDictionary<string, IReadOnlySet<string>> _dependencyIdsBySource;
+    private readonly LocalizationCatalog? _baseLocalization;
 
     private ContentValidator(
         IReadOnlyList<LoadedContent> loaded,
         ContentCatalog catalog,
-        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource)
+        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource,
+        LocalizationCatalog? baseLocalization)
     {
         _loaded = loaded;
         _catalog = catalog;
@@ -37,14 +39,20 @@ internal sealed class ContentValidator
             item => item.SourceId,
             StringComparer.Ordinal);
         _dependencyIdsBySource = dependencyIdsBySource;
+        _baseLocalization = baseLocalization;
     }
 
     public static IReadOnlyList<ContentProblem> Validate(
         IReadOnlyList<LoadedContent> loaded,
         ContentCatalog catalog,
-        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource)
+        IReadOnlyDictionary<string, IReadOnlySet<string>> dependencyIdsBySource,
+        LocalizationCatalog? baseLocalization = null)
     {
-        var validator = new ContentValidator(loaded, catalog, dependencyIdsBySource);
+        var validator = new ContentValidator(
+            loaded,
+            catalog,
+            dependencyIdsBySource,
+            baseLocalization);
         validator.ValidateAll();
         return validator._problems;
     }
@@ -105,6 +113,7 @@ internal sealed class ContentValidator
 
         ValidateEquipmentItemUniqueness();
         ValidateStartingClassPool();
+        ValidateLocalizationReferences();
     }
 
     private void ValidateStatusEffect(
@@ -319,18 +328,99 @@ internal sealed class ContentValidator
 
     private void ValidateDialogue(LoadedContent item, DialogueDefinition dialogue)
     {
-        RequireNonBlank(item, "$.speakerName", dialogue.SpeakerName);
+        RequireNonBlank(item, "$.speakerNameKey", dialogue.SpeakerNameKey);
 
-        IReadOnlyList<string> lines = RequireList(item, "$.lines", dialogue.Lines);
+        IReadOnlyList<string> lines = RequireList(item, "$.lineTextKeys", dialogue.LineTextKeys);
         if (lines.Count == 0)
         {
-            Add(item, "$.lines", "dialogue.no-lines",
-                "A dialogue must contain at least one line.");
+            Add(item, "$.lineTextKeys", "dialogue.no-lines",
+                "A dialogue must contain at least one line text key.");
         }
 
+        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
         for (int index = 0; index < lines.Count; index++)
         {
-            RequireNonBlank(item, $"$.lines[{index}]", lines[index]);
+            string path = $"$.lineTextKeys[{index}]";
+            RequireNonBlank(item, path, lines[index]);
+            if (!seenKeys.Add(lines[index]))
+            {
+                Add(item, path, "dialogue.duplicate-line-key",
+                    $"Dialogue line localization key '{lines[index]}' is duplicated.");
+            }
+        }
+    }
+
+    private void ValidateLocalizationReferences()
+    {
+        if (_baseLocalization is null)
+        {
+            return;
+        }
+
+        foreach (LoadedContent item in _loaded)
+        {
+            switch (item.Definition)
+            {
+                case AbilityDefinition ability:
+                    RequireLocalizationKey(item, "$.displayNameKey", ability.DisplayNameKey);
+                    RequireLocalizationKey(item, "$.descriptionKey", ability.DescriptionKey);
+                    break;
+                case ActorDefinition actor:
+                    RequireLocalizationKey(item, "$.displayNameKey", actor.DisplayNameKey);
+                    break;
+                case ClassDefinition classDefinition:
+                    RequireLocalizationKey(item, "$.displayNameKey", classDefinition.DisplayNameKey);
+                    break;
+                case DialogueDefinition dialogue:
+                    RequireLocalizationKey(item, "$.speakerNameKey", dialogue.SpeakerNameKey);
+                    for (int index = 0; index < dialogue.LineTextKeys.Count; index++)
+                    {
+                        RequireLocalizationKey(
+                            item,
+                            $"$.lineTextKeys[{index}]",
+                            dialogue.LineTextKeys[index]);
+                    }
+                    break;
+                case EnemyDefinition enemy:
+                    RequireLocalizationKey(item, "$.displayNameKey", enemy.DisplayNameKey);
+                    break;
+                case ItemDefinition itemDefinition:
+                    RequireLocalizationKey(item, "$.displayNameKey", itemDefinition.DisplayNameKey);
+                    RequireLocalizationKey(item, "$.descriptionKey", itemDefinition.DescriptionKey);
+                    break;
+                case MagicDisciplineDefinition discipline:
+                    RequireLocalizationKey(item, "$.displayNameKey", discipline.DisplayNameKey);
+                    RequireLocalizationKey(item, "$.descriptionKey", discipline.DescriptionKey);
+                    break;
+                case MapDefinition map:
+                    RequireLocalizationKey(item, "$.displayNameKey", map.DisplayNameKey);
+                    break;
+                case QuestDefinition quest:
+                    RequireLocalizationKey(item, "$.displayNameKey", quest.DisplayNameKey);
+                    RequireLocalizationKey(item, "$.descriptionKey", quest.DescriptionKey);
+                    break;
+                case StatisticDefinition statistic:
+                    RequireLocalizationKey(item, "$.displayNameKey", statistic.DisplayNameKey);
+                    break;
+                case StatusEffectDefinition status:
+                    RequireLocalizationKey(item, "$.displayNameKey", status.DisplayNameKey);
+                    if (status.DescriptionKey is not null)
+                    {
+                        RequireLocalizationKey(item, "$.descriptionKey", status.DescriptionKey);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void RequireLocalizationKey(LoadedContent item, string path, string? key)
+    {
+        if (_baseLocalization is not null
+            && !string.IsNullOrWhiteSpace(key)
+            && !_baseLocalization.Contains(key))
+        {
+            Add(item, path, "localization.missing-key",
+                $"Localization key '{key}' is missing from the base locale.");
         }
     }
 

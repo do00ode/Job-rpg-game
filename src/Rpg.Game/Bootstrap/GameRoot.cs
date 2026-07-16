@@ -240,8 +240,23 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
                 mod.ContentDirectory,
                 mod.Manifest.Dependencies)));
 
+        LocalizationLoadResult localizationResult = new LocalizationBundleLoader().Load(
+            "en",
+            new GodotLocalizationSource("res://game/localization/en").ReadAll());
+        if (!localizationResult.IsSuccess)
+        {
+            string details = string.Join(
+                System.Environment.NewLine,
+                localizationResult.Problems.Select(problem => problem.ToString()));
+            throw new InvalidDataException(
+                $"Localization validation failed with {localizationResult.Problems.Count} problem(s):"
+                + System.Environment.NewLine
+                + details);
+        }
+
+        LocalizationCatalog baseLocalization = localizationResult.Catalog!;
         var loader = new JsonContentLoader();
-        ContentLoadResult contentResult = loader.Load(sources);
+        ContentLoadResult contentResult = loader.Load(sources, baseLocalization);
 
         if (!contentResult.IsSuccess)
         {
@@ -277,8 +292,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         InputBindings = new InputBindingService(controlsPath);
         InputBindings.Initialize();
         DisplaySettings = new DisplaySettingsService();
-        Text = new LocalizedTextCatalog(
-            ProjectSettings.GlobalizePath("res://game/localization/en.json"));
+        Text = new LocalizedTextCatalog(baseLocalization);
         if (InputBindings.LoadWarning is not null)
         {
             GD.PushWarning(InputBindings.LoadWarning);

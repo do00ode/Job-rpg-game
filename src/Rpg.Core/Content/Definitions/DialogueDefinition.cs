@@ -4,16 +4,14 @@ namespace RpgGame.Core.Content.Definitions;
 /// Defines one short, linear conversation displayed by an exploration interaction.
 /// </summary>
 /// <remarks>
-/// Milestone 2 deliberately supports only a speaker label followed by ordered text lines.
-/// Choices, conditions, commands, portraits, and cutscene instructions require real future
-/// gameplay cases before they earn fields here. The strings are placeholder authored text;
-/// a localization contract is deferred rather than hidden behind an unfinished abstraction.
+/// Milestone 5.3A deliberately supports only a speaker key followed by ordered text keys.
+/// Choices, conditions, commands, portraits, and cutscene instructions remain deferred.
 /// </remarks>
 public sealed record DialogueDefinition : ContentDefinition
 {
-    /// <summary>Temporary player-facing speaker text for the minimal dialogue panel.</summary>
-    public required string SpeakerName { get; init; }
+    /// <summary>Localization key for the speaker label.</summary>
+    public required string SpeakerNameKey { get; init; }
 
-    /// <summary>Ordered nonblank lines advanced one at a time by the player.</summary>
-    public List<string> Lines { get; init; } = [];
+    /// <summary>Ordered localization keys advanced one at a time by the player.</summary>
+    public List<string> LineTextKeys { get; init; } = [];
 }

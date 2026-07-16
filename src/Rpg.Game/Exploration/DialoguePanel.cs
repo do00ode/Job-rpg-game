@@ -1,5 +1,6 @@
 using Godot;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Localization;
 
 namespace RpgGame.Exploration;
 
@@ -9,6 +10,7 @@ public partial class DialoguePanel : PanelContainer
     private Label _speakerLabel = null!;
     private Label _lineLabel = null!;
     private DialogueDefinition? _dialogue;
+    private LocalizedTextCatalog? _text;
     private int _lineIndex;
 
     /// <summary>Whether exploration input should currently be paused for dialogue.</summary>
@@ -21,10 +23,12 @@ public partial class DialoguePanel : PanelContainer
     }
 
     /// <summary>Begins at the first validated line of the selected content record.</summary>
-    public void ShowDialogue(DialogueDefinition dialogue)
+    public void ShowDialogue(DialogueDefinition dialogue, LocalizedTextCatalog text)
     {
         ArgumentNullException.ThrowIfNull(dialogue);
+        ArgumentNullException.ThrowIfNull(text);
         _dialogue = dialogue;
+        _text = text;
         _lineIndex = 0;
         Visible = true;
         RefreshText();
@@ -40,7 +44,7 @@ public partial class DialoguePanel : PanelContainer
         }
 
         _lineIndex++;
-        if (_lineIndex >= _dialogue.Lines.Count)
+        if (_lineIndex >= _dialogue.LineTextKeys.Count)
         {
             Close();
             return;
@@ -54,6 +58,7 @@ public partial class DialoguePanel : PanelContainer
     {
         Visible = false;
         _dialogue = null;
+        _text = null;
         _lineIndex = 0;
     }
 
@@ -64,7 +69,9 @@ public partial class DialoguePanel : PanelContainer
             return;
         }
 
-        _speakerLabel.Text = _dialogue.SpeakerName;
-        _lineLabel.Text = _dialogue.Lines[_lineIndex];
+        LocalizedTextCatalog text = _text
+            ?? throw new InvalidOperationException("DialoguePanel has no localization catalog.");
+        _speakerLabel.Text = text.Resolve(_dialogue.SpeakerNameKey);
+        _lineLabel.Text = text.Resolve(_dialogue.LineTextKeys[_lineIndex]);
     }
 }
