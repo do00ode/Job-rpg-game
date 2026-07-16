@@ -9,6 +9,8 @@ public static class DamageTypeIds
 {
     public const string Slash = "damage-type.slash";
 
+    public const string Blunt = "damage-type.blunt";
+
     public const string Energy = "damage-type.energy";
 
     public const string Fire = "damage-type.fire";
@@ -18,8 +20,8 @@ public static class DamageTypeIds
     public const string Lightning = "damage-type.lightning";
 
     public static IReadOnlyList<string> Supported { get; } = Array.AsReadOnly(
-        new[] { Slash, Energy, Fire, Ice, Lightning });
+        new[] { Slash, Blunt, Energy, Fire, Ice, Lightning });
 
     public static bool IsSupported(string? damageTypeId) => damageTypeId is
-        Slash or Energy or Fire or Ice or Lightning;
+        Slash or Blunt or Energy or Fire or Ice or Lightning;
 }

@@ -25,6 +25,7 @@ public sealed class DamageTypeContentTests
             sword.WeaponDamagePercentages.ToArray());
         Assert.Equal(4, sword.Attack);
         Assert.False(sword.StatisticModifiers.ContainsKey(CombatStatisticIds.Strength));
+        Assert.Contains(DamageTypeIds.Blunt, DamageTypeIds.Supported);
     }
 
     [Fact]
@@ -84,7 +85,7 @@ public sealed class DamageTypeContentTests
             ItemDocument(),
             EquipmentDocument(
                 "slot.weapon.main-hand",
-                "{ \"damage-type.slash\": 70, \"damage-type.fire\": 30 }"),
+                "{ \"damage-type.slash\": 70, \"damage-type.blunt\": 30 }"),
             EnemyDocument(
                 "{ \"damage-type.fire\": 50, \"damage-type.ice\": -75, "
                 + "\"damage-type.slash\": 20, \"damage-type.lightning\": -100 }"));
@@ -93,7 +94,7 @@ public sealed class DamageTypeContentTests
         EquipmentDefinition equipment = result.Catalog!.GetRequired<EquipmentDefinition>(
             "equipment.test.weapon");
         Assert.Equal(70, equipment.WeaponDamagePercentages[DamageTypeIds.Slash]);
-        Assert.Equal(30, equipment.WeaponDamagePercentages[DamageTypeIds.Fire]);
+        Assert.Equal(30, equipment.WeaponDamagePercentages[DamageTypeIds.Blunt]);
 
         EnemyDefinition enemy = result.Catalog.GetRequired<EnemyDefinition>("enemy.test.target");
         Assert.Equal(50, enemy.DamageTypePercentModifiers[DamageTypeIds.Fire]);

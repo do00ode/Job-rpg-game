@@ -65,6 +65,9 @@ either saved accessory slot, `.one` or `.two`; those concrete values are save ke
 shields, and accessories. Weapon damage profiles must total `100`. All equipment may use
 `statisticModifiers`, `grantedAbilityIds`, and reserved `specialEffectIds`.
 
+Supported weapon damage types include Slash, Blunt, Energy, Fire, Ice, and Lightning. For a
+blunt weapon, use for example `{ "damage-type.blunt": 100 }`.
+
 ## Maps
 
 Maps live in `game/content/maps/`. Rows are the gameplay logic layer, separate from visual art:

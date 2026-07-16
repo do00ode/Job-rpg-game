@@ -364,7 +364,7 @@ See `LOOT_TABLE_AUTHORING_GUIDE.md`.
 | `costStatisticId` | ID or null | Null/zero for no cost, or `stat.max-mp` to spend transient current MP. |
 | `costAmount` | integer | Nonnegative amount from the selected supported resource pool. |
 | `rulesetId` | ID | Selects one supported code-owned behavior; currently `rules.defense.guard`, `rules.damage.physical`, or `rules.healing.flat`. |
-| `damageTypeId` | ID or null | Optional code-owned type for a damage ruleset: `damage-type.slash`, `damage-type.energy`, `damage-type.fire`, `damage-type.ice`, or `damage-type.lightning`. Omitted legacy physical damage defaults to Energy. |
+| `damageTypeId` | ID or null | Optional code-owned type for a damage ruleset: `damage-type.slash`, `damage-type.blunt`, `damage-type.energy`, `damage-type.fire`, `damage-type.ice`, or `damage-type.lightning`. Omitted legacy physical damage defaults to Energy. |
 | `numericParameters` | object of string → number | Exact required keys and ranges are owned by the selected ruleset. Extra keys are errors. |
 
 ```json
