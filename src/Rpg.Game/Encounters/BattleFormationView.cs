@@ -182,7 +182,12 @@ public partial class BattleFormationView : Control
     private void DrawEnemyTexture(FormationPlacement placement, Texture2D texture)
     {
         Rect2 occupied = GetPlacementRectangle(placement);
-        float scale = Mathf.Min(occupied.Size.X / texture.GetWidth(), occupied.Size.Y / texture.GetHeight());
+        // Give enemy art a little visual presence beyond its logical cell while keeping the
+        // authored footprint authoritative. This follows the classic JRPG composition where
+        // enemies read as larger silhouettes than the party sprites on the opposite side.
+        float scale = Mathf.Min(
+            (occupied.Size.X * 1.25f) / texture.GetWidth(),
+            (occupied.Size.Y * 1.25f) / texture.GetHeight());
         Vector2 size = new(texture.GetWidth() * scale, texture.GetHeight() * scale);
         Rect2 destination = new(
             occupied.Position + ((occupied.Size - size) / 2.0f),
@@ -265,6 +270,12 @@ public partial class BattleFormationView : Control
 
     private void CreatePlacementLabel(FormationPlacement placement)
     {
+        if (placement.Anchor.Side == BattleSide.Enemy
+            && _textureByDefinitionId.ContainsKey(placement.DefinitionId))
+        {
+            return;
+        }
+
         Rect2 occupied = GetPlacementRectangle(placement);
         var labelArea = new Rect2(
             occupied.Position + new Vector2(5.0f, 4.0f),
