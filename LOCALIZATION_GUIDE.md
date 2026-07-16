@@ -25,7 +25,7 @@ Each file contains:
   "schemaVersion": 1,
   "locale": "en",
   "texts": {
-    "item.iron-sword.description": "A dependable blade."
+	"item.iron-sword.description": "A dependable blade."
   }
 }
 ```

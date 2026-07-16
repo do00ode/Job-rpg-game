@@ -138,8 +138,10 @@ public partial class ExplorationSceneController : Node2D
 			|| !global::Godot.Input.IsActionPressed(_heldMovementAction))
 		{
 			ClearHeldMovement();
+			_player.SetWalking(false);
 			return;
 		}
+		_player.SetWalking(true);
 
 		_movementRepeatTimer -= delta;
 		if (_movementRepeatTimer > 0)
@@ -290,6 +292,7 @@ public partial class ExplorationSceneController : Node2D
 
 	private void BeginHeldMovement(string action, Vector2I delta, string facing)
 	{
+		_player.SetWalking(true);
 		bool changedDirection = !string.Equals(
 			RequireSession().Current.Location.Facing,
 			facing,

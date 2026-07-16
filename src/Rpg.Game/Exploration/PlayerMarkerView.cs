@@ -2,31 +2,85 @@ using Godot;
 
 namespace RpgGame.Exploration;
 
-/// <summary>Simple code-drawn James placeholder with a visible facing marker.</summary>
+/// <summary>Pixel-art James marker used while exploring dungeon and town maps.</summary>
 public partial class PlayerMarkerView : Node2D
 {
     private string _facing = "south";
+    private readonly Dictionary<string, Texture2D[]> _frames = new(StringComparer.Ordinal);
+    private Texture2D? _currentFrame;
+    private bool _walking;
+    private double _animationTimer;
+    private int _animationFrame;
+
+    public override void _Ready()
+    {
+        _frames["north"] = LoadFrames("up");
+        _frames["east"] = LoadFrames("right");
+        _frames["south"] = LoadFrames("down");
+        _frames["west"] = LoadFrames("left");
+        _currentFrame = _frames["south"][0];
+        QueueRedraw();
+    }
 
     /// <summary>Updates the logical direction rendered on the next frame.</summary>
     public void SetFacing(string facing)
     {
         _facing = facing;
+        _animationFrame = 0;
+        _animationTimer = 0.0;
+        _currentFrame = _frames.TryGetValue(facing, out Texture2D[]? frames)
+            ? frames[0]
+            : _frames["south"][0];
+        QueueRedraw();
+    }
+
+    public void SetWalking(bool walking)
+    {
+        _walking = walking;
+        if (!walking)
+        {
+            _animationFrame = 0;
+            _animationTimer = 0.0;
+            SetFacing(_facing);
+        }
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!_walking || !_frames.TryGetValue(_facing, out Texture2D[]? frames))
+        {
+            return;
+        }
+
+        _animationTimer += delta;
+        if (_animationTimer < 0.16)
+        {
+            return;
+        }
+
+        _animationTimer = 0.0;
+        _animationFrame = (_animationFrame + 1) % frames.Length;
+        _currentFrame = frames[_animationFrame];
         QueueRedraw();
     }
 
     public override void _Draw()
     {
-        var body = new Rect2(new Vector2(-17, -17), new Vector2(34, 34));
-        DrawRect(body, new Color(0.17f, 0.55f, 0.95f));
-        DrawRect(body, Colors.White, false, 2.0f);
-
-        Vector2 direction = _facing switch
+        if (_currentFrame is not null)
         {
-            "north" => Vector2.Up,
-            "east" => Vector2.Right,
-            "west" => Vector2.Left,
-            _ => Vector2.Down,
-        };
-        DrawCircle(direction * 11.0f, 4.0f, Colors.White);
+            DrawTexture(_currentFrame, new Vector2(-8.0f, -24.0f));
+        }
+    }
+
+    private static Texture2D[] LoadFrames(string direction)
+    {
+        const string root = "res://game/assets/party/james/overworld/";
+        return
+        [
+            ResourceLoader.Load<Texture2D>($"{root}james-{direction}1.png")
+                ?? throw new InvalidDataException($"Missing James overworld frame '{direction}1'."),
+            ResourceLoader.Load<Texture2D>($"{root}james-{direction}2.png")
+                ?? throw new InvalidDataException($"Missing James overworld frame '{direction}2'."),
+        ];
     }
 }
