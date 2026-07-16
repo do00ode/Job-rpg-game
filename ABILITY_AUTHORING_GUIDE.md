@@ -204,3 +204,8 @@ Do not commit until these commands return exit code `0`.
 - At least one actor, class, enemy, or future equipment source grants the ability.
 - Base and base-plus-mod content validation both pass.
 - A focused test is added when a new C# ruleset or target contract is introduced.
+## Damage Variance
+
+Damage abilities may optionally author `damageVariance` with inclusive `minimumPercent` and
+`maximumPercent` bounds. Omitted magic abilities use 80-120; omitted physical abilities use the
+equipped weapon context when available, otherwise 95-105.

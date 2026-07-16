@@ -27,6 +27,10 @@ public sealed record EquipmentDefinition : ContentDefinition
     /// </summary>
     public int Attack { get; init; }
 
+    public string? WeaponFamilyId { get; init; }
+
+    public DamageVarianceDefinition? DamageVariance { get; init; }
+
     /// <summary>Abilities available only while this equipment is active.</summary>
     public List<string> GrantedAbilityIds { get; init; } = [];
 

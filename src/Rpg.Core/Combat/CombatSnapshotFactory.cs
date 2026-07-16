@@ -105,7 +105,8 @@ public sealed class CombatSnapshotFactory
                 abilityAvailability,
                 maximumHp,
                 equippedWeaponAttack: weapon.Attack,
-                equippedWeaponDamageTypeId: weapon.DamageTypeId));
+                equippedWeaponDamageTypeId: weapon.DamageTypeId,
+                equippedWeaponDamageVariance: weapon.DamageVariance));
         }
 
         foreach (string activeActorId in activePartyIds)
@@ -256,7 +257,7 @@ public sealed class CombatSnapshotFactory
             ?? throw new InvalidDataException($"Weapon '{weapon.Id}' has a null damage profile.");
         if (profile.Count == 0)
         {
-            return new EquippedWeaponSnapshot(weapon.Attack, null);
+            return new EquippedWeaponSnapshot(weapon.Attack, null, ResolveWeaponVariance(weapon));
         }
 
         if (profile.Count != 1 || profile.Single().Value != 100)
@@ -265,12 +266,18 @@ public sealed class CombatSnapshotFactory
                 $"Weapon '{weapon.Id}' has a multi-component damage profile, which basic Attack does not support yet.");
         }
 
-        return new EquippedWeaponSnapshot(weapon.Attack, profile.Single().Key);
+        return new EquippedWeaponSnapshot(weapon.Attack, profile.Single().Key, ResolveWeaponVariance(weapon));
     }
 
-    private sealed record EquippedWeaponSnapshot(int Attack, string? DamageTypeId)
+    private DamageVarianceDefinition? ResolveWeaponVariance(EquipmentDefinition weapon) =>
+        weapon.DamageVariance
+        ?? (weapon.WeaponFamilyId is null
+            ? null
+            : _content.GetRequired<WeaponFamilyDefinition>(weapon.WeaponFamilyId).DamageVariance);
+
+    private sealed record EquippedWeaponSnapshot(int Attack, string? DamageTypeId, DamageVarianceDefinition? DamageVariance)
     {
-        public static EquippedWeaponSnapshot None { get; } = new(0, null);
+        public static EquippedWeaponSnapshot None { get; } = new(0, null, null);
     }
 
     private void ValidateAbilityReferences(

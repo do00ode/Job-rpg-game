@@ -49,12 +49,38 @@ public sealed class CombatResolverTests
         Assert.Equal(CombatTestFixture.AttackId, damage.AbilityId);
         Assert.Equal(DamageTypeIds.Slash, damage.DamageTypeId);
         Assert.Equal(0, damage.DamagePercentModifier);
+        Assert.Equal(100, damage.VariancePercent);
         Assert.Equal(11, damage.Amount);
         Assert.Equal(22, damage.PreviousHp);
         Assert.Equal(11, damage.CurrentHp);
         Assert.Throws<NotSupportedException>(() =>
             ((IList<CombatEvent>)resolution.Events).Add(
                 new CombatantDefeated("enemy-0")));
+    }
+
+    [Fact]
+    public void Resolve_UsesInjectedInclusiveVarianceAndReportsTheRoll()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        AbilityDefinition attack = PhysicalAbility(CombatTestFixture.AttackId, 4m) with
+        {
+            DamageVariance = new DamageVarianceDefinition
+            {
+                MinimumPercent = 50,
+                MaximumPercent = 50,
+            },
+        };
+
+        CombatResolution resolution = new CombatResolver(
+            new TestCatalog(attack),
+            new ScriptedRandomSource(50)).Resolve(
+                battle.Snapshot,
+                Attack("party-0", "enemy-0"));
+
+        DamageApplied damage = Assert.IsType<DamageApplied>(Assert.Single(resolution.Events));
+        Assert.Equal(50, damage.VariancePercent);
+        Assert.Equal(5, damage.Amount);
+        Assert.Equal(17, resolution.Next.GetRequiredCombatant("enemy-0").CurrentHp);
     }
 
     [Fact]
@@ -631,6 +657,11 @@ public sealed class CombatResolverTests
                 command));
 
         Assert.Equal(expectedProblemCode, exception.ProblemCode);
+    }
+
+    private sealed class ScriptedRandomSource(int value) : IRandomSource
+    {
+        public int Next(int minInclusive, int maxExclusive) => value;
     }
 
     private static CombatSnapshot ReplaceCombatant(

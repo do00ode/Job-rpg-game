@@ -641,3 +641,10 @@ existing campaign class selections during load.
 Every JSON record must write `schemaVersion` even when it is `1`. The C# default exists for
 hand-built tests and tools only; accepting a missing JSON version would make future migrations
 unable to distinguish old content from an authoring omission.
+## Weapon Families
+
+Weapon-family records are stored under `game/content/weapon-families/`. They contain `id`,
+`schemaVersion`, `displayNameKey`, and a `damageVariance` object with inclusive integer
+`minimumPercent` and `maximumPercent` values. Equipment can reference a family with
+`weaponFamilyId` or override its range with its own `damageVariance`; abilities can author the
+same override.

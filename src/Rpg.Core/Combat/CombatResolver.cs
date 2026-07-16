@@ -16,10 +16,12 @@ public sealed class CombatResolver : ICombatResolver
 {
 	private const string BasicAttackAbilityId = "ability.command.attack";
 	private readonly IContentCatalog _content;
+	private readonly IRandomSource _random;
 
-	public CombatResolver(IContentCatalog content)
+	public CombatResolver(IContentCatalog content, IRandomSource? random = null)
 	{
 		_content = content ?? throw new ArgumentNullException(nameof(content));
+		_random = random ?? new FixedRandomSource(100);
 	}
 
 	/// <summary>
@@ -133,7 +135,7 @@ public sealed class CombatResolver : ICombatResolver
 		};
 	}
 
-	private static CombatResolution ResolvePhysicalDamage(
+	private CombatResolution ResolvePhysicalDamage(
 		CombatSnapshot current,
 		LocatedCombatant actor,
 		LocatedCombatant target,
@@ -160,13 +162,20 @@ public sealed class CombatResolver : ICombatResolver
 			out int authoredModifier)
 			? authoredModifier
 			: 0;
-		int appliedDamage = CalculateAppliedDamage(
+		DamageVarianceDefinition variance = ability.DamageVariance
+			?? actor.Value.EquippedWeaponDamageVariance
+			?? (ability.AbilityKindId == AbilityKindIds.Magic
+				? new DamageVarianceDefinition { MinimumPercent = 80, MaximumPercent = 120 }
+				: new DamageVarianceDefinition { MinimumPercent = 95, MaximumPercent = 105 });
+		(int appliedDamage, int variancePercent) = CalculateAppliedDamage(
 			strength,
 			isBasicAttack ? actor.Value.EquippedWeaponAttack : 0,
 			power,
 			defense,
 			target.Value.CurrentHp,
-			damagePercentModifier);
+			damagePercentModifier,
+			variance,
+			_random);
 		int nextHp = target.Value.CurrentHp - appliedDamage;
 
 		// Copy the ordered collection and replace exactly the target's slot. Every unaffected
@@ -208,9 +217,10 @@ public sealed class CombatResolver : ICombatResolver
             actor.Value.InstanceId,
             target.Value.InstanceId,
             ability.Id,
-            damageTypeId,
-            damagePercentModifier,
-            appliedDamage,
+			damageTypeId,
+			damagePercentModifier,
+			variancePercent,
+			appliedDamage,
             target.Value.CurrentHp,
             nextHp));
         if (nextHp == 0)
@@ -382,13 +392,15 @@ public sealed class CombatResolver : ICombatResolver
         return damageTypeId;
     }
 
-    private static int CalculateAppliedDamage(
+    private static (int Amount, int VariancePercent) CalculateAppliedDamage(
         int attackerStrength,
         int weaponAttack,
         decimal authoredPower,
         int defenderDefense,
         int remainingHp,
-        int damagePercentModifier)
+        int damagePercentModifier,
+        DamageVarianceDefinition variance,
+        IRandomSource random)
     {
         if (damagePercentModifier < -100)
         {
@@ -398,7 +410,7 @@ public sealed class CombatResolver : ICombatResolver
 
         if (damagePercentModifier == -100)
         {
-            return 0;
+            return (0, 100);
         }
 
         // Apply the signed percentage after Strength, power, Defense, and the base minimum, then
@@ -406,19 +418,17 @@ public sealed class CombatResolver : ICombatResolver
         // against the amount needed for defeat first keeps decimal.MaxValue power overflow-safe.
         decimal multiplier = (100m + damagePercentModifier) / 100m;
         decimal statisticDifference = (decimal)attackerStrength + weaponAttack - defenderDefense;
-        decimal baseDamageNeededToDefeat = remainingHp / multiplier;
-        decimal powerNeededToDefeat = baseDamageNeededToDefeat - statisticDifference;
-        if (authoredPower >= powerNeededToDefeat)
-        {
-            return remainingHp;
-        }
-
+        int variancePercent = random.Next(variance.MinimumPercent, variance.MaximumPercent + 1);
         decimal rawDamage = authoredPower + statisticDifference;
-        decimal modifiedDamage = Math.Max(1m, rawDamage) * multiplier;
+        decimal modifiedDamage = Math.Max(1m, rawDamage) * multiplier * variancePercent / 100m;
+        if (modifiedDamage >= remainingHp)
+        {
+            return (remainingHp, variancePercent);
+        }
         int roundedDamage = Math.Max(
             1,
             decimal.ToInt32(decimal.Floor(modifiedDamage)));
-        return Math.Min(roundedDamage, remainingHp);
+        return (Math.Min(roundedDamage, remainingHp), variancePercent);
     }
 
     [DoesNotReturn]

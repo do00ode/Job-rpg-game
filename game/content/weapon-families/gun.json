@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "id": "weapon-family.gun",
+  "displayNameKey": "weapon-family.gun.name",
+  "damageVariance": { "minimumPercent": 90, "maximumPercent": 110 }
+}

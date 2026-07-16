@@ -378,7 +378,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
             encounter,
             enemyPlacements,
             partyPlacements);
-        var actionResolver = new CombatResolver(Content);
+        var actionResolver = new CombatResolver(Content, RequireRandomSource());
         var timelineResolver = new CombatTimelineResolver(actionResolver, Content);
         var enemyPlanner = new EnemyCommandPlanner(Content);
         var commandAvailabilityResolver = new BattleCommandAvailabilityResolver(Content);

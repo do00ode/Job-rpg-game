@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "id": "weapon-family.bow",
+  "displayNameKey": "weapon-family.bow.name",
+  "damageVariance": { "minimumPercent": 85, "maximumPercent": 115 }
+}

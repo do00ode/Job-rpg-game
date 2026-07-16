@@ -63,6 +63,8 @@ public sealed record AbilityDefinition : ContentDefinition
     /// </remarks>
     public string? DamageTypeId { get; init; }
 
+    public DamageVarianceDefinition? DamageVariance { get; init; }
+
     /// <summary>
     /// Ruleset-specific tuning values, such as power or accuracy. Each known ruleset must
     /// validate its required keys, accepted keys, and legal ranges so this dictionary does

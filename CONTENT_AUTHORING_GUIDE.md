@@ -197,3 +197,9 @@ bounds are inclusive. Repeated item entries are allowed when drops should be ind
 - Putting an `E` or `T` marker on `#` or on a mismatched row symbol.
 - Embedding loot entries inside an enemy instead of using `lootTableId`.
 - Renaming an ID after another record or save can reference it.
+## Weapon Damage Personality
+
+Add reusable weapon families in `game/content/weapon-families/`, then reference them from weapon
+equipment with `weaponFamilyId`. Use `damageVariance` on a weapon or ability only when that record
+needs an override. Keep localization keys in the appropriate recursive bundle under
+`game/localization/en/`.

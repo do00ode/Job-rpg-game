@@ -15,6 +15,7 @@ public sealed record DamageApplied(
     string AbilityId,
     string DamageTypeId,
     int DamagePercentModifier,
+    int VariancePercent,
     int Amount,
     int PreviousHp,
     int CurrentHp) : CombatEvent;

@@ -207,6 +207,7 @@ public sealed record CombatantSnapshot
         int? currentMp = null,
         int equippedWeaponAttack = 0,
         string? equippedWeaponDamageTypeId = null,
+        DamageVarianceDefinition? equippedWeaponDamageVariance = null,
         long nextActionTime = 0,
         IReadOnlyList<ActiveStatusEffect>? activeStatusEffects = null)
         : this(
@@ -219,6 +220,7 @@ public sealed record CombatantSnapshot
             currentMp,
             equippedWeaponAttack,
             equippedWeaponDamageTypeId,
+            equippedWeaponDamageVariance,
             nextActionTime,
             activeStatusEffects)
     {
@@ -233,6 +235,7 @@ public sealed record CombatantSnapshot
         int? currentMp = null,
         int equippedWeaponAttack = 0,
         string? equippedWeaponDamageTypeId = null,
+        DamageVarianceDefinition? equippedWeaponDamageVariance = null,
         long nextActionTime = 0,
         IReadOnlyList<ActiveStatusEffect>? activeStatusEffects = null)
         : this(
@@ -246,6 +249,7 @@ public sealed record CombatantSnapshot
             currentMp,
             equippedWeaponAttack,
             equippedWeaponDamageTypeId,
+            equippedWeaponDamageVariance,
             nextActionTime,
             activeStatusEffects)
     {
@@ -261,6 +265,7 @@ public sealed record CombatantSnapshot
         int? currentMp,
         int equippedWeaponAttack,
         string? equippedWeaponDamageTypeId,
+        DamageVarianceDefinition? equippedWeaponDamageVariance,
         long nextActionTime,
         IReadOnlyList<ActiveStatusEffect>? activeStatusEffects)
     {
@@ -422,6 +427,7 @@ public sealed record CombatantSnapshot
         CurrentMp = resolvedCurrentMp;
         EquippedWeaponAttack = equippedWeaponAttack;
         EquippedWeaponDamageTypeId = equippedWeaponDamageTypeId;
+        EquippedWeaponDamageVariance = equippedWeaponDamageVariance;
         NextActionTime = nextActionTime;
     }
 
@@ -468,6 +474,8 @@ public sealed record CombatantSnapshot
     /// </summary>
     public string? EquippedWeaponDamageTypeId { get; }
 
+    public DamageVarianceDefinition? EquippedWeaponDamageVariance { get; }
+
     /// <summary>Absolute deterministic timeline position at which this actor next acts.</summary>
     public long NextActionTime { get; }
 
@@ -512,6 +520,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 ActiveStatusEffects)
             : new CombatantSnapshot(
@@ -523,6 +532,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 ActiveStatusEffects);
 
@@ -541,6 +551,7 @@ public sealed record CombatantSnapshot
                 currentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 ActiveStatusEffects)
             : new CombatantSnapshot(
@@ -552,6 +563,7 @@ public sealed record CombatantSnapshot
                 currentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 ActiveStatusEffects);
 
@@ -566,6 +578,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 nextActionTime,
                 ActiveStatusEffects)
             : new CombatantSnapshot(
@@ -577,6 +590,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 nextActionTime,
                 ActiveStatusEffects);
 
@@ -592,6 +606,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 activeStatusEffects)
             : new CombatantSnapshot(
@@ -603,6 +618,7 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
+                EquippedWeaponDamageVariance,
                 NextActionTime,
                 activeStatusEffects);
 }

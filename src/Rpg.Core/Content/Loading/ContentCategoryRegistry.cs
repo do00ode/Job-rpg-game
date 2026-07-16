@@ -50,6 +50,7 @@ internal static class ContentCategoryRegistry
         Create<StartingClassRuleDefinition>("starting-class-rules", "newgame.class-rule."),
         Create<StatisticDefinition>("statistics", "stat."),
         Create<StatusEffectDefinition>("status-effects", "status."),
+        Create<WeaponFamilyDefinition>("weapon-families", "weapon-family."),
     ];
 
     private static readonly IReadOnlyDictionary<string, ContentCategoryDescriptor>

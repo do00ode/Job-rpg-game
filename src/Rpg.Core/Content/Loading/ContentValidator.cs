@@ -108,6 +108,9 @@ internal sealed class ContentValidator
                 case StatusEffectDefinition status:
                     ValidateStatusEffect(item, status);
                     break;
+                case WeaponFamilyDefinition family:
+                    ValidateWeaponFamily(item, family);
+                    break;
             }
         }
 
@@ -474,6 +477,18 @@ internal sealed class ContentValidator
             equipment.WeaponDamagePercentages);
         ValidateWeaponDamagePercentages(item, equipment, weaponDamagePercentages);
 
+        if (equipment.WeaponFamilyId is not null)
+        {
+            RequireReference<WeaponFamilyDefinition>(item, "$.weaponFamilyId", equipment.WeaponFamilyId);
+            if (!equipment.SlotId.StartsWith("slot.weapon.", StringComparison.Ordinal))
+            {
+                Add(item, "$.weaponFamilyId", "equipment.weapon-family-on-nonweapon",
+                    "Only weapon slots may declare a weapon family.");
+            }
+        }
+
+        ValidateDamageVariance(item, "$.damageVariance", equipment.DamageVariance);
+
         if (equipment.Attack < 0)
         {
             Add(item, "$.attack", "equipment.attack-negative",
@@ -522,6 +537,7 @@ internal sealed class ContentValidator
         RequireStableKey(item, "$.targetingId", ability.TargetingId, "target.");
         RequireStableKey(item, "$.rulesetId", ability.RulesetId, "rules.");
         RequireAtLeast(item, "$.costAmount", ability.CostAmount, 0);
+        ValidateDamageVariance(item, "$.damageVariance", ability.DamageVariance);
 
         if (ability.DamageTypeId is not null)
         {
@@ -581,6 +597,40 @@ internal sealed class ContentValidator
                  AbilityDefinitionContractValidator.Validate(ability, numericParameters))
         {
             Add(item, problem.JsonPath, problem.Code, problem.Message);
+        }
+    }
+
+    private void ValidateWeaponFamily(LoadedContent item, WeaponFamilyDefinition family)
+    {
+        RequireNonBlank(item, "$.displayNameKey", family.DisplayNameKey);
+        if (family.DamageVariance is null)
+        {
+            Add(item, "$.damageVariance", "damage-variance.missing", "Weapon families require damage variance.");
+        }
+        ValidateDamageVariance(item, "$.damageVariance", family.DamageVariance);
+    }
+
+    private void ValidateDamageVariance(
+        LoadedContent item,
+        string jsonPath,
+        DamageVarianceDefinition? variance)
+    {
+        if (variance is null)
+        {
+            return;
+        }
+
+        if (variance.MinimumPercent < 0 || variance.MaximumPercent < 0)
+        {
+            Add(item, jsonPath, "damage-variance.negative", "Damage variance percentages cannot be negative.");
+        }
+        if (variance.MinimumPercent > variance.MaximumPercent)
+        {
+            Add(item, jsonPath, "damage-variance.order", "Minimum variance cannot exceed maximum variance.");
+        }
+        if (variance.MinimumPercent > 500 || variance.MaximumPercent > 500)
+        {
+            Add(item, jsonPath, "damage-variance.maximum", "Damage variance percentages cannot exceed 500.");
         }
     }
 

@@ -185,3 +185,5 @@ dotnet test tests/RpgGame.Core.Tests/RpgGame.Core.Tests.csproj
 - Grant the individual spell through `abilityUnlocks` or `startingAbilityIds`.
 - Grant at least one matching container through `magicDisciplineUnlocks`.
 - Validate base content, base plus mods, and headless tests.
+Magic damage uses an 80-120 percent inclusive fallback variance. A spell may override this with
+its own `damageVariance` object when its authored personality requires a different range.
