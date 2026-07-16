@@ -21,7 +21,7 @@ internal static class CombatTestFixture
     public const string AttackId = "ability.command.attack";
     public const string TackleId = "ability.enemy.tackle";
 
-    public static FixedBattle CreateFixedBattle(string classId = VanguardId)
+    public static FixedBattle CreateFixedBattle(string classId = VanguardId, int level = 1)
     {
         ContentCatalog content = TestContent.LoadCatalog();
         GameState campaign = new NewGameFactory(content).Create(new NewGameRequest
@@ -36,6 +36,7 @@ internal static class CombatTestFixture
                 {
                     ActorId = JamesId,
                     ClassId = classId,
+                    Level = level,
                 },
             ],
         });

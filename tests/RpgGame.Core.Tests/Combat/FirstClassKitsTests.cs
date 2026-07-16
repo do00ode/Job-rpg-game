@@ -32,19 +32,13 @@ public sealed class FirstClassKitsTests
     }
 
     [Fact]
-    public void ResolvePartyActor_BlackMageRequiresAndGrantsBlackMagicSpellbook()
+    public void ResolvePartyActor_BlackMageSpellbookUnlocksByLevel()
     {
         ContentCatalog content = TestContent.LoadCatalog();
 
-        PartyAbilityAvailability availability = ResolveAvailability(content, BlackMageId);
-
-        Assert.Equal([CombatTestFixture.AttackId], availability.DirectSkillIds);
-        MagicDisciplineAvailability discipline = Assert.Single(availability.MagicDisciplines);
-        Assert.Equal(BlackMagicId, discipline.MagicDisciplineId);
-        Assert.Equal([FireId, IceId, LightningId], discipline.SpellAbilityIds);
-        Assert.Equal(
-            [CombatTestFixture.AttackId, FireId, IceId, LightningId],
-            availability.ExecutableAbilityIds);
+        AssertSpellbook(content, 1, [FireId]);
+        AssertSpellbook(content, 3, [FireId, IceId]);
+        AssertSpellbook(content, 5, [FireId, IceId, LightningId]);
     }
 
     [Fact]
@@ -61,14 +55,15 @@ public sealed class FirstClassKitsTests
     }
 
     [Theory]
-    [InlineData(FireId, DamageTypeIds.Fire)]
-    [InlineData(IceId, DamageTypeIds.Ice)]
-    [InlineData(LightningId, DamageTypeIds.Lightning)]
-    public void Resolve_BlackMageSpellEmitsItsAuthoredDamageType(
+    [InlineData(FireId, DamageTypeIds.Fire, 1)]
+    [InlineData(IceId, DamageTypeIds.Ice, 3)]
+    [InlineData(LightningId, DamageTypeIds.Lightning, 5)]
+    public void Resolve_BlackMageSpellEmitsItsAuthoredDamageTypeAtUnlockLevel(
         string abilityId,
-        string expectedDamageTypeId)
+        string expectedDamageTypeId,
+        int level)
     {
-        FixedBattle battle = CombatTestFixture.CreateFixedBattle(BlackMageId);
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(BlackMageId, level);
 
         CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
             battle.Snapshot,
@@ -77,6 +72,22 @@ public sealed class FirstClassKitsTests
         Assert.IsType<ResourceSpent>(resolution.Events[0]);
         DamageApplied damage = Assert.IsType<DamageApplied>(resolution.Events[1]);
         Assert.Equal(expectedDamageTypeId, damage.DamageTypeId);
+    }
+
+    private static void AssertSpellbook(
+        ContentCatalog content,
+        int level,
+        IReadOnlyList<string> expectedSpellIds)
+    {
+        PartyAbilityAvailability availability = ResolveAvailability(content, BlackMageId, level);
+
+        Assert.Equal([CombatTestFixture.AttackId], availability.DirectSkillIds);
+        MagicDisciplineAvailability discipline = Assert.Single(availability.MagicDisciplines);
+        Assert.Equal(BlackMagicId, discipline.MagicDisciplineId);
+        Assert.Equal(expectedSpellIds, discipline.SpellAbilityIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, .. expectedSpellIds],
+            availability.ExecutableAbilityIds);
     }
 
     [Fact]
@@ -240,12 +251,15 @@ public sealed class FirstClassKitsTests
             availability.ExecutableAbilityIds);
     }
 
-    private static PartyAbilityAvailability ResolveAvailability(ContentCatalog content, string classId) =>
+    private static PartyAbilityAvailability ResolveAvailability(
+        ContentCatalog content,
+        string classId,
+        int level = 1) =>
         new AbilityAvailabilityResolver(content).ResolvePartyActor(new ActorProgressState
         {
             ActorId = CombatTestFixture.JamesId,
             ClassId = classId,
-            Level = 1,
+            Level = level,
         });
 
     private static CombatSnapshot ReplaceCombatant(

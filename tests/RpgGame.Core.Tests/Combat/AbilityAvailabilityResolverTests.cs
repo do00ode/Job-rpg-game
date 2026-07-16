@@ -21,7 +21,7 @@ public sealed class AbilityAvailabilityResolverTests
     }
 
     [Fact]
-    public void ResolvePartyActor_CheckedInBlackMageHasLearnedBlackMagic()
+    public void ResolvePartyActor_CheckedInLevelOneBlackMageHasFireAndBlackMagic()
     {
         CombatantSnapshot james = CombatTestFixture
             .CreateFixedBattle(CombatTestFixture.BlackMageId)
@@ -31,14 +31,12 @@ public sealed class AbilityAvailabilityResolverTests
         MagicDisciplineAvailability discipline = Assert.Single(james.MagicDisciplines);
         Assert.Equal("magic-discipline.black-magic", discipline.MagicDisciplineId);
         Assert.Equal(
-            ["ability.black-magic.fire", "ability.black-magic.ice", "ability.black-magic.lightning"],
+            ["ability.black-magic.fire"],
             discipline.SpellAbilityIds);
         Assert.Equal(
             [
                 CombatTestFixture.AttackId,
                 "ability.black-magic.fire",
-                "ability.black-magic.ice",
-                "ability.black-magic.lightning",
             ],
             james.AbilityIds);
     }
