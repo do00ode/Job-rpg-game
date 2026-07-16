@@ -36,6 +36,13 @@ public partial class ExplorationSceneController : Node2D
 	private InputBindingService? _inputBindings;
 	private bool _developmentCommandInProgress;
 	private bool _encounterTransitionRequested;
+	private string? _heldMovementAction;
+	private Vector2I _heldMovementDelta;
+	private string _heldMovementFacing = string.Empty;
+	private double _movementRepeatTimer;
+
+	private const double MovementInitialDelaySeconds = 0.24;
+	private const double MovementRepeatIntervalSeconds = 0.16;
 
 	/// <summary>Requests reconstruction by the composition root without adding navigation.</summary>
 	public event EventHandler? ReloadRequested;
@@ -62,6 +69,7 @@ public partial class ExplorationSceneController : Node2D
 		_instructions = GetNode<Label>("Interface/Instructions");
 		_developmentStatus = GetNode<Label>("Interface/DevelopmentStatus");
 		SetProcessUnhandledInput(false);
+		SetProcess(false);
 	}
 
 	/// <summary>
@@ -105,6 +113,32 @@ public partial class ExplorationSceneController : Node2D
 		RefreshInstructionText();
 		ApplyAuthoritativeState();
 		SetProcessUnhandledInput(true);
+		SetProcess(true);
+	}
+
+	public override void _Process(double delta)
+	{
+		if (_heldMovementAction is null
+			|| _session is null
+			|| _encounterTransitionRequested
+			|| _dialogue.IsOpen
+			|| _controlsPanel.IsOpen
+			|| _gameMenuPanel.Visible
+			|| _equipmentPanel.IsOpen
+			|| !global::Godot.Input.IsActionPressed(_heldMovementAction))
+		{
+			ClearHeldMovement();
+			return;
+		}
+
+		_movementRepeatTimer -= delta;
+		if (_movementRepeatTimer > 0)
+		{
+			return;
+		}
+
+		TryMove(_heldMovementDelta, _heldMovementFacing);
+		_movementRepeatTimer = MovementRepeatIntervalSeconds;
 	}
 
 	/// <summary>
@@ -217,10 +251,10 @@ public partial class ExplorationSceneController : Node2D
 
 		if (TryGetMovement(keyEvent, out Vector2I delta, out string facing))
 		{
+			BeginHeldMovement(keyEvent, delta, facing);
 			// A successful step may synchronously ask GameRoot to remove this scene. Mark the
 			// input handled while this Node still owns a viewport, then perform the move.
 			GetViewport().SetInputAsHandled();
-			TryMove(delta, facing);
 			return;
 		}
 
@@ -229,6 +263,43 @@ public partial class ExplorationSceneController : Node2D
 			TryInteract();
 			GetViewport().SetInputAsHandled();
 		}
+	}
+
+	private void BeginHeldMovement(InputEventKey keyEvent, Vector2I delta, string facing)
+	{
+		string action = GetMovementAction(keyEvent);
+		bool changedDirection = !string.Equals(
+			RequireSession().Current.Location.Facing,
+			facing,
+			StringComparison.Ordinal);
+
+		_heldMovementAction = action;
+		_heldMovementDelta = delta;
+		_heldMovementFacing = facing;
+		_movementRepeatTimer = MovementInitialDelaySeconds;
+
+		if (changedDirection)
+		{
+			TurnTo(facing);
+			return;
+		}
+
+		TryMove(delta, facing);
+	}
+
+	private void TurnTo(string facing)
+	{
+		IGameSession session = RequireSession();
+		MapLocationState location = session.Current.Location;
+		session.UpdateLocation(location with { Facing = facing });
+	}
+
+	private void ClearHeldMovement()
+	{
+		_heldMovementAction = null;
+		_heldMovementDelta = Vector2I.Zero;
+		_heldMovementFacing = string.Empty;
+		_movementRepeatTimer = 0;
 	}
 
 	private void TryMove(Vector2I delta, string facing)
@@ -406,6 +477,31 @@ public partial class ExplorationSceneController : Node2D
 		delta = Vector2I.Zero;
 		facing = string.Empty;
 		return false;
+	}
+
+	private static string GetMovementAction(InputEventKey keyEvent)
+	{
+		if (keyEvent.IsActionPressed(GameInputActions.MoveUp))
+		{
+			return GameInputActions.MoveUp;
+		}
+
+		if (keyEvent.IsActionPressed(GameInputActions.MoveRight))
+		{
+			return GameInputActions.MoveRight;
+		}
+
+		if (keyEvent.IsActionPressed(GameInputActions.MoveDown))
+		{
+			return GameInputActions.MoveDown;
+		}
+
+		if (keyEvent.IsActionPressed(GameInputActions.MoveLeft))
+		{
+			return GameInputActions.MoveLeft;
+		}
+
+		throw new InvalidOperationException("Movement action was not present on the key event.");
 	}
 
 	/// <summary>

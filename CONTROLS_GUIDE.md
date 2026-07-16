@@ -70,7 +70,9 @@ next launch.
 2. The service loads validated key names or defaults and registers physical-key events in
    Godot `InputMap`, keeping game controls stable across operating-system keyboard layouts.
 3. `ControlsPanel` edits the service through its narrow rebind/reset methods.
-4. `ExplorationSceneController` calls `InputEvent.IsActionPressed` with stable action IDs.
+4. `ExplorationSceneController` calls `InputEvent.IsActionPressed` with stable action IDs. A
+   directional press turns James without stepping when the requested direction differs from his
+   current facing; held input is polled for discrete one-tile repeats at a fixed walking pace.
 5. Accepted movement still updates `GameSession`; controls never become campaign state.
 6. The exploration-local Menu panel and character Equipment screen read movement, Interact,
    Menu, and the dedicated Equipment action. `I` opens Equipment directly by default; movement

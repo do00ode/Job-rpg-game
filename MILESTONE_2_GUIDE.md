@@ -8,7 +8,7 @@ room without losing his position or the fact that the conversation occurred.
 
 | Input | Result |
 |---|---|
-| Current Move bindings | Face a direction and attempt one tile of movement |
+| Current Move bindings | Face a direction first, then move one tile; holding a direction repeats at a steady walking pace |
 | Current Interact / Confirm bindings | Interact with the tile James faces; advance dialogue |
 | Current Menu / Cancel bindings | Close dialogue or open/close the controls panel |
 | Current Interact or Menu binding in the placeholder | Return to a reconstructed test room |
@@ -99,7 +99,8 @@ moves James and sets the NPC flag through the same session API before writing th
 
 - Only `map.prologue.test-room` can be presented.
 - The room layout is a fixed procedural tile grid, not an authored TileSet asset.
-- Movement is immediate; there is no step animation or held-key repeat.
+- Movement is discrete and has no step animation. A direction change consumes the first press;
+  holding the direction then repeats one-tile steps after a short delay.
 - The guide is the only interactable and uses one dialogue for every interaction.
 - There is no map-to-map transition, player-facing save menu, dialogue choice, localization,
   gamepad support, combat resolution, random encounter system, inventory, quest behavior,
