@@ -34,7 +34,7 @@ the top-level directory still determines the definition type.
 | `items/` and its subdirectories | `ItemDefinition` |
 | `equipment/` and its subdirectories | `EquipmentDefinition` |
 | `loot-tables/` | `LootTableDefinition` |
-| `abilities/` | `AbilityDefinition` |
+| `abilities/` and its subdirectories | `AbilityDefinition` |
 | `magic-disciplines/` | `MagicDisciplineDefinition` |
 | `enemies/` | `EnemyDefinition` |
 | `encounters/` | `EncounterDefinition` |

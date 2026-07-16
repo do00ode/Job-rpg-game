@@ -41,7 +41,7 @@ For elemental attacks, reuse the existing physical-damage contract. For single-t
 use `target.ally.single` plus `rules.healing.flat`; its positive whole-number `power` restores
 that many HP before max-HP clamping. Cure is the checked-in example.
 
-`game/content/abilities/aegis.json`
+`game/content/abilities/heroes/aegis.json`
 
 ```json
 {

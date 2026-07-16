@@ -48,10 +48,12 @@ See `MILESTONE_4_3_GUIDE.md` for affinity percentages and rounding.
 
 ## Add one direct Skill
 
-Create one JSON file under `game/content/abilities/`. The filename is for organization; the
-permanent `id` is the identity used by content, runtime state, mods, and future saves.
+Create one JSON file under `game/content/abilities/heroes/` for a hero/class ability or
+`game/content/abilities/enemies/` for an enemy ability. The filename and folder are for
+organization; the permanent `id` is the identity used by content, runtime state, mods, and
+future saves. The loader discovers ability files recursively.
 
-Example: `game/content/abilities/shield-focus.json`
+Example: `game/content/abilities/heroes/shield-focus.json`
 
 ```json
 {
@@ -194,7 +196,8 @@ Do not commit until these commands return exit code `0`.
 
 ## Checklist
 
-- The JSON file is in `abilities/` and contains explicit `schemaVersion: 1`.
+- The JSON file is in `abilities/heroes/` or `abilities/enemies/` and contains
+  explicit `schemaVersion: 1`.
 - The permanent ID starts with `ability.` and uses lowercase stable-ID syntax.
 - Skill/Magic kind, discipline list, targeting, ruleset, and parameters agree.
 - Cost is null/zero or a nonnegative `stat.max-mp` amount.

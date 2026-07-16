@@ -33,7 +33,8 @@ user://mods/
     ├── manifest.json
     └── content/
         ├── abilities/
-        │   └── temporal-guard.json
+        │   └── heroes/
+        │       └── temporal-guard.json
         ├── classes/
         │   └── chronoguard.json
         └── starting-class-rules/
