@@ -29,10 +29,10 @@ core rules; art is a presentation layer that can be replaced without changing th
 
 ### Coordinate and tile standards
 
-The current exploration placeholder uses a 48 x 48 logical tile at a 1280 x 720 logical viewport.
-That is the project integration target for map assets until a later rendering milestone explicitly
-changes it. Keep source tiles on a clean pixel grid and make each tile's canvas exactly 48 x 48
-pixels unless a documented tileset exception is approved.
+The art tile system uses a 16 x 16 pixel native tile. Keep source tiles on a clean pixel grid and
+make each base terrain tile exactly 16 x 16 pixels unless a documented asset exception is approved.
+The current exploration debug renderer may display logical cells at a larger presentation scale;
+that does not change the native art standard.
 
 Maps are authored from ASCII passability rows and map-owned markers. Artwork must fit that logical
 grid but must not redefine collision. A decorative tree may overhang neighboring tiles; its walkable
@@ -57,7 +57,7 @@ scene without changing collision data.
 
 ## 3. Exploration Character Standards
 
-Use a 24 x 32 pixel native canvas for an ordinary exploration character, with a transparent canvas
+Use a 16 x 24 pixel native canvas for an ordinary exploration character, with a transparent canvas
 and a consistent ground anchor at the bottom-center. The character's feet should land on the tile's
 logical center; do not center by the sprite's visual bounding box.
 
@@ -74,9 +74,9 @@ pixel density, and lighting must agree with nearby terrain.
 
 ## 4. Combat Character Standards
 
-Use a 64 x 64 pixel native canvas for a standard party battle sprite. Preserve transparent padding
-so the silhouette does not touch the canvas edge. A normal character should occupy roughly 44 to
-56 pixels vertically, leaving room for weapons, casting poses, and animation motion.
+Use a 48 x 48 pixel native canvas for a standard party battle sprite. Preserve transparent padding
+so the silhouette does not touch the canvas edge. A normal character should visually occupy roughly
+75-85% of the canvas, leaving room for weapons, casting poses, and animation motion.
 
 Combat sprites are placed by the battle presentation using formation data. They must not be
 arbitrarily scaled per action or per frame. Keep the feet or base aligned to a stable anchor, keep
@@ -92,17 +92,17 @@ Enemy art and logical occupancy are related but not identical. The formation sys
 a 4 x 4 enemy grid and rectangular logical footprints. The footprint controls targeting, overlap,
 and formation placement; the sprite controls visual presence.
 
-| Logical footprint | Typical visual use | Art guidance |
+| Example | Logical footprint | Native sprite canvas |
 | --- | --- | --- |
-| 1 x 1 | slime, bat, small soldier | Keep the silhouette inside its cell or with a modest overhang. |
-| 1 x 2 | tall knight, serpent, large flying enemy | Use the long axis to communicate height or reach. |
-| 2 x 2 | ogre, golem, large beast | Establish one clear center of mass and readable attack side. |
-| 3 x 2 | giant creature, machine, elite monster | Allow visual overlap while keeping the authored rectangle obvious. |
-| 4 x 4 | boss or battlefield-scale entity | Fill the formation space impressively without changing logical occupancy. |
+| Slime | 1 x 1 | 32 x 32 |
+| Wolf | 1 x 2 | 48 x 48 |
+| Ogre | 2 x 2 | 64 x 64 |
+| Dragon | 3 x 2 | 96 x 64 |
+| Final Boss | 4 x 4 | 128 x 128 |
 
 An enemy may visually overlap nearby cells, especially for wings, tails, weapons, smoke, or a boss
-silhouette. It must never imply a different tactical footprint than the content definition. Do not
-use art size as a substitute for formation data.
+silhouette. Targeting is based on occupied logical grid cells, not transparent pixels. Artwork is
+never stretched to fit a footprint, and sprite size never replaces formation data.
 
 ## 6. Portrait Standards
 
@@ -160,9 +160,9 @@ still have a readable source and should not erase silhouettes.
 
 ## 9. Palette Standards
 
-This guide does not prescribe a fixed palette. Artists should use shared ramps and coordinate new
-colors with existing work before adding them. Palette consistency is what makes assets from
-different artists read as one world.
+The project uses one global palette. Artists should use its shared ramps and coordinate any proposed
+addition before adding colors. Palette consistency is what makes assets from different artists read
+as one world.
 
 Maintain reusable ramps for:
 
@@ -182,7 +182,7 @@ These are starting targets, not a reason to add motion where a still pose commun
 
 | State | Starting frames | Notes |
 | --- | ---: | --- |
-| Idle | 1-2 | Optional one-pixel breathing or cloth shift. |
+| Idle | 1 | A still readable pose; motion is optional and should remain subtle. |
 | Walk | 3 | Clear foot alternation; keep the cycle readable and subtle. |
 | Attack | 4-6 | Anticipation, action, impact, recovery. |
 | Cast | 4-6 | Pose, channel, release, settle; effects may animate separately. |
