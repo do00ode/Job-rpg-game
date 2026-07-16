@@ -547,6 +547,13 @@ map ID normalize to the original room start.
 Deferred: random encounters, roaming enemies, respawns, world maps, doors/keys, cutscenes, map
 editing tools, and final map art polish. See the Milestone 5.2 handoff for manual verification.
 
+### Milestone 5.2A - Data-authored passability map foundation
+
+Milestone 5.2A moves exploration collision and trigger locations into ASCII map rows and
+map-owned encounter markers. `MapQueryService` is Godot-free and answers bounds, symbols,
+passability, spawns, encounters, and transitions. Placeholder rendering remains separate from
+the gameplay logic layer. See `MAP_AUTHORING_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

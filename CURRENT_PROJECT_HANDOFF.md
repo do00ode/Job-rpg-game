@@ -4,6 +4,20 @@
 > The live battle path now uses deterministic wait-mode timeline initiative plus the transient
 > status foundation. Older sections below remain historical unless explicitly superseded above.
 
+## Current Milestone 5.2A summary
+
+Milestone 5.2A replaces hardcoded map collision and trigger coordinates with validated ASCII rows
+inside the existing `MapDefinition` records. `#` is impassable; `.`, `E`, and `T` are passable.
+Map-owned encounter markers now provide encounter IDs and cleared flag IDs, while existing
+top-level transition definitions are queried only when their source cell is authored as `T`.
+`MapQueryService` remains Godot-free and owns symbol, bounds, passability, spawn, encounter, and
+transition queries. Both placeholder map views initialize from it and draw logic rows rather than
+maintaining wall or encounter tile lists in C#.
+
+Validation for this update: solution build passed with 0 warnings/errors; core tests passed 383;
+content validation passed 46 definitions. The Godot executable is not available on `PATH`, so no
+headless or interactive Godot run was performed.
+
 ## Current Milestone 5.2 summary
 
 Milestone 5.2 adds two validated content categories: `maps/` (`MapDefinition` with named tile

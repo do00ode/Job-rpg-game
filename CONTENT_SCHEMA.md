@@ -52,6 +52,11 @@ exploration controller evaluates the authored source cell after a successful ste
 typed transition request to `GameRoot`, which updates `GameState.Location` before replacing the
 disposable map scene.
 
+`MapDefinition` records also require `width`, `height`, and `rows`. Each row is an ASCII string
+using only `#` (blocked), `.` (passable), `E` (passable encounter tile), and `T` (passable
+transition tile). `encounters` contains map-owned marker objects with `x`, `y`, `encounterId`,
+and `clearedFlagId`. Coordinates are zero-based with `Rows[y][x]`.
+
 ## Stable IDs
 
 Canonical IDs match:

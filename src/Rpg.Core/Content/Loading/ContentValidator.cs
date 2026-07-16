@@ -766,6 +766,40 @@ internal sealed class ContentValidator
     private void ValidateMap(LoadedContent item, MapDefinition map)
     {
         RequireNonBlank(item, "$.displayNameKey", map.DisplayNameKey);
+        IReadOnlyList<string> rows = RequireList(item, "$.rows", map.Rows);
+        if (map.Width <= 0)
+        {
+            Add(item, "$.width", "map.width-invalid", "Map width must be greater than zero.");
+        }
+        if (map.Height <= 0)
+        {
+            Add(item, "$.height", "map.height-invalid", "Map height must be greater than zero.");
+        }
+        if (rows.Count != map.Height)
+        {
+            Add(item, "$.rows", "map.height-mismatch", $"Map has {rows.Count} rows but height is {map.Height}.");
+        }
+        for (int y = 0; y < rows.Count; y++)
+        {
+            string? row = rows[y];
+            if (row is null)
+            {
+                Add(item, $"$.rows[{y}]", "value.null", "Array entries cannot be null.");
+                continue;
+            }
+            if (row.Length != map.Width)
+            {
+                Add(item, $"$.rows[{y}]", "map.width-mismatch", $"Map row has {row.Length} characters but width is {map.Width}.");
+                continue;
+            }
+            for (int x = 0; x < row.Length; x++)
+            {
+                if (row[x] is not ('#' or '.' or 'T' or 'E'))
+                {
+                    Add(item, $"$.rows[{y}]", "map.symbol-invalid", $"Map symbol '{row[x]}' at ({x}, {y}) is unsupported.");
+                }
+            }
+        }
         IReadOnlyList<MapSpawnDefinition> spawns = RequireList(item, "$.spawns", map.Spawns);
         var ids = new HashSet<string>(StringComparer.Ordinal);
         for (int index = 0; index < spawns.Count; index++)
@@ -787,12 +821,44 @@ internal sealed class ContentValidator
             {
                 Add(item, path, "map.spawn-coordinate-invalid", "Spawn coordinates cannot be negative.");
             }
+            else if (IsMapTile(map, spawn.X, spawn.Y) && map.Rows[spawn.Y][spawn.X] == '#')
+            {
+                Add(item, path, "map.spawn-impassable", "Spawn tile must be passable.");
+            }
             if (spawn.Facing is not ("north" or "east" or "south" or "west"))
             {
                 Add(item, $"{path}.facing", "map.spawn-facing-invalid", "Spawn facing must be north, east, south, or west.");
             }
         }
+
+        IReadOnlyList<MapEncounterMarkerDefinition> encounters = RequireList(
+            item, "$.encounters", map.Encounters);
+        for (int index = 0; index < encounters.Count; index++)
+        {
+            MapEncounterMarkerDefinition? marker = encounters[index];
+            if (marker is null) continue;
+            string path = $"$.encounters[{index}]";
+            RequireReference<EncounterDefinition>(item, $"{path}.encounterId", marker.EncounterId);
+            RequireStableKey(item, $"{path}.id", marker.Id, "encounter-marker.");
+            RequireStableKey(item, $"{path}.clearedFlagId", marker.ClearedFlagId, "flag.");
+            if (!IsMapTile(map, marker.X, marker.Y))
+            {
+                Add(item, path, "map.marker-out-of-bounds", "Encounter marker must be inside the map.");
+            }
+            else if (map.Rows[marker.Y][marker.X] == '#')
+            {
+                Add(item, path, "map.marker-impassable", "Encounter marker must be on a passable tile.");
+            }
+            else if (map.Rows[marker.Y][marker.X] != 'E')
+            {
+                Add(item, path, "map.encounter-symbol-mismatch", "Encounter marker should be authored over E.");
+            }
+        }
     }
+
+    private static bool IsMapTile(MapDefinition map, int x, int y) =>
+        x >= 0 && y >= 0 && x < map.Width && y < map.Height
+        && y < map.Rows.Count && map.Rows[y] is not null && x < map.Rows[y].Length;
 
     private void ValidateMapTransition(LoadedContent item, MapTransitionDefinition transition)
     {
@@ -805,6 +871,19 @@ internal sealed class ContentValidator
         else if (transition.SourceCell.X < 0 || transition.SourceCell.Y < 0)
         {
             Add(item, "$.sourceCell", "map.cell-coordinate-invalid", "Source coordinates cannot be negative.");
+        }
+
+        MapCellDefinition? sourceCell = transition.SourceCell;
+        if (source is not null && sourceCell is not null)
+        {
+            if (!IsMapTile(source, sourceCell.X, sourceCell.Y))
+            {
+                Add(item, "$.sourceCell", "map.marker-out-of-bounds", "Transition source cell must be inside the source map.");
+            }
+            else if (source.Rows[sourceCell.Y][sourceCell.X] != 'T')
+            {
+                Add(item, "$.sourceCell", "map.transition-symbol-mismatch", "Transition source cell should be authored over T.");
+            }
         }
 
         if (destination is not null
