@@ -15,13 +15,14 @@ Selected class -> learned abilities and discipline access -> battle menu -> Comb
 
 | Starter presentation | Stable class ID | Level-one grants |
 |---|---|---|
-| Knight | `class.martial.vanguard` | Direct Skill `ability.knight.power-strike` |
+| Knight | `class.martial.knight` | Direct Skill `ability.knight.power-strike` |
 | Black Mage | `class.magic.black-mage` | Black Magic access plus Fire, Ice, and Lightning |
 | White Mage | `class.magic.white-mage` | White Magic access; Cure arrives in Milestone 4.7 |
 
-The pre-existing `class.martial.vanguard` ID now presents the Knight kit. The permanent ID is
-retained because existing saves store it in `ActorProgressState.ClassId`; it must not be renamed
-or removed. The base starting-class pool still contains exactly these three records.
+`class.martial.knight` is the canonical Knight content ID. Save format 2 replaces the former
+Vanguard ID with this new ID during load, so existing format-1 campaigns remain playable and
+re-save in the canonical form. The base starting-class pool still contains exactly these three
+records.
 
 Power Strike, Fire, Ice, and Lightning are `target.enemy.single` abilities using the existing
 `rules.damage.physical` formula. Power Strike is Slash. The three spells explicitly select
@@ -42,9 +43,9 @@ remain stable-ID-derived placeholders until localization presentation exists.
 
 ## Compatibility and deferrals
 
-No save field, content schema version, or mod data-API version changes. Existing saves using
-`class.martial.vanguard` continue to resolve the Knight kit. Content mods may add compatible
-class grants, disciplines, and spells using the established JSON-only contracts.
+The content schema and mod data-API version do not change. Save format 2 migrates format-1
+campaigns that use the retired Vanguard class ID. Content mods may add compatible class grants,
+disciplines, and spells using the established JSON-only contracts.
 
 Additional classes, equipment, item commands, status effects, magic-specific statistics,
 multi-target abilities, MP recovery, class progression beyond authored level-one grants, and

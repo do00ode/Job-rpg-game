@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "equipment.armor.wooden-shield",
+  "itemId": "item.equipment.wooden-shield",
+  "slotId": "slot.weapon.off-hand",
+  "statisticModifiers": {
+    "stat.defense": 2
+  },
+  "attack": 0,
+  "weaponDamagePercentages": {},
+  "grantedAbilityIds": []
+}

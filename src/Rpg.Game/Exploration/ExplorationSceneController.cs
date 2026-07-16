@@ -2,8 +2,10 @@ using Godot;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.State;
+using RpgGame.Display;
 using RpgGame.Encounters;
 using RpgGame.Input;
+using RpgGame.Localization;
 
 namespace RpgGame.Exploration;
 
@@ -24,6 +26,7 @@ public partial class ExplorationSceneController : Node2D
     private TestGuideNpc _guide = null!;
     private DialoguePanel _dialogue = null!;
     private ControlsPanel _controlsPanel = null!;
+    private DisplaySettingsPanel _displaySettingsPanel = null!;
     private GameMenuPanel _gameMenuPanel = null!;
     private CharacterEquipmentPanel _equipmentPanel = null!;
     private Label _instructions = null!;
@@ -51,6 +54,7 @@ public partial class ExplorationSceneController : Node2D
         _guide = GetNode<TestGuideNpc>("Guide");
         _dialogue = GetNode<DialoguePanel>("Interface/Dialogue");
         _controlsPanel = GetNode<ControlsPanel>("Interface/Controls");
+        _displaySettingsPanel = GetNode<DisplaySettingsPanel>("Interface/DisplaySettings");
         _gameMenuPanel = GetNode<GameMenuPanel>("Interface/GameMenu");
         _equipmentPanel = GetNode<CharacterEquipmentPanel>("Interface/Equipment");
         _instructions = GetNode<Label>("Interface/Instructions");
@@ -66,12 +70,16 @@ public partial class ExplorationSceneController : Node2D
         IContentCatalog content,
         IGameSession session,
         IExplorationDevelopmentCommands developmentCommands,
-        InputBindingService inputBindings)
+        InputBindingService inputBindings,
+        DisplaySettingsService displaySettings,
+        LocalizedTextCatalog text)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(developmentCommands);
         ArgumentNullException.ThrowIfNull(inputBindings);
+        ArgumentNullException.ThrowIfNull(displaySettings);
+        ArgumentNullException.ThrowIfNull(text);
 
         if (_session is not null)
         {
@@ -85,9 +93,11 @@ public partial class ExplorationSceneController : Node2D
         _session.StateChanged += OnSessionStateChanged;
         _inputBindings.BindingsChanged += OnBindingsChanged;
         _controlsPanel.Initialize(_inputBindings);
+        _displaySettingsPanel.Initialize(displaySettings);
         _gameMenuPanel.EquipmentRequested += OnEquipmentRequested;
         _gameMenuPanel.ControlsRequested += OnControlsRequested;
-        _equipmentPanel.Initialize(_content, _session);
+        _gameMenuPanel.DisplayRequested += OnDisplayRequested;
+        _equipmentPanel.Initialize(_content, _session, text);
         RefreshInstructionText();
         ApplyAuthoritativeState();
         SetProcessUnhandledInput(true);
@@ -121,6 +131,7 @@ public partial class ExplorationSceneController : Node2D
         {
             _gameMenuPanel.EquipmentRequested -= OnEquipmentRequested;
             _gameMenuPanel.ControlsRequested -= OnControlsRequested;
+            _gameMenuPanel.DisplayRequested -= OnDisplayRequested;
         }
     }
 
@@ -307,6 +318,12 @@ public partial class ExplorationSceneController : Node2D
     {
         _gameMenuPanel.Close();
         _controlsPanel.Open();
+    }
+
+    private void OnDisplayRequested(object? sender, EventArgs eventArgs)
+    {
+        _gameMenuPanel.Close();
+        _displaySettingsPanel.Open();
     }
 
     private void ApplyAuthoritativeState()

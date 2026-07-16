@@ -8,6 +8,12 @@ public sealed class EquipmentScreenProjectionTests
 {
     private const string JamesId = "actor.hero.james";
     private const string SwordItemId = "item.equipment.iron-sword";
+    private const string WoodenShieldItemId = "item.equipment.wooden-shield";
+    private const string LeatherArmorItemId = "item.equipment.leather-armor";
+    private const string LeatherBootsItemId = "item.equipment.leather-boots";
+    private const string LeatherHelmItemId = "item.equipment.leather-helm";
+    private const string PowerRingItemId = "item.equipment.power-ring";
+    private const string SpiritCharmItemId = "item.equipment.spirit-charm";
 
     [Fact]
     public void Resolve_ShowsAllSlotsAndSeparatesWeaponAttackFromStrength()
@@ -19,11 +25,17 @@ public sealed class EquipmentScreenProjectionTests
 
         Assert.Equal(JamesId, screen.ActorId);
         Assert.Equal(
-            [EquipmentSlotIds.MainHandWeapon, EquipmentSlotIds.BodyArmor, EquipmentSlotIds.AccessoryOne],
+            [
+                EquipmentSlotIds.MainHandWeapon,
+                EquipmentSlotIds.OffHandWeapon,
+                EquipmentSlotIds.BodyArmor,
+                EquipmentSlotIds.FeetArmor,
+                EquipmentSlotIds.HelmArmor,
+                EquipmentSlotIds.AccessoryOne,
+                EquipmentSlotIds.AccessoryTwo,
+            ],
             screen.Slots.Select(slot => slot.SlotId));
-        Assert.Null(screen.Slots[0].EquippedItem);
-        Assert.Null(screen.Slots[1].EquippedItem);
-        Assert.Null(screen.Slots[2].EquippedItem);
+        Assert.All(screen.Slots, slot => Assert.Null(slot.EquippedItem));
         Assert.Equal(7, screen.CurrentStats.Intelligence);
         Assert.Equal(7, screen.CurrentStats.Spirit);
         Assert.Equal(0, screen.CurrentStats.WeaponAttack);
@@ -80,6 +92,30 @@ public sealed class EquipmentScreenProjectionTests
             resolver.Resolve(session.Current, JamesId).CurrentStats);
     }
 
+    [Theory]
+    [InlineData(EquipmentSlotIds.BodyArmor, LeatherArmorItemId)]
+    [InlineData(EquipmentSlotIds.OffHandWeapon, WoodenShieldItemId)]
+    [InlineData(EquipmentSlotIds.FeetArmor, LeatherBootsItemId)]
+    [InlineData(EquipmentSlotIds.HelmArmor, LeatherHelmItemId)]
+    [InlineData(EquipmentSlotIds.AccessoryOne, PowerRingItemId)]
+    [InlineData(EquipmentSlotIds.AccessoryTwo, SpiritCharmItemId)]
+    public void PreviewEquipmentChange_EachAdditionalStarterSlotHasOneCompatibleOwnedItem(
+        string slotId,
+        string itemId)
+    {
+        GameState state = CreateState();
+        var resolver = new EquipmentScreenProjectionResolver(TestContent.LoadCatalog());
+
+        EquipmentScreenModel screen = resolver.Resolve(state, JamesId);
+        EquipmentSlotScreenModel slot = screen.Slots.Single(candidate => candidate.SlotId == slotId);
+        EquipmentPreviewModel preview = resolver.PreviewEquipmentChange(state, JamesId, slotId, itemId);
+
+        Assert.Equal([itemId], slot.CompatibleOwnedItems.Select(item => item.ItemId));
+        Assert.Equal(itemId, preview.CandidateItem!.ItemId);
+        Assert.NotEqual(preview.Current.CurrentStats, preview.PreviewStats);
+        Assert.Empty(state.ActorProgress[JamesId].EquippedItems);
+    }
+
     private static GameState CreateState(string? equippedItemId = null)
     {
         var equipped = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -91,14 +127,23 @@ public sealed class EquipmentScreenProjectionTests
         return new GameState
         {
             SaveId = "equipment-screen-test",
-            Inventory = new Dictionary<string, int>(StringComparer.Ordinal) { [SwordItemId] = 1 },
+            Inventory = new Dictionary<string, int>(StringComparer.Ordinal)
+            {
+                [SwordItemId] = 1,
+                [WoodenShieldItemId] = 1,
+                [LeatherArmorItemId] = 1,
+                [LeatherBootsItemId] = 1,
+                [LeatherHelmItemId] = 1,
+                [PowerRingItemId] = 1,
+                [SpiritCharmItemId] = 1,
+            },
             ActivePartyActorIds = [JamesId],
             ActorProgress = new Dictionary<string, ActorProgressState>(StringComparer.Ordinal)
             {
                 [JamesId] = new ActorProgressState
                 {
                     ActorId = JamesId,
-                    ClassId = "class.martial.vanguard",
+                    ClassId = "class.martial.knight",
                     EquippedItems = equipped,
                 },
             },

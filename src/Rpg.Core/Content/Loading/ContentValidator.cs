@@ -321,6 +321,23 @@ internal sealed class ContentValidator
             grantedAbilityIds,
             "equipment.duplicate-granted-ability",
             "Granted ability");
+
+        IReadOnlyList<string> specialEffectIds = RequireList(
+            item,
+            "$.specialEffectIds",
+            equipment.SpecialEffectIds);
+        var seenSpecialEffects = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < specialEffectIds.Count; index++)
+        {
+            string effectId = specialEffectIds[index];
+            string path = $"$.specialEffectIds[{index}]";
+            RequireStableKey(item, path, effectId, "equipment-effect.");
+            if (!seenSpecialEffects.Add(effectId))
+            {
+                Add(item, path, "equipment.duplicate-special-effect",
+                    $"Special effect '{effectId}' is repeated.");
+            }
+        }
     }
 
     private void ValidateAbility(LoadedContent item, AbilityDefinition ability)

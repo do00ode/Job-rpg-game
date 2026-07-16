@@ -36,7 +36,7 @@ public sealed class DirectoryModDiscoveryTests
             contentResult.IsSuccess,
             string.Join(Environment.NewLine, contentResult.Problems));
         ContentCatalog catalog = Assert.IsType<ContentCatalog>(contentResult.Catalog);
-        Assert.Equal(32, catalog.Count);
+        Assert.Equal(44, catalog.Count);
         Assert.NotNull(catalog.GetRequired<ClassDefinition>(
             "class.example.starter-pack.chronoguard"));
         Assert.NotNull(catalog.GetRequired<AbilityDefinition>(
@@ -46,7 +46,7 @@ public sealed class DirectoryModDiscoveryTests
             {
                 "class.example.starter-pack.chronoguard",
                 "class.magic.white-mage",
-                "class.martial.vanguard",
+                "class.martial.knight",
             },
             StartingClassPool.Resolve(catalog));
 
@@ -112,7 +112,8 @@ public sealed class DirectoryModDiscoveryTests
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public void GameApiVersionsBeforeStandaloneLootTables_AreRejected(int legacyApiVersion)
+    [InlineData(3)]
+    public void OlderGameApiVersions_AreRejected(int legacyApiVersion)
     {
         using var installation = new TemporaryModInstallation();
         installation.Add("mod.example.legacy", [], gameApiVersion: legacyApiVersion);
@@ -123,7 +124,7 @@ public sealed class DirectoryModDiscoveryTests
         ModProblem problem = Assert.Single(
             result.Problems,
             problem => problem.Code == "manifest.api-unsupported");
-        Assert.Contains("expected 3", problem.Message, StringComparison.Ordinal);
+        Assert.Contains("expected 4", problem.Message, StringComparison.Ordinal);
     }
 
     /// <summary>

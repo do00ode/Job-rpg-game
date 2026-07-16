@@ -29,4 +29,10 @@ public sealed record EquipmentDefinition : ContentDefinition
 
     /// <summary>Abilities available only while this equipment is active.</summary>
     public List<string> GrantedAbilityIds { get; init; } = [];
+
+    /// <summary>
+    /// Reserved code-owned effect IDs for future equipment mechanics and presentation.
+    /// These IDs describe no behavior until a later rules milestone explicitly supports them.
+    /// </summary>
+    public List<string> SpecialEffectIds { get; init; } = [];
 }

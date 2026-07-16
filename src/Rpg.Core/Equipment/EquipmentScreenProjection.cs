@@ -133,7 +133,8 @@ public sealed class EquipmentScreenProjectionResolver
             equipment.SlotId,
             equipment.Attack,
             equipment.StatisticModifiers,
-            equipment.WeaponDamagePercentages);
+            equipment.WeaponDamagePercentages,
+            equipment.SpecialEffectIds);
     }
 
     private static ActorProgressState GetProgress(GameState state, string actorId)
@@ -220,7 +221,8 @@ public sealed record EquipmentItemDetail
         string slotId,
         int attack,
         IReadOnlyDictionary<string, int> statisticModifiers,
-        IReadOnlyDictionary<string, int> weaponDamagePercentages)
+        IReadOnlyDictionary<string, int> weaponDamagePercentages,
+        IReadOnlyList<string> specialEffectIds)
     {
         ItemId = itemId;
         DisplayNameKey = displayNameKey;
@@ -231,6 +233,7 @@ public sealed record EquipmentItemDetail
             new Dictionary<string, int>(statisticModifiers, StringComparer.Ordinal));
         WeaponDamagePercentages = new ReadOnlyDictionary<string, int>(
             new Dictionary<string, int>(weaponDamagePercentages, StringComparer.Ordinal));
+        SpecialEffectIds = Array.AsReadOnly(specialEffectIds.ToArray());
     }
 
     public string ItemId { get; }
@@ -240,4 +243,5 @@ public sealed record EquipmentItemDetail
     public int Attack { get; }
     public IReadOnlyDictionary<string, int> StatisticModifiers { get; }
     public IReadOnlyDictionary<string, int> WeaponDamagePercentages { get; }
+    public IReadOnlyList<string> SpecialEffectIds { get; }
 }

@@ -56,7 +56,7 @@ Example: `game/content/abilities/shield-focus.json`
 ```json
 {
   "schemaVersion": 1,
-  "id": "ability.vanguard.shield-focus",
+  "id": "ability.knight.shield-focus",
   "displayNameKey": "ability.shield-focus.name",
   "descriptionKey": "ability.shield-focus.description",
   "abilityKindId": "ability-kind.skill",
@@ -83,8 +83,8 @@ implemented.
 
 ### First class-kit examples
 
-Milestone 4.6 uses class-owned level-one unlocks for the first real kits. Knight's permanent
-legacy class ID `class.martial.vanguard` grants the direct Skill
+Milestone 4.6 uses class-owned level-one unlocks for the first real kits. Knight's class ID
+`class.martial.knight` grants the direct Skill
 `ability.knight.power-strike`. Black Mage grants the individual Fire, Ice, and Lightning spell
 IDs through `abilityUnlocks`; it also grants the separate Black Magic container through
 `magicDisciplineUnlocks`. A Magic spell needs both facts before it becomes executable.
@@ -104,7 +104,7 @@ Add an entry to that class's `abilityUnlocks` array:
 "abilityUnlocks": [
   {
     "level": 1,
-    "abilityId": "ability.vanguard.shield-focus"
+    "abilityId": "ability.knight.shield-focus"
   }
 ]
 ```

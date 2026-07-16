@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.power-ring",
+  "displayNameKey": "item.power-ring.name",
+  "descriptionKey": "item.power-ring.description",
+  "buyPrice": 100,
+  "maxStack": 1
+}

@@ -3,6 +3,6 @@
   "id": "mod.example.starter-pack",
   "name": "Example Starter Pack",
   "version": "2.0.0",
-  "gameApiVersion": 3,
+  "gameApiVersion": 4,
   "dependencies": []
 }

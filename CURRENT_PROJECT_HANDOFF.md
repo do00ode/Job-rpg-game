@@ -12,11 +12,15 @@
 > equipped slots visible while browsing choices, and adds remappable `game.equipment` with
 > default key `I`. The local, uncommitted follow-up adds Intelligence and Spirit as resolved and
 > presented attributes; magic-damage, healing, and magical-resistance formulas remain deferred.
-> Milestone 4.96 then establishes a 640x480 CRT-safe logical viewport, compact container-driven
-> layouts, opaque menu surfaces, and adaptive battle-formation rendering. Validation passes with
-> 355 core tests, base content (29 definitions), base plus example mod (32 definitions), a clean
+> Milestone 4.96 preserves the authored 1280x720 logical viewport while allowing CRT-safe
+> windowed output scaling, plus compact container-driven layouts, opaque menu surfaces, and
+> adaptive battle-formation rendering. Validation passes with
+> 362 core tests, base content (41 definitions), base plus example mod (44 definitions), a clean
 > solution build, Godot editor validation, and Godot startup smoke test. Manual checks remain
 > required at the documented 4:3, 16:9, and 16:10 resolutions.
+> Follow-up correction: Menu now includes Display presets, and the equipment comparison uses
+> four paired compact rows so persistent equipment slots remain visible without changing the
+> exploration room's authored coordinate system.
 
 > Milestone 4.9 extends this summary with an exploration-local equipment menu. It uses the
 > read-only `EquipmentMenuProjectionResolver` and authoritative `EquipmentService`; UI state is

@@ -235,11 +235,12 @@ checks its data-contract API version, verifies dependencies, and produces a dete
 topological order. `GameRoot` loads base content first and each mod's `content/` folder in
 that order. Validation remains all-or-nothing across the combined catalog.
 
-The supported data API is `3`. API 2 replaced API 1's loosely documented encounter formation
+The supported data API is `4`. API 2 replaced API 1's loosely documented encounter formation
 keys with canonical grid coordinates. API 3 replaces embedded enemy `loot` arrays with typed,
 reusable `loot-tables/` records and an enemy `lootTableId`; enemy records consequently use
-schema version 2. These explicit compatibility gates reject old mod shapes instead of guessing
-their meaning. Neither content-contract change alters `SaveFormatVersion`.
+schema version 2. API 4 retires `class.martial.vanguard` for `class.martial.knight`. These
+explicit compatibility gates reject old mod shapes instead of guessing their meaning. The class
+rename separately advances save format 1 to 2 so campaign progress remains compatible.
 
 Milestone 2.8 keeps authored `EnemyFootprintDefinition` separate from transient formation
 state. Its one `ToFormationFootprint` conversion copies validated rows and columns into the
@@ -469,7 +470,9 @@ Milestone 4.8 stores each actor's equipped inventory item IDs in
 owned item to its one `EquipmentDefinition`, verifies the authored slot, and publishes a single
 replacement actor-progress state through `IGameSession`. Equipping never removes an inventory
 stack; clearing an empty slot is a no-op. The starter slice supports
-`slot.weapon.main-hand` only. Older saves omit the additive map and deserialize as empty.
+the ordered stable slots `slot.weapon.main-hand`, `slot.weapon.off-hand`, `slot.armor.body`, `slot.armor.feet`,
+`slot.armor.helm`, `slot.accessory.one`, and `slot.accessory.two`. Older saves omit the additive
+map and deserialize as empty.
 
 `CombatSnapshotFactory` copies the equipped main-hand weapon into transient `CombatantSnapshot`
 fields (`EquippedWeaponAttack` and an optional single damage type). The combat resolver does not
@@ -496,11 +499,11 @@ permanent top slot list remains visible when the lower choice pane opens. The re
 `game.equipment` action opens this scene-local panel directly. Highlight previews still come
 from `EquipmentScreenProjectionResolver`; only confirmation reaches `EquipmentService`.
 
-Milestone 4.96 establishes a `640x480` minimum logical viewport and keeps responsive geometry
-in Godot presentation. Scene containers divide the available viewport instead of owning
-desktop-specific pixel rectangles. `BattleFormationView` converts existing core placements into
-a size-dependent grid and rebuilds only view labels after resize; it never changes formation
-rules or combat state.
+Milestone 4.96 preserves the authored `1280x720` logical viewport and keeps resolution scaling
+in Godot presentation. Window-size changes scale that stable room coordinate space rather than
+changing map geometry. Scene containers divide the available menu viewport, while
+`BattleFormationView` converts existing core placements into a size-dependent grid and rebuilds
+only view labels after resize; it never changes formation rules or combat state.
 
 ### Complete deterministic rounds
 

@@ -57,6 +57,8 @@ public sealed class SaveCompatibilityTests
         // Milestone 1 saves predate data mods. The additive list must receive its safe
         // default without requiring a format-version migration.
         Assert.Empty(save.EnabledMods);
+        Assert.Equal(SaveJsonSerializer.CurrentFormatVersion, save.SaveFormatVersion);
+        Assert.Equal("class.martial.knight", save.State.ActorProgress["actor.hero.james"].ClassId);
         Assert.Empty(save.State.Inventory);
         Assert.Empty(save.State.ActorProgress["actor.hero.james"].EquippedItems);
 

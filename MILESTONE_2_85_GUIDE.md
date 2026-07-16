@@ -29,7 +29,7 @@ The three inputs have different owners and lifetimes:
 | `EnemyDefinition` | Immutable content catalog | One enemy species' authored starting values |
 | `StatisticDefinition` | Immutable content catalog | Stable ID, fallback default, and legal range |
 
-James is not permanently a Vanguard. `ActorProgressState.ClassId` can select Vanguard in one
+James is not permanently a Knight. `ActorProgressState.ClassId` can select Knight in one
 campaign and Black Mage in another. Saving a duplicate resolved-statistic dictionary would
 make those numbers stale whenever the selected class or enabled data content changed. The
 game therefore persists the class choice and derives starting combat values when they are
@@ -52,12 +52,12 @@ party statistic =
 ```
 
 The current class always comes from `ActorProgressState.ClassId`. The resolver does not infer
-a class from the actor ID, assume Vanguard, read starting-class availability, use the first
+a class from the actor ID, assume Knight, read starting-class availability, use the first
 loaded class, or look at presentation state.
 
-With the current checked-in content, James as a Vanguard resolves to:
+With the current checked-in content, James as a Knight resolves to:
 
-| Statistic | Actor base | Vanguard bonus | Result |
+| Statistic | Actor base | Knight bonus | Result |
 |---|---:|---:|---:|
 | `stat.max-hp` | 84 | 12 | 96 |
 | `stat.max-mp` | 12 | 0 | 12 |
@@ -68,7 +68,7 @@ With the current checked-in content, James as a Vanguard resolves to:
 | `stat.speed` | 6 | 0 | 6 |
 
 Changing `ClassId` to Black Mage uses Black Mage's bonuses instead. No actor definition is
-rewritten, and no Vanguard special case exists in code.
+rewritten, and no Knight special case exists in code.
 
 ## Enemy formula
 
@@ -221,7 +221,7 @@ and avoids designing the whole combat system at once.
 
 The headless tests cover:
 
-- the exact checked-in James/Vanguard and green-slime values;
+- the exact checked-in James/Knight and green-slime values;
 - selecting a different class through `ActorProgressState.ClassId`;
 - actor and enemy defaults, including a class bonus applied after a default;
 - rejection of invalid actor levels, missing/wrong-category content IDs, derived range

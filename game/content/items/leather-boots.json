@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.leather-boots",
+  "displayNameKey": "item.leather-boots.name",
+  "descriptionKey": "item.leather-boots.description",
+  "buyPrice": 55,
+  "maxStack": 1
+}

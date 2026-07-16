@@ -12,9 +12,11 @@ using RpgGame.Core.Mods;
 using RpgGame.Core.Persistence;
 using RpgGame.Core.Rewards;
 using RpgGame.Core.State;
+using RpgGame.Display;
 using RpgGame.Encounters;
 using RpgGame.Exploration;
 using RpgGame.Input;
+using RpgGame.Localization;
 using RpgGame.Rewards;
 
 namespace RpgGame.Bootstrap;
@@ -39,6 +41,12 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
     private const string GameVersion = "0.4.8-equipment";
     private const string JamesId = "actor.hero.james";
     private const string IronSwordItemId = "item.equipment.iron-sword";
+    private const string WoodenShieldItemId = "item.equipment.wooden-shield";
+    private const string LeatherArmorItemId = "item.equipment.leather-armor";
+    private const string LeatherBootsItemId = "item.equipment.leather-boots";
+    private const string LeatherHelmItemId = "item.equipment.leather-helm";
+    private const string PowerRingItemId = "item.equipment.power-ring";
+    private const string SpiritCharmItemId = "item.equipment.spirit-charm";
     private const string TestRoomScenePath = "res://game/scenes/exploration/TestRoom.tscn";
     private const string BattleScenePath = "res://game/scenes/encounters/Battle.tscn";
     private const string RewardSummaryScenePath =
@@ -62,6 +70,11 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 
     /// <summary>Application-lifetime player preferences applied through Godot InputMap.</summary>
     public InputBindingService InputBindings { get; private set; } = null!;
+
+    public DisplaySettingsService DisplaySettings { get; private set; } = null!;
+
+    /// <summary>Application-lifetime text lookup for the base presentation language.</summary>
+    public LocalizedTextCatalog Text { get; private set; } = null!;
 
     /// <summary>
     /// Validated loose-folder data mods active for this process, in dependency order. The
@@ -110,7 +123,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 
         // Until the title screen supplies a player choice, select the first stable ID from
         // the resolved pool. This is deterministic and remains valid when a mod removes the
-        // vanilla Vanguard choice. It is a bootstrap fallback, not actor configuration.
+        // vanilla Knight choice. It is a bootstrap fallback, not actor configuration.
         string selectedClassId = startingClassId
             ?? StartingClassPool.Resolve(Content).FirstOrDefault()
             ?? throw new InvalidOperationException(
@@ -120,10 +133,18 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
             DefaultGameSetup.CreateRequest(selectedClassId));
         Session.ReplaceState(initialState);
 
-        // Temporary starter content keeps the equipment/combat slice manually playable until
-        // Milestone 4.9 provides an equipment menu. The item remains an ordinary inventory stack.
+        // Starter equipment remains ordinary inventory stacks; only the weapon begins equipped.
         var inventory = new InventoryService(Content, Session);
-        inventory.AddItem(IronSwordItemId, 1);
+        inventory.AddItems(
+        [
+            new InventoryAddition(IronSwordItemId, 1),
+            new InventoryAddition(WoodenShieldItemId, 1),
+            new InventoryAddition(LeatherArmorItemId, 1),
+            new InventoryAddition(LeatherBootsItemId, 1),
+            new InventoryAddition(LeatherHelmItemId, 1),
+            new InventoryAddition(PowerRingItemId, 1),
+            new InventoryAddition(SpiritCharmItemId, 1),
+        ]);
         new EquipmentService(Content, Session).EquipItem(
             JamesId,
             IronSwordItemId,
@@ -238,6 +259,9 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         string controlsPath = ProjectSettings.GlobalizePath("user://settings/controls.json");
         InputBindings = new InputBindingService(controlsPath);
         InputBindings.Initialize();
+        DisplaySettings = new DisplaySettingsService();
+        Text = new LocalizedTextCatalog(
+            ProjectSettings.GlobalizePath("res://game/localization/en.json"));
         if (InputBindings.LoadWarning is not null)
         {
             GD.PushWarning(InputBindings.LoadWarning);
@@ -266,7 +290,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         AddChild(scene);
         try
         {
-            scene.Initialize(Content, Session, this, InputBindings);
+            scene.Initialize(Content, Session, this, InputBindings, DisplaySettings, Text);
             scene.ReloadRequested += OnExplorationReloadRequested;
             scene.EncounterRequested += OnEncounterRequested;
             if (developmentStatus is not null)

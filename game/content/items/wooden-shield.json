@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.wooden-shield",
+  "displayNameKey": "item.wooden-shield.name",
+  "descriptionKey": "item.wooden-shield.description",
+  "buyPrice": 70,
+  "maxStack": 1
+}

@@ -111,7 +111,7 @@ for the manifest and folder contract.
 
 An actor is identity, not a campaign's current build. The selected class and level are
 written to `ActorProgressState` when a new game is created. Consequently James can be a
-Vanguard in one save and a White Mage in another without changing `actor.hero.james`.
+Knight in one save and a White Mage in another without changing `actor.hero.james`.
 
 ### Class
 
@@ -157,7 +157,7 @@ mod can still include or exclude a vanilla class by stable ID.
   "schemaVersion": 1,
   "id": "newgame.class-rule.base.default",
   "includeClassIds": [
-    "class.martial.vanguard",
+    "class.martial.knight",
     "class.magic.black-mage",
     "class.magic.white-mage"
   ],
@@ -269,9 +269,15 @@ This keeps common inventory/shop data in exactly one place.
   "statisticModifiers": {},
   "attack": 4,
   "weaponDamagePercentages": { "damage-type.slash": 100 },
-  "grantedAbilityIds": []
+  "grantedAbilityIds": [],
+  "specialEffectIds": []
 }
 ```
+
+The supported base-game slot IDs are `slot.weapon.main-hand`, `slot.weapon.off-hand`, `slot.armor.body`,
+`slot.armor.feet`, `slot.armor.helm`, `slot.accessory.one`, and `slot.accessory.two`. They are
+stable save keys, not display labels. Each equipment definition selects exactly one slot; a
+character can independently equip one item in each supported slot.
 
 Weapon profiles may mix Slash, Energy, Fire, Ice, and Lightning. Milestone 4.8 activates only
 an equipped weapon's single 100% profile for intrinsic `ability.command.attack`; a mixed profile
@@ -280,6 +286,8 @@ Omission remains compatible and leaves Attack on its authored/legacy damage type
 
 `attack` is weapon damage, while `statisticModifiers` remains the separate future mechanism for
 armor/accessory-style statistic bonuses. Basic weapons must use `attack`, not `stat.strength`.
+`specialEffectIds` is an optional unique list of reserved `equipment-effect.*` IDs. It is
+presentation data only until a later code-owned effect contract assigns behavior to an ID.
 
 ### Loot table
 
@@ -572,6 +580,10 @@ added only when their first playable use case is built.
 Milestone 4.3 adds optional damage-type fields without changing schema versions or mod API 3.
 Omitted enemy modifier maps are neutral, omitted weapon profiles remain compatible, and
 omitted legacy physical-ability types resolve as Energy. Explicit null maps are invalid.
+
+The later API 4 class-identity change retires `class.martial.vanguard` in favor of
+`class.martial.knight`. It intentionally rejects API-3 mods, while save format 2 migrates
+existing campaign class selections during load.
 
 Every JSON record must write `schemaVersion` even when it is `1`. The C# default exists for
 hand-built tests and tools only; accepting a missing JSON version would make future migrations

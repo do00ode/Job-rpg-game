@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "equipment.armor.leather-boots",
+  "itemId": "item.equipment.leather-boots",
+  "slotId": "slot.armor.feet",
+  "statisticModifiers": {
+	"stat.speed": 1
+  },
+  "attack": 0,
+  "weaponDamagePercentages": {},
+  "grantedAbilityIds": []
+}

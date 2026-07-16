@@ -13,7 +13,7 @@ dotnet run --project tools/content-validation/RpgGame.ContentValidation.csproj -
 ```
 
 Successful combined validation loads 23 definitions. With this example enabled, the final
-starting pool is Chronoguard, White Mage, and Vanguard.
+starting pool is Chronoguard, White Mage, and Knight.
 
 The example version is `2.0.0` because moving from data API 2 to 3 is a breaking authoring
 contract change. The manifest uses data API `3`. API `2` introduced canonical encounter

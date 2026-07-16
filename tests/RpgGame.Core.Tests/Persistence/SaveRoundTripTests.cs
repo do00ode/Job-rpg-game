@@ -37,7 +37,7 @@ public sealed class SaveRoundTripTests
                         new StartingPartyMemberRequest
                         {
                             ActorId = "actor.hero.james",
-                            ClassId = "class.martial.vanguard",
+                            ClassId = "class.martial.knight",
                         },
                     ],
                 });

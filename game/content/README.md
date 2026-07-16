@@ -10,7 +10,7 @@ and save/load tests. They should remain small as real content is introduced sepa
 
 The base pack currently contains 20 definitions and no concrete magic-discipline records yet.
 James is class-neutral; the
-`starting-class-rules/default.json` record makes Vanguard, Black Mage, and White Mage legal
+`starting-class-rules/default.json` record makes Knight, Black Mage, and White Mage legal
 new-game choices. Until a class-selection screen exists, the bootstrap selects the first
 stable ID in the resolved pool solely so the nonvisual startup demonstration can run.
 The additional dialogue record supplies the two placeholder lines used by the test-room guide.

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "equipment.accessory.spirit-charm",
+  "itemId": "item.equipment.spirit-charm",
+  "slotId": "slot.accessory.two",
+  "statisticModifiers": {
+    "stat.spirit": 1
+  },
+  "attack": 0,
+  "weaponDamagePercentages": {},
+  "grantedAbilityIds": []
+}

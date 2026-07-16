@@ -59,7 +59,7 @@ where an array/string is expected, and unsupported versions are errors.
   "id": "mod.example.starter-pack",
   "name": "Example Starter Pack",
   "version": "2.0.0",
-  "gameApiVersion": 3,
+  "gameApiVersion": 4,
   "dependencies": []
 }
 ```
@@ -70,7 +70,7 @@ where an array/string is expected, and unsupported versions are errors.
 | `id` | Permanent lowercase ID in `mod.author.mod-name` form. It must equal the folder name. |
 | `name` | Nonblank human-facing name. It is never used as identity. |
 | `version` | Author-controlled Semantic Version such as `1.0.0` or `1.1.0-beta.1`. |
-| `gameApiVersion` | Integer data contract supported by the game; currently exactly `3`. |
+| `gameApiVersion` | Integer data contract supported by the game; currently exactly `4`. |
 | `dependencies` | Stable IDs of mods that must be installed and loaded first. |
 
 `gameApiVersion` is separate from the executable's build string. Ordinary game releases do
@@ -101,6 +101,13 @@ This is still not a save-format change. Loot tables describe immutable possibili
 items already awarded to a campaign. API-2 mods must move each embedded array into a
 namespaced table, update each enemy reference, use enemy `schemaVersion: 2`, and declare
 `gameApiVersion: 3`. The manifest's own `schemaVersion` remains `1`.
+
+### Data API 4 Knight rename
+
+API 4 replaces the base class ID `class.martial.vanguard` with
+`class.martial.knight`. Mods that reference the retired ID must update those references and
+declare `gameApiVersion: 4`. Base save files migrate the retired ID during load; mod manifests
+do not, so the API gate rejects old mod content clearly rather than allowing an ambiguous load.
 
 ## Record ownership and references
 
@@ -312,7 +319,7 @@ it reports those unusable IDs at load time instead of allowing a later runtime f
 
 ## Changing the new-game class pool
 
-The base game includes Vanguard, Black Mage, and White Mage. Availability is not stored on
+The base game includes Knight, Black Mage, and White Mage. Availability is not stored on
 James or as an `availableAtStart` Boolean inside each class. That approach would let a mod add
 its own starting class, but it could not remove a vanilla choice because mods may not replace
 vanilla files.

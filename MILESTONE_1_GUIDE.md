@@ -70,7 +70,7 @@ Errors include a file, JSON path, stable error code, and explanation. For exampl
 
 ```text
 base/starting-class-rules/default.json $.includeClassIds[0]: Referenced
-ClassDefinition 'class.missing.vanguard' does not exist. [reference.missing]
+ClassDefinition 'class.missing.knight' does not exist. [reference.missing]
 ```
 
 The catalog indexes definitions by both concrete type and ID. This is valid:
@@ -90,7 +90,7 @@ The 20 checked-in records cover every implemented category:
 |---|---|
 | Statistics | Bounds and dictionary references for HP, MP, strength, defense, and speed |
 | Abilities | James's intrinsic Attack and the enemy Tackle action |
-| Classes | Vanguard, Black Mage, and White Mage definitions |
+| Classes | Knight, Black Mage, and White Mage definitions |
 | Starting-class rule | Makes those three vanilla classes legal new-game choices |
 | Actor | Class-neutral James, the starting actor used by new-game creation |
 | Dialogue | One short guide exchange used by the test room |
@@ -110,7 +110,7 @@ final characters, balance, names, or story content.
 and structured party actor/class choices. `NewGameFactory` is reusable application logic that validates those
 choices against the catalog and creates a fresh `GameState`.
 
-James's JSON no longer selects Vanguard. `ActorDefinition` describes identity, name key,
+James's JSON no longer selects Knight. `ActorDefinition` describes identity, name key,
 intrinsic statistics, and actor-specific abilities. A `StartingPartyMemberRequest` supplies
 the class and level for this particular campaign; `NewGameFactory` checks that class against
 the pool produced by `StartingClassPool`. Until a UI exists, the bootstrap chooses the first
@@ -118,7 +118,7 @@ stable ID in that resolved pool, while `GameRoot.StartNewGame(classId)` accepts 
 legal choice. No class ID is hard-coded on James or in the bootstrap fallback.
 
 This is what enables replayability without hard-coding James: separate saves can start him as
-Vanguard, Black Mage, or White Mage, while his stable actor ID and display-name key remain the
+Knight, Black Mage, or White Mage, while his stable actor ID and display-name key remain the
 same. Mods can change the legal pool through `starting-class-rules` records. A future seeded
 randomizer should consume that same resolved pool rather than altering actor definitions.
 See `STARTING_CLASS_GUIDE.md` for the file-by-file authoring and modding walkthrough.

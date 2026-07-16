@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.spirit-charm",
+  "displayNameKey": "item.spirit-charm.name",
+  "descriptionKey": "item.spirit-charm.description",
+  "buyPrice": 100,
+  "maxStack": 1
+}

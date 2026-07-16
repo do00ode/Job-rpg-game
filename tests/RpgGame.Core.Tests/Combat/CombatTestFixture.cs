@@ -14,14 +14,14 @@ namespace RpgGame.Core.Tests.Combat;
 internal static class CombatTestFixture
 {
     public const string JamesId = "actor.hero.james";
-    public const string VanguardId = "class.martial.vanguard";
+    public const string KnightId = "class.martial.knight";
     public const string BlackMageId = "class.magic.black-mage";
     public const string EncounterId = "encounter.forest.slimes-01";
     public const string GreenSlimeId = "enemy.forest.green-slime";
     public const string AttackId = "ability.command.attack";
     public const string TackleId = "ability.enemy.tackle";
 
-    public static FixedBattle CreateFixedBattle(string classId = VanguardId, int level = 1)
+    public static FixedBattle CreateFixedBattle(string classId = KnightId, int level = 1)
     {
         ContentCatalog content = TestContent.LoadCatalog();
         GameState campaign = new NewGameFactory(content).Create(new NewGameRequest

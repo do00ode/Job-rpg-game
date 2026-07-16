@@ -19,7 +19,7 @@ public sealed record SaveEnvelope
     /// Version controlling ordered <see cref="ISaveMigration"/> execution.
     /// Increment only for a breaking file-format change.
     /// </summary>
-    public int SaveFormatVersion { get; init; } = 1;
+    public int SaveFormatVersion { get; init; } = SaveJsonSerializer.CurrentFormatVersion;
 
     /// <summary>
     /// Human-diagnostic build version that created the file. Compatibility decisions use

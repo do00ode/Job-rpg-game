@@ -9,7 +9,7 @@ namespace RpgGame.Core.Persistence;
 public sealed class SaveJsonSerializer
 {
     /// <summary>Current file format written by this build.</summary>
-    public const int CurrentFormatVersion = 1;
+    public const int CurrentFormatVersion = 2;
 
     private readonly JsonSerializerOptions _options;
     private readonly SaveMigrationRunner _migrationRunner;
@@ -19,7 +19,7 @@ public sealed class SaveJsonSerializer
         _options = CreateOptions();
         _migrationRunner = new SaveMigrationRunner(
             CurrentFormatVersion,
-            migrations ?? Array.Empty<ISaveMigration>());
+            migrations ?? [new VanguardClassIdMigration()]);
     }
 
     /// <summary>Serializes one current-format envelope as readable camelCase JSON.</summary>

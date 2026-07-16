@@ -4,6 +4,7 @@ using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Equipment;
 using RpgGame.Core.State;
 using RpgGame.Input;
+using RpgGame.Localization;
 
 namespace RpgGame.Exploration;
 
@@ -12,7 +13,7 @@ public partial class CharacterEquipmentPanel : PanelContainer
 {
     private Label _title = null!;
     private Label _character = null!;
-    private Label _comparison = null!;
+    private RichTextLabel _comparison = null!;
     private Label _detail = null!;
     private Label _status = null!;
     private Label _choicesTitle = null!;
@@ -22,6 +23,7 @@ public partial class CharacterEquipmentPanel : PanelContainer
     private IGameSession? _session;
     private EquipmentScreenProjectionResolver? _screenResolver;
     private EquipmentService? _equipmentService;
+    private LocalizedTextCatalog? _text;
     private readonly List<Button> _buttons = [];
     private readonly List<Button> _slotButtons = [];
     private readonly List<Button> _choiceButtons = [];
@@ -36,7 +38,7 @@ public partial class CharacterEquipmentPanel : PanelContainer
     {
         _title = GetNode<Label>("Margin/VBox/Title");
         _character = GetNode<Label>("Margin/VBox/Character");
-        _comparison = GetNode<Label>("Margin/VBox/Lower/StatsColumn/Comparison");
+        _comparison = GetNode<RichTextLabel>("Margin/VBox/Lower/StatsColumn/Comparison");
         _detail = GetNode<Label>("Margin/VBox/Lower/StatsColumn/Detail");
         _status = GetNode<Label>("Margin/VBox/Status");
         _choicesTitle = GetNode<Label>("Margin/VBox/Lower/ChoicesColumn/ChoicesTitle");
@@ -45,12 +47,13 @@ public partial class CharacterEquipmentPanel : PanelContainer
         Visible = false;
     }
 
-    public void Initialize(IContentCatalog content, IGameSession session)
+    public void Initialize(IContentCatalog content, IGameSession session, LocalizedTextCatalog text)
     {
         _content = content ?? throw new ArgumentNullException(nameof(content));
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _screenResolver = new EquipmentScreenProjectionResolver(content);
         _equipmentService = new EquipmentService(content, session);
+        _text = text ?? throw new ArgumentNullException(nameof(text));
         session.StateChanged += OnSessionStateChanged;
     }
 
@@ -103,7 +106,7 @@ public partial class CharacterEquipmentPanel : PanelContainer
         if (_selectedSlotId is null)
         {
             _choicesTitle.Text = "Choose a slot above";
-            _detail.Text = "Highlight an equipped slot to inspect it.";
+            _detail.Text = "Effects: Select equipment to inspect it.";
             AddChoiceButton("Close Equipment", Close);
             SetStatus("Confirm a slot to browse equipment. I closes this screen.");
         }
@@ -161,22 +164,19 @@ public partial class CharacterEquipmentPanel : PanelContainer
     }
 
     private void ShowComparison(EquipmentStatValues current, EquipmentStatValues preview) => _comparison.Text =
-        "Current     Preview" + System.Environment.NewLine
-        + StatLine("Max HP", current.MaximumHp, preview.MaximumHp)
-        + StatLine("Max MP", current.MaximumMp, preview.MaximumMp)
-        + StatLine("Strength", current.Strength, preview.Strength)
-        + StatLine("Intelligence", current.Intelligence, preview.Intelligence)
-        + StatLine("Defense", current.Defense, preview.Defense)
-        + StatLine("Spirit", current.Spirit, preview.Spirit)
-        + StatLine("Speed", current.Speed, preview.Speed)
-        + StatLine("Weapon Attack", current.WeaponAttack, preview.WeaponAttack);
+        "[color=#59e7ff]Current -> Preview[/color]" + System.Environment.NewLine
+        + ComparisonLine("HP", current.MaximumHp, preview.MaximumHp, "MP", current.MaximumMp, preview.MaximumMp)
+        + ComparisonLine("STR", current.Strength, preview.Strength, "INT", current.Intelligence, preview.Intelligence)
+        + ComparisonLine("DEF", current.Defense, preview.Defense, "SPR", current.Spirit, preview.Spirit)
+        + ComparisonLine("SPD", current.Speed, preview.Speed, "ATK", current.WeaponAttack, preview.WeaponAttack);
 
     private void ShowItemDetail(EquipmentItemDetail? item)
     {
-        if (item is null) { _detail.Text = "Empty slot. No equipment bonuses."; return; }
-        string modifiers = item.StatisticModifiers.Count == 0 ? "None" : string.Join(", ", item.StatisticModifiers.Select(pair => $"{ShortName(pair.Key)} {pair.Value:+#;-#;0}"));
-        string profile = item.WeaponDamagePercentages.Count == 0 ? "None" : string.Join(", ", item.WeaponDamagePercentages.Select(pair => $"{ShortName(pair.Key)} {pair.Value}%"));
-        _detail.Text = $"{DisplayItemName(item)} ({DisplaySlotName(item.SlotId)})" + System.Environment.NewLine + $"Weapon Attack: {item.Attack}    Stat bonuses: {modifiers}" + System.Environment.NewLine + $"Damage profile: {profile}";
+        if (item is null) { _detail.Text = "Effects: None"; return; }
+        string effects = item.SpecialEffectIds.Count == 0
+            ? "None"
+            : string.Join(", ", item.SpecialEffectIds.Select(ShortName));
+        _detail.Text = $"{RequireText().Resolve(item.DescriptionKey)}{System.Environment.NewLine}Effects: {effects}";
     }
 
     private void TryEquip(string itemId, string slotId)
@@ -241,9 +241,27 @@ public partial class CharacterEquipmentPanel : PanelContainer
     }
 
     private void OnSessionStateChanged(object? sender, EventArgs eventArgs) { if (Visible) Refresh(); }
-    private static string StatLine(string label, int current, int preview) { int delta = preview - current; return $"{label,-15}{current,4} -> {preview,4}{(delta == 0 ? string.Empty : $" ({delta:+#;-#;0})")}{System.Environment.NewLine}"; }
+    private static string ComparisonLine(string left, int leftCurrent, int leftPreview, string right, int rightCurrent, int rightPreview) =>
+        $"{ComparisonValue(left, leftCurrent, leftPreview)}    {ComparisonValue(right, rightCurrent, rightPreview)}{System.Environment.NewLine}";
+    private static string ComparisonValue(string label, int current, int preview)
+    {
+        int delta = preview - current;
+        string color = delta switch { > 0 => "#72e58b", < 0 => "#ff7b72", _ => "#c9d1d9" };
+        string deltaText = delta > 0 ? $"+{delta}" : delta.ToString();
+        return $"{label} {current} -> [color={color}]{preview} ({deltaText})[/color]";
+    }
     private static string CompactHint(EquipmentItemDetail item) => item.Attack > 0 ? $"  Attack +{item.Attack}" : string.Empty;
-    private static string DisplaySlotName(string slotId) => slotId switch { EquipmentSlotIds.MainHandWeapon => "Weapon", EquipmentSlotIds.BodyArmor => "Body", EquipmentSlotIds.AccessoryOne => "Accessory", _ => slotId };
+    private static string DisplaySlotName(string slotId) => slotId switch
+    {
+        EquipmentSlotIds.MainHandWeapon => "Weapon",
+        EquipmentSlotIds.OffHandWeapon => "Off Hand",
+        EquipmentSlotIds.BodyArmor => "Body",
+        EquipmentSlotIds.FeetArmor => "Feet",
+        EquipmentSlotIds.HelmArmor => "Helm",
+        EquipmentSlotIds.AccessoryOne => "Accessory 1",
+        EquipmentSlotIds.AccessoryTwo => "Accessory 2",
+        _ => slotId,
+    };
     private string DisplayItemName(EquipmentItemDetail? item) => item is null ? "None" : ShortName(item.DisplayNameKey);
     private string DisplayItemName(string itemId) => ShortName(RequireContent().GetRequired<ItemDefinition>(itemId).DisplayNameKey);
     private string DisplayActorName(string actorId) => ShortName(RequireContent().GetRequired<ActorDefinition>(actorId).DisplayNameKey);
@@ -254,4 +272,5 @@ public partial class CharacterEquipmentPanel : PanelContainer
     private IGameSession RequireSession() => _session ?? throw new InvalidOperationException("CharacterEquipmentPanel is not initialized.");
     private EquipmentScreenProjectionResolver RequireScreenResolver() => _screenResolver ?? throw new InvalidOperationException("CharacterEquipmentPanel is not initialized.");
     private EquipmentService RequireEquipmentService() => _equipmentService ?? throw new InvalidOperationException("CharacterEquipmentPanel is not initialized.");
+    private LocalizedTextCatalog RequireText() => _text ?? throw new InvalidOperationException("CharacterEquipmentPanel is not initialized.");
 }

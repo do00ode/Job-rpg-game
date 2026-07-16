@@ -49,7 +49,7 @@ The base record `ability.command.attack` is a direct Skill using:
 | `power` | `4` |
 
 James lists Attack in `startingAbilityIds`. This makes it intrinsic to the hero regardless of
-whether the campaign chooses Vanguard, Black Mage, or White Mage. James remains class-neutral,
+whether the campaign chooses Knight, Black Mage, or White Mage. James remains class-neutral,
 and all current vanilla classes deliberately have empty `abilityUnlocks` arrays. Class skills
 can be authored later without changing the actor or resolver.
 

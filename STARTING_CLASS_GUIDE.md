@@ -8,7 +8,7 @@ new-game class list moddable without turning the project into a general-purpose 
 | Fact | Example | Stored in | Why |
 |---|---|---|---|
 | Actor identity | `actor.hero.james` | `ActorDefinition` JSON | James remains the same story person. |
-| Legal new-game choices | Vanguard, Black Mage, White Mage | `StartingClassRuleDefinition` JSON | Base content and mods compose one pool. |
+| Legal new-game choices | Knight, Black Mage, White Mage | `StartingClassRuleDefinition` JSON | Base content and mods compose one pool. |
 | This save's choice | James chose White Mage at level 1 | `ActorProgressState` | Different campaigns can make different choices. |
 
 Do not put James's current class in `james.json`. That would make content identity and saved
@@ -40,11 +40,11 @@ without making display text part of identity.
 `startingAbilityIds` should contain only abilities James receives regardless of class.
 Milestone 3.10 adds `ability.command.attack` there because Attack is the universal basic
 command James should retain with every starting class. That intrinsic grant does not make
-James a Vanguard and does not change which classes can be selected.
+James a Knight and does not change which classes can be selected.
 
 Milestone 4.6 gives the three starter choices their first level-one kits through their owning
-class records. The permanent `class.martial.vanguard` ID presents the Knight kit and grants
-Power Strike; its legacy ID remains because existing saves store it. Black Mage grants Black
+class records. The `class.martial.knight` ID presents the Knight kit and grants Power Strike.
+Older save format 1 documents migrate their retired Vanguard ID during load. Black Mage grants Black
 Magic access plus Fire, Ice, and Lightning. Milestone 4.7 gives White Mage both White Magic
 access and Cure. Keep future class-specific grants on their class record rather than adding
 them to James, whose intrinsic Attack remains universal.

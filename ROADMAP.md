@@ -418,8 +418,8 @@ out-of-battle resources, save persistence, and additional mutable resource famil
 - Prepare White Magic access without faking Cure before a healing ruleset exists.
 
 Exit criteria: the selected class changes the available battle commands; Black Mage spells use
-their authored elemental damage types and pay MP exactly once; the permanent Vanguard class ID
-continues to load as the Knight kit for existing saves.
+their authored elemental damage types and pay MP exactly once; the canonical Knight class ID
+loads for new campaigns and older Vanguard saves migrate during load.
 
 Explicitly excluded: Cure/healing, extra classes, magical-stat formulas, area targets,
 equipment, items, status effects, animations, and class progression UI. See
@@ -484,9 +484,8 @@ hybrid classes. See `MILESTONE_4_95_GUIDE.md`.
 
 ### Milestone 4.96 - Resolution-safe presentation
 
-- Establish `640x480` as the minimum logical viewport for CRT-safe 4:3 presentation.
-- Use expanding widescreen canvas space and container-driven layouts instead of desktop-only
-  fixed scene dimensions.
+- Preserve the authored `1280x720` logical viewport and scale it for CRT-safe 4:3 output.
+- Use container-driven menu layouts instead of introducing a second logical scene dimension.
 - Keep equipment, menus, controls, dialogue, battle, and rewards inside the available viewport.
 - Scale battle formation geometry from its allocated presentation area without changing core
   formation rules.

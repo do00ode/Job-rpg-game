@@ -22,7 +22,7 @@ public sealed class AbilityMagicFrameworkContentTests
         Assert.Equal(AbilityKindIds.Skill, tackle.AbilityKindId);
         Assert.Empty(tackle.MagicDisciplineIds);
 
-        ClassDefinition knight = catalog.GetRequired<ClassDefinition>("class.martial.vanguard");
+        ClassDefinition knight = catalog.GetRequired<ClassDefinition>("class.martial.knight");
         Assert.Equal("ability.knight.power-strike", Assert.Single(knight.AbilityUnlocks).AbilityId);
         ClassDefinition blackMage = catalog.GetRequired<ClassDefinition>("class.magic.black-mage");
         Assert.Equal(3, blackMage.AbilityUnlocks.Count);

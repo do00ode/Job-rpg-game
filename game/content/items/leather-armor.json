@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.leather-armor",
+  "displayNameKey": "item.leather-armor.name",
+  "descriptionKey": "item.leather-armor.description",
+  "buyPrice": 80,
+  "maxStack": 1
+}

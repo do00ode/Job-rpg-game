@@ -15,7 +15,7 @@ namespace RpgGame.Core.Tests.Combat;
 public sealed class CombatStatisticResolverTests
 {
     private const string JamesId = "actor.hero.james";
-    private const string VanguardId = "class.martial.vanguard";
+    private const string KnightId = "class.martial.knight";
     private const string BlackMageId = "class.magic.black-mage";
     private const string WhiteMageId = "class.magic.white-mage";
     private const string GreenSlimeId = "enemy.forest.green-slime";
@@ -27,12 +27,12 @@ public sealed class CombatStatisticResolverTests
     }
 
     [Fact]
-    public void ResolvePartyActor_CheckedInJamesWithVanguard_CombinesExpectedValues()
+    public void ResolvePartyActor_CheckedInJamesWithKnight_CombinesExpectedValues()
     {
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
         IReadOnlyDictionary<string, int> result = resolver.ResolvePartyActor(
-            Progress(VanguardId));
+            Progress(KnightId));
 
         Assert.Equal(7, result.Count);
         Assert.Equal(96, result["stat.max-hp"]);
@@ -45,7 +45,7 @@ public sealed class CombatStatisticResolverTests
     }
 
     [Fact]
-    public void ResolvePartyActor_BlackMageClassId_DoesNotAssumeVanguard()
+    public void ResolvePartyActor_BlackMageClassId_DoesNotAssumeKnight()
     {
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
@@ -66,22 +66,22 @@ public sealed class CombatStatisticResolverTests
     {
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
-        IReadOnlyDictionary<string, int> vanguard = resolver.ResolvePartyActor(
-            Progress(VanguardId));
+        IReadOnlyDictionary<string, int> knight = resolver.ResolvePartyActor(
+            Progress(KnightId));
         IReadOnlyDictionary<string, int> blackMage = resolver.ResolvePartyActor(
             Progress(BlackMageId));
 
-        Assert.Equal(vanguard["stat.strength"], blackMage["stat.strength"]);
-        Assert.Equal(7, vanguard["stat.intelligence"]);
+        Assert.Equal(knight["stat.strength"], blackMage["stat.strength"]);
+        Assert.Equal(7, knight["stat.intelligence"]);
         Assert.Equal(10, blackMage["stat.intelligence"]);
-        Assert.Equal(96, vanguard["stat.max-hp"]);
+        Assert.Equal(96, knight["stat.max-hp"]);
         Assert.Equal(84, blackMage["stat.max-hp"]);
-        Assert.Equal(12, vanguard["stat.max-mp"]);
+        Assert.Equal(12, knight["stat.max-mp"]);
         Assert.Equal(22, blackMage["stat.max-mp"]);
-        Assert.Equal(9, vanguard["stat.defense"]);
+        Assert.Equal(9, knight["stat.defense"]);
         Assert.Equal(7, blackMage["stat.defense"]);
-        Assert.Equal(vanguard["stat.spirit"], blackMage["stat.spirit"]);
-        Assert.Equal(6, vanguard["stat.speed"]);
+        Assert.Equal(knight["stat.spirit"], blackMage["stat.spirit"]);
+        Assert.Equal(6, knight["stat.speed"]);
         Assert.Equal(7, blackMage["stat.speed"]);
     }
 
@@ -124,7 +124,7 @@ public sealed class CombatStatisticResolverTests
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => resolver.ResolvePartyActor(Progress(VanguardId, level: level)));
+            () => resolver.ResolvePartyActor(Progress(KnightId, level: level)));
     }
 
     [Fact]
@@ -133,9 +133,9 @@ public sealed class CombatStatisticResolverTests
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
         IReadOnlyDictionary<string, int> levelOne = resolver.ResolvePartyActor(
-            Progress(VanguardId, level: 1));
+            Progress(KnightId, level: 1));
         IReadOnlyDictionary<string, int> levelNinetyNine = resolver.ResolvePartyActor(
-            Progress(VanguardId, level: 99));
+            Progress(KnightId, level: 99));
 
         Assert.Equal(levelOne.ToArray(), levelNinetyNine.ToArray());
     }
@@ -146,9 +146,9 @@ public sealed class CombatStatisticResolverTests
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
         IReadOnlyDictionary<string, int> noExperience = resolver.ResolvePartyActor(
-            Progress(VanguardId, experience: 0));
+            Progress(KnightId, experience: 0));
         IReadOnlyDictionary<string, int> highExperience = resolver.ResolvePartyActor(
-            Progress(VanguardId, experience: 999_999));
+            Progress(KnightId, experience: 999_999));
 
         Assert.Equal(noExperience.ToArray(), highExperience.ToArray());
     }
@@ -162,8 +162,8 @@ public sealed class CombatStatisticResolverTests
     }
 
     [Theory]
-    [InlineData("", VanguardId)]
-    [InlineData("   ", VanguardId)]
+    [InlineData("", KnightId)]
+    [InlineData("   ", KnightId)]
     [InlineData(JamesId, "")]
     [InlineData(JamesId, "   ")]
     public void ResolvePartyActor_BlankActorOrClassId_IsRejected(
@@ -184,7 +184,7 @@ public sealed class CombatStatisticResolverTests
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
         KeyNotFoundException exception = Assert.Throws<KeyNotFoundException>(
-            () => resolver.ResolvePartyActor(Progress(VanguardId, actorId)));
+            () => resolver.ResolvePartyActor(Progress(KnightId, actorId)));
 
         Assert.Contains(actorId, exception.Message, StringComparison.Ordinal);
         Assert.Contains(nameof(ActorDefinition), exception.Message, StringComparison.Ordinal);
@@ -437,8 +437,8 @@ public sealed class CombatStatisticResolverTests
     {
         var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
 
-        IReadOnlyDictionary<string, int> first = resolver.ResolvePartyActor(Progress(VanguardId));
-        IReadOnlyDictionary<string, int> second = resolver.ResolvePartyActor(Progress(VanguardId));
+        IReadOnlyDictionary<string, int> first = resolver.ResolvePartyActor(Progress(KnightId));
+        IReadOnlyDictionary<string, int> second = resolver.ResolvePartyActor(Progress(KnightId));
 
         Assert.NotSame(first, second);
         Assert.Equal(first.ToArray(), second.ToArray());

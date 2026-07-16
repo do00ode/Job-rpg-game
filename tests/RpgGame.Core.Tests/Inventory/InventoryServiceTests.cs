@@ -385,7 +385,7 @@ public sealed class InventoryServiceTests
             ["actor.hero.james"] = new ActorProgressState
             {
                 ActorId = "actor.hero.james",
-                ClassId = "class.martial.vanguard",
+                ClassId = "class.martial.knight",
                 Level = 3,
                 Experience = 12,
             },

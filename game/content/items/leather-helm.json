@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equipment.leather-helm",
+  "displayNameKey": "item.leather-helm.name",
+  "descriptionKey": "item.leather-helm.description",
+  "buyPrice": 65,
+  "maxStack": 1
+}

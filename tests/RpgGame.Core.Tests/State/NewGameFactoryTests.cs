@@ -21,7 +21,7 @@ public sealed class NewGameFactoryTests
                 new StartingPartyMemberRequest
                 {
                     ActorId = "actor.hero.james",
-                    ClassId = "class.martial.vanguard",
+                    ClassId = "class.martial.knight",
                 },
             ],
         };
@@ -38,7 +38,7 @@ public sealed class NewGameFactoryTests
         Assert.Empty(state.EventFlags);
 
         ActorProgressState progress = state.ActorProgress["actor.hero.james"];
-        Assert.Equal("class.martial.vanguard", progress.ClassId);
+        Assert.Equal("class.martial.knight", progress.ClassId);
         Assert.Equal(1, progress.Level);
         Assert.Equal(0, progress.Experience);
         Assert.Empty(progress.EquippedItems);
@@ -97,7 +97,7 @@ public sealed class NewGameFactoryTests
     }
 
     [Theory]
-    [InlineData("class.martial.vanguard")]
+    [InlineData("class.martial.knight")]
     [InlineData("class.magic.black-mage")]
     [InlineData("class.magic.white-mage")]
     public void Create_AllThreeVanillaStartingClassesAreSelectable(string classId)
@@ -116,7 +116,7 @@ public sealed class NewGameFactoryTests
 
     private static StartingPartyMemberRequest Member(
         string actorId,
-        string classId = "class.martial.vanguard") => new()
+        string classId = "class.martial.knight") => new()
         {
             ActorId = actorId,
             ClassId = classId,

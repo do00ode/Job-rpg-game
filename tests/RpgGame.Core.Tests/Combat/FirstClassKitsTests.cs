@@ -9,7 +9,7 @@ namespace RpgGame.Core.Tests.Combat;
 
 public sealed class FirstClassKitsTests
 {
-    private const string KnightId = "class.martial.vanguard";
+    private const string KnightId = "class.martial.knight";
     private const string BlackMageId = "class.magic.black-mage";
     private const string WhiteMageId = "class.magic.white-mage";
     private const string PowerStrikeId = "ability.knight.power-strike";
@@ -240,11 +240,11 @@ public sealed class FirstClassKitsTests
     }
 
     [Fact]
-    public void LegacyVanguardId_ResolvesTheKnightKitForExistingSaveProgress()
+    public void KnightId_ResolvesTheKnightKit()
     {
         ContentCatalog content = TestContent.LoadCatalog();
 
-        PartyAbilityAvailability availability = ResolveAvailability(content, "class.martial.vanguard");
+        PartyAbilityAvailability availability = ResolveAvailability(content, KnightId);
 
         Assert.Equal(
             [CombatTestFixture.AttackId, PowerStrikeId],
