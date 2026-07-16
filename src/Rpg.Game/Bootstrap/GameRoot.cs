@@ -552,24 +552,31 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 
     private void OnBattleMusicChanged(object? sender, EventArgs eventArgs)
     {
-        if (_battleMusicPlayer is not null)
-            _battleMusicPlayer.VolumeDb = VolumePercentToDecibels(DisplaySettings.BattleMusicVolumePercent);
+        if (_activeBattleMusicCueId is null)
+        {
+            return;
+        }
+
         if (!DisplaySettings.BattleMusicEnabled)
         {
             StopBattleMusic(false);
             return;
         }
 
-        if (_activeBattleMusicCueId is not null)
+        if (_battleMusicPlayer is not null)
         {
-            PlayBattleMusic(_activeBattleMusicCueId);
+            _battleMusicPlayer.VolumeDb = VolumePercentToDecibels(
+                DisplaySettings.BattleMusicVolumePercent);
         }
     }
 
     private void OnOverworldMusicChanged(object? sender, EventArgs eventArgs)
     {
-        if (_activeOverworldMusicCueId is not null)
-            PlayOverworldMusic(_activeOverworldMusicCueId);
+        if (_activeOverworldMusicCueId is not null && _battleMusicPlayer is not null)
+        {
+            _battleMusicPlayer.VolumeDb = VolumePercentToDecibels(
+                DisplaySettings.OverworldMusicVolumePercent);
+        }
     }
 
     private static float VolumePercentToDecibels(int percent) =>

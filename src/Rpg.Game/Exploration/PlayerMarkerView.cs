@@ -8,7 +8,7 @@ public partial class PlayerMarkerView : Node2D
     private string _facing = "south";
     private readonly Dictionary<string, Texture2D[]> _frames = new(StringComparer.Ordinal);
     private Texture2D? _currentFrame;
-    private int _animationFrame;
+    private int _nextStepFrame;
 
     public override void _Ready()
     {
@@ -27,7 +27,7 @@ public partial class PlayerMarkerView : Node2D
         _facing = facing;
         if (changed)
         {
-            _animationFrame = 0;
+            _nextStepFrame = 0;
         }
         if (changed || !_frames.TryGetValue(facing, out Texture2D[]? frames))
         {
@@ -38,15 +38,6 @@ public partial class PlayerMarkerView : Node2D
         QueueRedraw();
     }
 
-    public void SetWalking(bool walking)
-    {
-        if (!walking)
-        {
-            _animationFrame = 0;
-            SetFacing(_facing);
-        }
-    }
-
     public void AdvanceStepAnimation()
     {
         if (!_frames.TryGetValue(_facing, out Texture2D[]? frames))
@@ -54,20 +45,29 @@ public partial class PlayerMarkerView : Node2D
             return;
         }
 
-        _animationFrame = (_animationFrame + 1) % frames.Length;
-        _currentFrame = frames[_animationFrame];
+        _currentFrame = frames[_nextStepFrame];
+        _nextStepFrame = (_nextStepFrame + 1) % frames.Length;
         QueueRedraw();
+    }
+
+    public void AnimateTo(Vector2 targetPosition)
+    {
+        CreateTween()
+            .SetTrans(Tween.TransitionType.Linear)
+            .SetEase(Tween.EaseType.InOut)
+            .TweenProperty(this, "position", targetPosition, 0.13);
     }
 
     public override void _Draw()
     {
         if (_currentFrame is not null)
         {
-            // Source frames are 16x24 pixel art; 2x nearest-neighbor scaling makes the
-            // character readable against the 48x48 exploration tile without blur.
+            // Source frames are authored for the native 16x16 exploration cell. Keep each
+            // frame at native size so its directional proportions remain intact.
+            Vector2 size = _currentFrame.GetSize();
             DrawTextureRect(
                 _currentFrame,
-                new Rect2(-16.0f, -24.0f, 32.0f, 48.0f),
+                new Rect2(-size.X * 0.5f, -size.Y * 0.5f, size.X, size.Y),
                 tile: false,
                 modulate: Colors.White,
                 transpose: false);

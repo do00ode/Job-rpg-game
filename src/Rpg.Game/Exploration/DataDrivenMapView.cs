@@ -7,7 +7,7 @@ namespace RpgGame.Exploration;
 /// <summary>Generic placeholder presentation for any authored ASCII exploration map.</summary>
 public partial class DataDrivenMapView : Node2D, IExplorationMapView
 {
-    private const int TileSize = 48;
+    private const int TileSize = 16;
     private static readonly Vector2 DrawingOrigin = new(96, 136);
     private static readonly Vector2I TestRoomGuideTile = new(7, 4);
     private const string TestRoomMapId = "map.prologue.test-room";
@@ -100,17 +100,17 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
         {
             if (_clearedEncounterFlags.Contains(marker.ClearedFlagId)) continue;
             Vector2 center = TileToWorld(new Vector2I(marker.X, marker.Y));
-            Vector2[] diamond = [center + Vector2.Up * 15, center + Vector2.Right * 15,
-                center + Vector2.Down * 15, center + Vector2.Left * 15];
+            Vector2[] diamond = [center + Vector2.Up * 5, center + Vector2.Right * 5,
+                center + Vector2.Down * 5, center + Vector2.Left * 5];
             DrawColoredPolygon(diamond, new Color(0.82f, 0.23f, 0.36f));
-            DrawPolyline([diamond[0], diamond[1], diamond[2], diamond[3], diamond[0]], Colors.White, 2.0f);
+            DrawPolyline([diamond[0], diamond[1], diamond[2], diamond[3], diamond[0]], Colors.White, 1.0f);
         }
 
         foreach (MapTransitionDefinition transition in _map.TransitionMarkers)
         {
             Vector2 center = TileToWorld(new Vector2I(transition.SourceCell.X, transition.SourceCell.Y));
-            DrawCircle(center, 10.0f, new Color(0.30f, 0.85f, 0.95f));
-            DrawCircle(center, 10.0f, Colors.White, false, 2.0f);
+            DrawCircle(center, 5.0f, new Color(0.30f, 0.85f, 0.95f));
+            DrawCircle(center, 5.0f, Colors.White, false, 1.0f);
         }
     }
 }

@@ -38,6 +38,7 @@ public partial class ExplorationSceneController : Node2D
 	private InputBindingService? _inputBindings;
 	private bool _developmentCommandInProgress;
 	private bool _encounterTransitionRequested;
+	private bool _animateNextPlayerPosition;
 	private bool _readyForInput;
 	private string? _heldMovementAction;
 	private Vector2I _heldMovementDelta;
@@ -138,10 +139,8 @@ public partial class ExplorationSceneController : Node2D
 			|| !global::Godot.Input.IsActionPressed(_heldMovementAction))
 		{
 			ClearHeldMovement();
-			_player.SetWalking(false);
 			return;
 		}
-		_player.SetWalking(true);
 
 		_movementRepeatTimer -= delta;
 		if (_movementRepeatTimer > 0)
@@ -356,6 +355,7 @@ public partial class ExplorationSceneController : Node2D
 			&& requestedTile != _room.GuideTile;
 		Vector2I acceptedTile = canEnter ? requestedTile : currentTile;
 		bool moved = acceptedTile != currentTile;
+		_animateNextPlayerPosition = moved;
 
 		// Facing changes even when a wall blocks movement, matching classic JRPG controls
 		// and allowing the player to turn toward an adjacent NPC before interacting.
@@ -483,7 +483,16 @@ public partial class ExplorationSceneController : Node2D
 				$"Saved tile ({tile.X}, {tile.Y}) is not walkable in map '{_room.MapId}'.");
 		}
 
-		_player.Position = _room.TileToWorld(tile);
+		Vector2 targetPosition = _room.TileToWorld(tile);
+		if (_animateNextPlayerPosition)
+		{
+			_animateNextPlayerPosition = false;
+			_player.AnimateTo(targetPosition);
+		}
+		else
+		{
+			_player.Position = targetPosition;
+		}
 		_player.SetFacing(location.Facing);
 		_guide.Visible = _room.GuideTile.X >= 0;
 		_guide.Position = _room.GuideTile.X >= 0
