@@ -1,5 +1,10 @@
 # Current Project Handoff
 
+> Update: Milestones 4.2 through 4.7 are now implemented after this historical 4.1 handoff.
+> The current working tree includes the uncommitted Milestone 4.7 healing and ally-targeting
+> work. Do not rely on the milestone status, validation totals, or recommended-next-milestone
+> statements below without checking the current `ROADMAP.md` and `git status`.
+
 ## 1. Repository state and completed milestone
 
 Repository: `jrickter88/Job-rpg-game`

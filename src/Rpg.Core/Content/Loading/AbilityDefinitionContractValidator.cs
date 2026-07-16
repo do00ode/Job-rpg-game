@@ -41,7 +41,8 @@ internal static class AbilityDefinitionContractValidator
         {
             Add(problems, "$.targetingId", "ability.targeting-unsupported",
                 $"Unsupported targeting ID '{ability.TargetingId}'. Supported values are "
-                + $"'{AbilityTargetingIds.Self}' and '{AbilityTargetingIds.SingleEnemy}'.");
+                + $"'{AbilityTargetingIds.Self}', '{AbilityTargetingIds.SingleEnemy}', and "
+                + $"'{AbilityTargetingIds.SingleAlly}'.");
         }
 
         if (!rulesetHasValidShape)
@@ -69,10 +70,19 @@ internal static class AbilityDefinitionContractValidator
                     AbilityTargetingIds.SingleEnemy);
                 ValidatePhysicalDamageParameters(problems, numericParameters);
                 break;
+            case AbilityRulesetIds.FlatHealing:
+                ValidateRulesetTargeting(
+                    problems,
+                    ability,
+                    targetingHasValidShape,
+                    AbilityTargetingIds.SingleAlly);
+                ValidateFlatHealingParameters(problems, numericParameters);
+                break;
             default:
                 Add(problems, "$.rulesetId", "ability.ruleset-unsupported",
                     $"Unsupported ruleset ID '{ability.RulesetId}'. Supported values are "
-                    + $"'{AbilityRulesetIds.Guard}' and '{AbilityRulesetIds.PhysicalDamage}'.");
+                + $"'{AbilityRulesetIds.Guard}', '{AbilityRulesetIds.PhysicalDamage}', and "
+                + $"'{AbilityRulesetIds.FlatHealing}'.");
                 break;
         }
 
@@ -155,6 +165,32 @@ internal static class AbilityDefinitionContractValidator
         }
     }
 
+    private static void ValidateFlatHealingParameters(
+        ICollection<AbilityContractProblem> problems,
+        IReadOnlyDictionary<string, decimal> numericParameters)
+    {
+        ValidateOnlyKnownParameters(
+            problems,
+            numericParameters,
+            AbilityRulesetIds.FlatHealing,
+            AbilityNumericParameterIds.Power);
+
+        if (!numericParameters.TryGetValue(AbilityNumericParameterIds.Power, out decimal power))
+        {
+            Add(problems, "$.numericParameters", "ability.parameter-missing",
+                $"Ruleset '{AbilityRulesetIds.FlatHealing}' requires numeric parameter "
+                + $"'{AbilityNumericParameterIds.Power}'.");
+        }
+        else if (power <= 0m || decimal.Truncate(power) != power || power > int.MaxValue)
+        {
+            Add(problems,
+                $"$.numericParameters.{AbilityNumericParameterIds.Power}",
+                "ability.parameter-out-of-range",
+                $"'{AbilityNumericParameterIds.Power}' must be a positive whole number no "
+                + $"greater than {int.MaxValue}; found {power}.");
+        }
+    }
+
     private static void ValidateOnlyKnownParameters(
         ICollection<AbilityContractProblem> problems,
         IReadOnlyDictionary<string, decimal> numericParameters,
@@ -177,7 +213,8 @@ internal static class AbilityDefinitionContractValidator
 
     private static bool IsSupportedTargeting(string? targetingId) => targetingId is
         AbilityTargetingIds.Self or
-        AbilityTargetingIds.SingleEnemy;
+        AbilityTargetingIds.SingleEnemy or
+        AbilityTargetingIds.SingleAlly;
 
     private static bool HasStablePrefix(string? value, string prefix) =>
         ContentId.IsValid(value)

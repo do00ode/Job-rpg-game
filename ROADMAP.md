@@ -425,6 +425,20 @@ Explicitly excluded: Cure/healing, extra classes, magical-stat formulas, area ta
 equipment, items, status effects, animations, and class progression UI. See
 `MILESTONE_4_6_GUIDE.md`.
 
+### Milestone 4.7 - Healing and ally targeting
+
+- Add `target.ally.single`, deterministic flat healing, and an authoritative `HealingApplied`
+  event.
+- Grant White Mage Cure through the existing learned-spell and White Magic discipline boundary.
+- Let the battle UI select living ally targets while preserving enemy target selection.
+
+Exit criteria: Cure selects a living ally, spends MP once, clamps to maximum HP, and reports
+the actual HP restored through `HealingApplied`.
+
+Explicitly excluded: revive, area healing, enemy healer AI, healing items, regeneration,
+status cleansing, overheal, magical-stat scaling, animation, and sound. See
+`MILESTONE_4_7_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

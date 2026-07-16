@@ -45,9 +45,9 @@ James a Vanguard and does not change which classes can be selected.
 Milestone 4.6 gives the three starter choices their first level-one kits through their owning
 class records. The permanent `class.martial.vanguard` ID presents the Knight kit and grants
 Power Strike; its legacy ID remains because existing saves store it. Black Mage grants Black
-Magic access plus Fire, Ice, and Lightning. White Mage grants White Magic access but no Cure
-until healing has a real resolver path. Keep future class-specific grants on their class record
-rather than adding them to James, whose intrinsic Attack remains universal.
+Magic access plus Fire, Ice, and Lightning. Milestone 4.7 gives White Mage both White Magic
+access and Cure. Keep future class-specific grants on their class record rather than adding
+them to James, whose intrinsic Attack remains universal.
 
 ## Adding a vanilla starting class
 
@@ -88,5 +88,5 @@ milestone so the project does not gain abstractions without a gameplay use case.
 - There is one class per actor in `ActorProgressState`; multiclassing is not implemented.
 - Later class unlocks and class-changing are not implemented.
 - Class names and descriptions have no UI yet.
-- Cure and all healing remain deferred; White Magic access does not grant a fake command.
+- Revive, area healing, and healing progression beyond Cure remain deferred.
 - The campaign supports one to four total heroes; mods cannot increase that limit.

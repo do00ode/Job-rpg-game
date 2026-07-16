@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "newgame.class-rule.base.default",
   "includeClassIds": [
-    "class.martial.vanguard",
-    "class.magic.black-mage",
+	"class.martial.vanguard",
+	"class.magic.black-mage",
     "class.magic.white-mage"
   ],
   "excludeClassIds": []

@@ -40,8 +40,8 @@ flowchart TD
     Result --> UI["HP labels + event log"]
 ```
 
-If the formula changes later, this screen does not change. It already reads the authoritative
-`DamageApplied` amount and before/after HP values from core events.
+If a formula changes later, this screen does not change. It reads authoritative damage and
+healing amounts plus before/after HP values from core events.
 
 ## Stable identity versus display text
 
@@ -72,12 +72,13 @@ The presenter intentionally handles the complete event set supported by the curr
 | Event | Presentation |
 |---|---|
 | `DamageApplied` | Actor, ability, target, applied damage, and authoritative HP transition |
+| `HealingApplied` | Actor, ability, target, actual restored HP, and authoritative HP transition |
 | `CombatantDefeated` | A defeated message for that battle-local combatant |
 | `BattleEnded` | Party victory or party defeat |
 
 An unknown event currently throws instead of silently disappearing. When a future milestone
-adds a real event—such as healing or a status application—it must deliberately add its battle
-presentation at the same time.
+adds a real event—such as a status application—it must deliberately add its battle presentation
+at the same time. Milestone 4.7 adds `HealingApplied` presentation.
 
 ## Manual review
 
@@ -98,7 +99,7 @@ solely for manual testing.
 ## Deliberately deferred
 
 - Guard execution, items, escape, or command queues for multiple party members;
-- statuses, healing, area targets, or retargeting;
+- statuses, area targets, or retargeting;
 - animation, sprites, sound, floating numbers, and polished battle UI;
 - rewards, loot resolution, experience, gold, or inventory mutation;
 - saving/resuming a transient battle and controller navigation.

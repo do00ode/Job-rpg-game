@@ -15,6 +15,9 @@ public static class AbilityTargetingIds
 
     /// <summary>Exactly one combatant on the opposing side is selected.</summary>
     public const string SingleEnemy = "target.enemy.single";
+
+    /// <summary>Exactly one living combatant on the acting combatant's side is selected.</summary>
+    public const string SingleAlly = "target.ally.single";
 }
 
 /// <summary>
@@ -32,6 +35,9 @@ public static class AbilityRulesetIds
 
     /// <summary>Uses the physical-damage formula against one opposing combatant.</summary>
     public const string PhysicalDamage = "rules.damage.physical";
+
+    /// <summary>Restores a fixed authored amount of HP to one living ally.</summary>
+    public const string FlatHealing = "rules.healing.flat";
 }
 
 /// <summary>

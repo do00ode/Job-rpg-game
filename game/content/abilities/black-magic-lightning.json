@@ -11,6 +11,6 @@
   "rulesetId": "rules.damage.physical",
   "damageTypeId": "damage-type.lightning",
   "numericParameters": {
-    "power": 8
+	"power": 8
   }
 }

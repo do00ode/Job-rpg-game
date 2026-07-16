@@ -75,9 +75,10 @@ Before calculating damage, `CombatResolver` checks:
 3. the ability exists in the validated content catalog;
 4. it declares a supported cost and the actor can afford it;
 5. exactly one target was supplied;
-6. the target exists, is alive, and is on the opposing side;
-7. the ability uses the supported `target.enemy.single` and
-   `rules.damage.physical` combination.
+6. the target exists and is alive;
+7. the target side matches the supported authored contract: opposing for damage or same-side
+   for flat healing;
+8. the ability uses a supported target/ruleset combination.
 
 An invalid command raises `CombatCommandValidationException`. Its stable `ProblemCode` is for
 program decisions; its message is for a developer or log. A future UI should normally prevent
@@ -153,8 +154,8 @@ nonfinal combatant still emits no `BattleEnded`; see `MILESTONE_3_13_GUIDE.md`.
 - Vanilla classes currently grant no abilities. The generic class-unlock and defensive
   authoring contracts remain available for later content, but this resolver executes only the
   physical-damage contract documented above.
-- Cost-bearing abilities remain unsupported because `stat.max-mp` is a maximum statistic, not
-  mutable current MP.
+- Milestones 4.5 and 4.7 add current MP and supported MP costs, plus flat same-side healing;
+  see `MILESTONE_4_5_GUIDE.md` and `MILESTONE_4_7_GUIDE.md`.
 
 ## Automated coverage
 
@@ -206,7 +207,7 @@ new visible battle behavior is expected when running the game.
 ## Explicitly deferred
 
 - Guard execution and defensive state;
-- additional action effects beyond the implemented physical-damage contract;
+- additional action effects beyond physical damage and flat same-side healing;
 - items, status effects, and resource families beyond current MP;
 - campaign outcome application, encounter clearing, experience, loot rolls, and rewards;
 - campaign-state changes and battle saves;

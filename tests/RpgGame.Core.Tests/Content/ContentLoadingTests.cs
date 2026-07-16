@@ -17,7 +17,7 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(26, catalog.Count);
+        Assert.Equal(27, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Single(catalog.GetAll<DialogueDefinition>());
@@ -25,7 +25,7 @@ public sealed class ContentLoadingTests
         Assert.Equal(2, catalog.GetAll<ItemDefinition>().Count);
         Assert.Single(catalog.GetAll<EquipmentDefinition>());
         Assert.Single(catalog.GetAll<LootTableDefinition>());
-        Assert.Equal(6, catalog.GetAll<AbilityDefinition>().Count);
+        Assert.Equal(7, catalog.GetAll<AbilityDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<MagicDisciplineDefinition>().Count);
         Assert.Single(catalog.GetAll<EnemyDefinition>());
         Assert.Single(catalog.GetAll<EncounterDefinition>());
@@ -65,7 +65,7 @@ public sealed class ContentLoadingTests
             slime.LootTableId!);
         LootEntryDefinition slimeDrop = Assert.Single(slimeLoot.Entries);
         Assert.Equal("item.consumable.potion", slimeDrop.ItemId);
-        Assert.Equal(0.125m, slimeDrop.Chance);
+        Assert.Equal(0.25m, slimeDrop.Chance);
     }
 
     /// <summary>

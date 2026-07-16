@@ -11,6 +11,6 @@
   "rulesetId": "rules.damage.physical",
   "damageTypeId": "damage-type.ice",
   "numericParameters": {
-    "power": 7
+	"power": 7
   }
 }

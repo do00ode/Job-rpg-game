@@ -46,8 +46,8 @@ same affordability predicate as player commands, so there is no AI-only payment 
 The battle screen presents current/maximum MP and records authoritative resource-spending
 events in its log. It does not mutate MP itself.
 
-Milestone 4.6 adds first-party MP-costing Power Strike and elemental spell content while reusing
-this payment path. A new magic formula, healing, status effect, save field, out-of-battle MP,
-restoration, or additional resource family remains out of scope. Future resource pools should
+Milestones 4.6 and 4.7 add first-party MP-costing damage and healing content while reusing this
+payment path. A new magic formula, status effect, save field, out-of-battle MP, restoration, or
+additional resource family remains out of scope. Future resource pools should
 extend the closed cost-resource mapping and snapshot invariants rather than treating arbitrary
 statistics as mutable values.

@@ -1,9 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dhxcwarh2yi2a"]
 
-; Link the authored scene to its C# composition-root script by a Godot resource path.
-[ext_resource type="Script" path="res://src/Rpg.Game/Bootstrap/GameRoot.cs" id="1_game_root"]
+[ext_resource type="Script" uid="uid://peg70hedwwyl" path="res://src/Rpg.Game/Bootstrap/GameRoot.cs" id="1_game_root"]
 
-; The root remains a plain composition Node. It instantiates the current exploration child
-; only after content, session, and save services have been initialized successfully.
-[node name="GameRoot" type="Node"]
+[node name="GameRoot" type="Node" unique_id=1184950677]
 script = ExtResource("1_game_root")

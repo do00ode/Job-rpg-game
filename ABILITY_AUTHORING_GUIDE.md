@@ -19,7 +19,8 @@ The game accepts only code-owned target and ruleset contracts that it understand
 | Targeting ID | Ruleset ID | Required parameters | Legal values |
 |---|---|---|---|
 | `target.self` | `rules.defense.guard` | `damage-reduction` | Greater than `0` and at most `1`; validated but not executed yet |
-| `target.enemy.single` | `rules.damage.physical` | `power` | Greater than `0`; executable now only when cost-free |
+| `target.enemy.single` | `rules.damage.physical` | `power` | Greater than `0`; executable with supported MP costs |
+| `target.ally.single` | `rules.healing.flat` | `power` | Positive whole-number HP restoration; executable with supported MP costs |
 
 For example, `0.25` means a 25% reduction. The Guard authoring contract is validated now so
 bad data cannot reach its future resolver. A physical-damage ability also selects one supported
@@ -88,8 +89,9 @@ legacy class ID `class.martial.vanguard` grants the direct Skill
 IDs through `abilityUnlocks`; it also grants the separate Black Magic container through
 `magicDisciplineUnlocks`. A Magic spell needs both facts before it becomes executable.
 
-White Mage grants White Magic access but no spell until healing is implemented. Do not add Cure
-as a damage ability or add an unimplemented ruleset just to populate the submenu.
+Milestone 4.7 adds `ability.white-magic.cure`: White Mage grants both the White Magic container
+and this learned Cure spell. Cure uses `target.ally.single` with `rules.healing.flat`; its
+positive whole-number `power` is the deterministic flat HP restoration before max-HP clamping.
 
 Creating an ability record does not grant it to anyone. Choose the owner that matches the game
 design.

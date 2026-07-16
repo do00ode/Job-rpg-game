@@ -17,7 +17,7 @@ Selected class -> learned abilities and discipline access -> battle menu -> Comb
 |---|---|---|
 | Knight | `class.martial.vanguard` | Direct Skill `ability.knight.power-strike` |
 | Black Mage | `class.magic.black-mage` | Black Magic access plus Fire, Ice, and Lightning |
-| White Mage | `class.magic.white-mage` | White Magic access only |
+| White Mage | `class.magic.white-mage` | White Magic access; Cure arrives in Milestone 4.7 |
 
 The pre-existing `class.martial.vanguard` ID now presents the Knight kit. The permanent ID is
 retained because existing saves store it in `ActorProgressState.ClassId`; it must not be renamed
@@ -31,14 +31,14 @@ remain outside this milestone.
 
 Black Magic is a container, not an executable ability. The Black Mage receives both the
 discipline unlock and individual spell unlocks; either fact alone is insufficient to make an
-unlearned or inaccessible spell executable. White Mage similarly receives White Magic access,
-but no Cure record is authored because the current resolver has no honest healing effect.
+unlearned or inaccessible spell executable. Milestone 4.7 extends White Mage with Cure through
+the same learned-spell plus discipline-access boundary.
 
 ## Presentation
 
 The existing 4.4 menu shows Knight's direct Power Strike and Black Mage's learned Black Magic
-spells. White Magic is an empty disabled container rather than a fake damage or broken Cure
-command. Names remain stable-ID-derived placeholders until localization presentation exists.
+spells. Milestone 4.7 makes White Magic present Cure through the same menu projection. Names
+remain stable-ID-derived placeholders until localization presentation exists.
 
 ## Compatibility and deferrals
 
@@ -46,6 +46,6 @@ No save field, content schema version, or mod data-API version changes. Existing
 `class.martial.vanguard` continue to resolve the Knight kit. Content mods may add compatible
 class grants, disciplines, and spells using the established JSON-only contracts.
 
-Cure and all healing are deferred to Milestone 4.7. Also deferred: additional classes,
-equipment, item commands, status effects, magic-specific statistics, multi-target abilities,
-MP recovery, class progression beyond authored level-one grants, and class-change systems.
+Additional classes, equipment, item commands, status effects, magic-specific statistics,
+multi-target abilities, MP recovery, class progression beyond authored level-one grants, and
+class-change systems remain deferred.

@@ -244,11 +244,6 @@ public partial class BattleController : Control
             (combatant.Side == BattleSide.Party ? _partyStatus : _enemyStatus).AddChild(hpLabel);
             _hpLabelByInstanceId.Add(combatant.InstanceId, hpLabel);
 
-            if (combatant.Side != BattleSide.Enemy)
-            {
-                continue;
-            }
-
             string instanceId = combatant.InstanceId;
             var targetButton = new Button
             {
@@ -288,8 +283,7 @@ public partial class BattleController : Control
 
     private void OpenMagicMenu(string magicDisciplineId)
     {
-        if (_phase is not (BattleInputPhase.Command or BattleInputPhase.MagicSelection)
-            || _selectedAbilityId is null)
+        if (_phase != BattleInputPhase.Command)
         {
             return;
         }
@@ -399,7 +393,13 @@ public partial class BattleController : Control
         _selectedAbilityId = ability.Id;
         if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal))
         {
-            BeginTargetSelection();
+            BeginTargetSelection(BattleSide.Enemy);
+            return;
+        }
+
+        if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleAlly, StringComparison.Ordinal))
+        {
+            BeginTargetSelection(BattleSide.Party);
             return;
         }
 
@@ -413,23 +413,26 @@ public partial class BattleController : Control
             $"Battle command UI does not support targeting contract '{ability.TargetingId}'.");
     }
 
-    private void BeginTargetSelection()
+    private void BeginTargetSelection(BattleSide targetSide)
     {
-        if (_phase != BattleInputPhase.Command)
+        if (_phase is not (BattleInputPhase.Command or BattleInputPhase.MagicSelection)
+            || _selectedAbilityId is null)
         {
             return;
         }
 
-        string[] livingTargets = GetLivingEnemyIds();
+        string[] livingTargets = GetLivingTargetIds(targetSide);
         if (livingTargets.Length == 0)
         {
             throw new InvalidOperationException(
-                "An in-progress battle must have at least one living enemy target.");
+                $"An in-progress battle must have at least one living {targetSide} target.");
         }
 
         _phase = BattleInputPhase.TargetSelection;
         _selectedTargetId = livingTargets[0];
-        AppendLog("Choose an enemy target.");
+        AppendLog(targetSide == BattleSide.Enemy
+            ? "Choose an enemy target."
+            : "Choose an ally target.");
         RefreshPresentation();
         _targetButtonByInstanceId[_selectedTargetId].GrabFocus();
     }
@@ -456,7 +459,7 @@ public partial class BattleController : Control
 
     private void CycleTarget(int offset)
     {
-        string[] livingTargets = GetLivingEnemyIds();
+        string[] livingTargets = GetLivingTargetIds(RequireSelectedTargetSide());
         if (livingTargets.Length == 0)
         {
             return;
@@ -476,7 +479,8 @@ public partial class BattleController : Control
     private void SelectFocusedTarget(string instanceId)
     {
         if (_phase == BattleInputPhase.TargetSelection
-            && !RequireSnapshot().GetRequiredCombatant(instanceId).IsDefeated)
+            && !RequireSnapshot().GetRequiredCombatant(instanceId).IsDefeated
+            && RequireSnapshot().GetRequiredCombatant(instanceId).Side == RequireSelectedTargetSide())
         {
             _selectedTargetId = instanceId;
             RefreshPresentation();
@@ -492,6 +496,11 @@ public partial class BattleController : Control
 
         CombatantSnapshot target = RequireSnapshot().GetRequiredCombatant(instanceId);
         if (target.IsDefeated)
+        {
+            return;
+        }
+
+        if (target.Side != RequireSelectedTargetSide())
         {
             return;
         }
@@ -528,6 +537,20 @@ public partial class BattleController : Control
                  && !string.Equals(targetId, partyActor.InstanceId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("A self-targeted ability must target its acting combatant.");
+        }
+        else if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleAlly, StringComparison.Ordinal))
+        {
+            if (_phase != BattleInputPhase.TargetSelection)
+            {
+                return;
+            }
+
+            CombatantSnapshot target = current.GetRequiredCombatant(targetId);
+            if (target.Side != partyActor.Side || target.IsDefeated)
+            {
+                throw new InvalidOperationException(
+                    $"Selected target '{target.InstanceId}' is not a living ally.");
+            }
         }
 
         _phase = BattleInputPhase.Resolving;
@@ -585,6 +608,15 @@ public partial class BattleController : Control
                         $"{DisplayName(spent.CombatantId)} spent {spent.Amount} MP for "
                         + $"{ShortDefinitionName(spent.AbilityId)} ({spent.PreviousValue} -> "
                         + $"{spent.CurrentValue} MP).");
+                    break;
+
+                case HealingApplied healing:
+                    AppendLog(
+                        $"{DisplayName(healing.ActingCombatantId)} used "
+                        + $"{ShortDefinitionName(healing.AbilityId)} on "
+                        + $"{DisplayName(healing.TargetCombatantId)}: restored "
+                        + $"{healing.Amount} HP ({healing.PreviousHp} -> "
+                        + $"{healing.CurrentHp} HP).");
                     break;
 
                 case DamageApplied damage:
@@ -645,7 +677,8 @@ public partial class BattleController : Control
                     $"{DisplayName(combatant.InstanceId)} "
                     + $"{combatant.CurrentHp}/{combatant.MaximumHp}";
                 targetButton.Disabled = combatant.IsDefeated
-                    || _phase != BattleInputPhase.TargetSelection;
+                    || _phase != BattleInputPhase.TargetSelection
+                    || combatant.Side != RequireSelectedTargetSideOrDefault();
             }
         }
 
@@ -662,7 +695,8 @@ public partial class BattleController : Control
             BattleInputPhase.MagicSelection =>
                 $"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
             BattleInputPhase.TargetSelection =>
-                $"{ShortDefinitionName(_selectedAbilityId ?? "ability")}: choose a living enemy.",
+                $"{ShortDefinitionName(_selectedAbilityId ?? "ability")}: choose a living "
+                + $"{TargetSideLabel(RequireSelectedTargetSide())}.",
             BattleInputPhase.Resolving => "Resolving the round...",
             BattleInputPhase.Completed => "Battle ended.",
             _ => string.Empty,
@@ -721,10 +755,31 @@ public partial class BattleController : Control
         };
     }
 
-    private string[] GetLivingEnemyIds() => RequireSnapshot().Combatants
-        .Where(combatant => combatant.Side == BattleSide.Enemy && !combatant.IsDefeated)
+    private string[] GetLivingTargetIds(BattleSide side) => RequireSnapshot().Combatants
+        .Where(combatant => combatant.Side == side && !combatant.IsDefeated)
         .Select(combatant => combatant.InstanceId)
         .ToArray();
+
+    private BattleSide RequireSelectedTargetSide()
+    {
+        AbilityDefinition ability = RequireContent().GetRequired<AbilityDefinition>(
+            _selectedAbilityId
+                ?? throw new InvalidOperationException("No ability is selected for targeting."));
+        return ability.TargetingId switch
+        {
+            AbilityTargetingIds.SingleEnemy => BattleSide.Enemy,
+            AbilityTargetingIds.SingleAlly => BattleSide.Party,
+            _ => throw new InvalidOperationException(
+                $"Ability '{ability.Id}' does not use an explicit target selection."),
+        };
+    }
+
+    private BattleSide RequireSelectedTargetSideOrDefault() =>
+        _selectedAbilityId is null ? BattleSide.Enemy : RequireSelectedTargetSide();
+
+    private static string TargetSideLabel(BattleSide side) => side == BattleSide.Enemy
+        ? "enemy"
+        : "ally";
 
     private string DisplayName(string instanceId) => _formationView.GetDisplayLabel(instanceId);
 

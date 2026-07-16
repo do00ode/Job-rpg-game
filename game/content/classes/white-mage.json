@@ -6,7 +6,12 @@
 	"stat.max-mp": 8,
 	"stat.defense": 1
   },
-  "abilityUnlocks": [],
+  "abilityUnlocks": [
+	{
+	  "level": 1,
+	  "abilityId": "ability.white-magic.cure"
+	}
+  ],
   "magicDisciplineUnlocks": [
 	{
 	  "level": 1,

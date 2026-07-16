@@ -107,6 +107,37 @@ public sealed class CombatResolver : ICombatResolver
                 + $"ability '{ability.Id}'.");
         }
 
+        if (!CombatAbilityExecutionSupport.HasSupportedContract(ability))
+        {
+            Reject(
+                CombatCommandProblemCodes.AbilityContractUnsupported,
+                $"Ability '{ability.Id}' uses targeting '{ability.TargetingId}' and ruleset "
+                + $"'{ability.RulesetId}', which is not executable.");
+        }
+
+        return ability.RulesetId switch
+        {
+            AbilityRulesetIds.PhysicalDamage => ResolvePhysicalDamage(
+                current,
+                actor,
+                target,
+                ability),
+            AbilityRulesetIds.FlatHealing => ResolveFlatHealing(
+                current,
+                actor,
+                target,
+                ability),
+            _ => throw new InvalidDataException(
+                $"Supported ability '{ability.Id}' has unknown ruleset '{ability.RulesetId}'."),
+        };
+    }
+
+    private static CombatResolution ResolvePhysicalDamage(
+        CombatSnapshot current,
+        LocatedCombatant actor,
+        LocatedCombatant target,
+        AbilityDefinition ability)
+    {
         if (target.Value.Side == actor.Value.Side)
         {
             Reject(
@@ -114,16 +145,6 @@ public sealed class CombatResolver : ICombatResolver
                 $"Ability '{ability.Id}' requires an opposing target, but "
                 + $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are both on "
                 + $"the '{actor.Value.Side}' side.");
-        }
-
-        if (!CombatAbilityExecutionSupport.HasSupportedContract(ability))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityContractUnsupported,
-                $"Ability '{ability.Id}' uses targeting '{ability.TargetingId}' and ruleset "
-                + $"'{ability.RulesetId}'. Milestone 3.10 supports only "
-                + $"'{AbilityTargetingIds.SingleEnemy}' with "
-                + $"'{AbilityRulesetIds.PhysicalDamage}'.");
         }
 
         decimal power = RequirePositivePower(ability);
@@ -149,12 +170,21 @@ public sealed class CombatResolver : ICombatResolver
         int costAmount = ability.CostAmount;
         int nextMp = actor.Value.CurrentMp - costAmount;
         CombatantSnapshot[] nextCombatants = current.Combatants.ToArray();
-        if (costAmount > 0)
+        if (actor.Index == target.Index)
         {
-            nextCombatants[actor.Index] = actor.Value.WithCurrentMp(nextMp);
+            nextCombatants[actor.Index] = costAmount > 0
+                ? actor.Value.WithCurrentMp(nextMp).WithCurrentHp(nextHp)
+                : actor.Value.WithCurrentHp(nextHp);
         }
+        else
+        {
+            if (costAmount > 0)
+            {
+                nextCombatants[actor.Index] = actor.Value.WithCurrentMp(nextMp);
+            }
 
-        nextCombatants[target.Index] = target.Value.WithCurrentHp(nextHp);
+            nextCombatants[target.Index] = target.Value.WithCurrentHp(nextHp);
+        }
         var nextSnapshot = new CombatSnapshot(current.Round, nextCombatants);
 
         var events = new List<CombatEvent>();
@@ -192,6 +222,65 @@ public sealed class CombatResolver : ICombatResolver
             events.Add(new BattleEnded(nextOutcome));
         }
 
+        return new CombatResolution(nextSnapshot, events);
+    }
+
+    private static CombatResolution ResolveFlatHealing(
+        CombatSnapshot current,
+        LocatedCombatant actor,
+        LocatedCombatant target,
+        AbilityDefinition ability)
+    {
+        if (target.Value.Side != actor.Value.Side)
+        {
+            Reject(
+                CombatCommandProblemCodes.TargetAllyRequired,
+                $"Ability '{ability.Id}' requires an ally target, but "
+                + $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are on "
+                + "opposing sides.");
+        }
+
+        int authoredHealing = RequirePositiveWholePower(ability);
+        int nextHp = Math.Min(target.Value.MaximumHp, target.Value.CurrentHp + authoredHealing);
+        int appliedHealing = nextHp - target.Value.CurrentHp;
+        int costAmount = ability.CostAmount;
+        int nextMp = actor.Value.CurrentMp - costAmount;
+        CombatantSnapshot[] nextCombatants = current.Combatants.ToArray();
+        if (actor.Index == target.Index)
+        {
+            nextCombatants[actor.Index] = costAmount > 0
+                ? actor.Value.WithCurrentMp(nextMp).WithCurrentHp(nextHp)
+                : actor.Value.WithCurrentHp(nextHp);
+        }
+        else
+        {
+            if (costAmount > 0)
+            {
+                nextCombatants[actor.Index] = actor.Value.WithCurrentMp(nextMp);
+            }
+
+            nextCombatants[target.Index] = target.Value.WithCurrentHp(nextHp);
+        }
+        var nextSnapshot = new CombatSnapshot(current.Round, nextCombatants);
+        var events = new List<CombatEvent>();
+        if (costAmount > 0)
+        {
+            events.Add(new ResourceSpent(
+                actor.Value.InstanceId,
+                ability.Id,
+                ability.CostStatisticId!,
+                costAmount,
+                actor.Value.CurrentMp,
+                nextMp));
+        }
+
+        events.Add(new HealingApplied(
+            actor.Value.InstanceId,
+            target.Value.InstanceId,
+            ability.Id,
+            appliedHealing,
+            target.Value.CurrentHp,
+            nextHp));
         return new CombatResolution(nextSnapshot, events);
     }
 
@@ -259,6 +348,20 @@ public sealed class CombatResolver : ICombatResolver
         }
 
         return power;
+    }
+
+    private static int RequirePositiveWholePower(AbilityDefinition ability)
+    {
+        decimal power = RequirePositivePower(ability);
+        if (decimal.Truncate(power) != power || power > int.MaxValue)
+        {
+            throw new InvalidDataException(
+                $"Flat-healing ability '{ability.Id}' must have a positive whole "
+                + $"'{AbilityNumericParameterIds.Power}' parameter no greater than "
+                + $"{int.MaxValue}.");
+        }
+
+        return decimal.ToInt32(power);
     }
 
     private static string RequireDamageTypeId(AbilityDefinition ability)

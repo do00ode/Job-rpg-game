@@ -11,6 +11,6 @@
   "rulesetId": "rules.damage.physical",
   "damageTypeId": "damage-type.slash",
   "numericParameters": {
-    "power": 4
+	"power": 4
   }
 }

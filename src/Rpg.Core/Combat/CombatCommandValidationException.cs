@@ -17,6 +17,7 @@ public static class CombatCommandProblemCodes
     public const string TargetMissing = "combat.command.target-missing";
     public const string TargetDefeated = "combat.command.target-defeated";
     public const string TargetSameSide = "combat.command.target-same-side";
+    public const string TargetAllyRequired = "combat.command.target-ally-required";
     public const string AbilityContractUnsupported = "combat.command.ability-contract-unsupported";
     public const string AbilityCostUnsupported = "combat.command.ability-cost-unsupported";
     public const string AbilityResourceInsufficient = "combat.command.ability-resource-insufficient";

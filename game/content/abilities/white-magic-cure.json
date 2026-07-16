@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.white-magic.cure",
+  "displayNameKey": "ability.white-magic.cure.name",
+  "descriptionKey": "ability.white-magic.cure.description",
+  "abilityKindId": "ability-kind.magic",
+  "magicDisciplineIds": ["magic-discipline.white-magic"],
+  "targetingId": "target.ally.single",
+  "costStatisticId": "stat.max-mp",
+  "costAmount": 3,
+  "rulesetId": "rules.healing.flat",
+  "damageTypeId": null,
+  "numericParameters": {
+    "power": 12
+  }
+}

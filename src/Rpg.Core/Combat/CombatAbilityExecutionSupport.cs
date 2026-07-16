@@ -28,14 +28,7 @@ public static class CombatAbilityExecutionSupport
     public static bool HasSupportedContract(AbilityDefinition ability)
     {
         ArgumentNullException.ThrowIfNull(ability);
-        return string.Equals(
-                ability.TargetingId,
-                AbilityTargetingIds.SingleEnemy,
-                StringComparison.Ordinal)
-            && string.Equals(
-                ability.RulesetId,
-                AbilityRulesetIds.PhysicalDamage,
-                StringComparison.Ordinal);
+        return IsPhysicalDamage(ability) || IsFlatHealing(ability);
     }
 
     /// <summary>
@@ -62,4 +55,16 @@ public static class CombatAbilityExecutionSupport
             _ => false,
         };
     }
+
+    /// <summary>Enemy planning remains damage-only until a healer policy has a real use case.</summary>
+    public static bool IsSupportedEnemyPlanningContract(AbilityDefinition ability) =>
+        IsPhysicalDamage(ability);
+
+    private static bool IsPhysicalDamage(AbilityDefinition ability) =>
+        string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal)
+        && string.Equals(ability.RulesetId, AbilityRulesetIds.PhysicalDamage, StringComparison.Ordinal);
+
+    private static bool IsFlatHealing(AbilityDefinition ability) =>
+        string.Equals(ability.TargetingId, AbilityTargetingIds.SingleAlly, StringComparison.Ordinal)
+        && string.Equals(ability.RulesetId, AbilityRulesetIds.FlatHealing, StringComparison.Ordinal);
 }

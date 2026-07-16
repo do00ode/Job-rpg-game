@@ -1,4 +1,5 @@
 using RpgGame.Core.Combat;
+using RpgGame.Core.Combat.Formation;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.State;
@@ -17,6 +18,7 @@ public sealed class FirstClassKitsTests
     private const string LightningId = "ability.black-magic.lightning";
     private const string BlackMagicId = "magic-discipline.black-magic";
     private const string WhiteMagicId = "magic-discipline.white-magic";
+    private const string CureId = "ability.white-magic.cure";
 
     [Fact]
     public void ResolvePartyActor_KnightAddsPowerStrikeAsDirectSkill()
@@ -46,16 +48,16 @@ public sealed class FirstClassKitsTests
     }
 
     [Fact]
-    public void ResolvePartyActor_WhiteMageHasNoBrokenUnlearnedSpellCommands()
+    public void ResolvePartyActor_WhiteMageHasLearnedCureInWhiteMagic()
     {
         ContentCatalog content = TestContent.LoadCatalog();
 
         PartyAbilityAvailability availability = ResolveAvailability(content, WhiteMageId);
 
-        Assert.Equal([CombatTestFixture.AttackId], availability.ExecutableAbilityIds);
+        Assert.Equal([CombatTestFixture.AttackId, CureId], availability.ExecutableAbilityIds);
         MagicDisciplineAvailability discipline = Assert.Single(availability.MagicDisciplines);
         Assert.Equal(WhiteMagicId, discipline.MagicDisciplineId);
-        Assert.Empty(discipline.SpellAbilityIds);
+        Assert.Equal([CureId], discipline.SpellAbilityIds);
     }
 
     [Theory]
@@ -113,6 +115,117 @@ public sealed class FirstClassKitsTests
         Assert.Equal(CombatCommandProblemCodes.AbilityResourceInsufficient, exception.ProblemCode);
         Assert.Equal(2, insufficientMp.GetRequiredCombatant("party-0").CurrentMp);
         Assert.Equal(22, insufficientMp.GetRequiredCombatant("enemy-0").CurrentHp);
+    }
+
+    [Fact]
+    public void Resolve_CureHealsLivingAllyAndSpendsMpOnce()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(WhiteMageId);
+        CombatSnapshot damaged = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => combatant.WithCurrentHp(60));
+        CombatantSnapshot originalParty = damaged.GetRequiredCombatant("party-0");
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            damaged,
+            new CombatCommand("party-0", CureId, ["party-0"]));
+
+        CombatantSnapshot healed = resolution.Next.GetRequiredCombatant("party-0");
+        Assert.Equal(72, healed.CurrentHp);
+        Assert.Equal(originalParty.CurrentMp - 3, healed.CurrentMp);
+        Assert.Collection(
+            resolution.Events,
+            combatEvent => Assert.IsType<ResourceSpent>(combatEvent),
+            combatEvent =>
+            {
+                HealingApplied healing = Assert.IsType<HealingApplied>(combatEvent);
+                Assert.Equal("party-0", healing.ActingCombatantId);
+                Assert.Equal("party-0", healing.TargetCombatantId);
+                Assert.Equal(CureId, healing.AbilityId);
+                Assert.Equal(12, healing.Amount);
+                Assert.Equal(60, healing.PreviousHp);
+                Assert.Equal(72, healing.CurrentHp);
+            });
+    }
+
+    [Fact]
+    public void Resolve_CureClampsAtMaximumHpAndReportsActualHealing()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(WhiteMageId);
+        CombatantSnapshot party = battle.Snapshot.GetRequiredCombatant("party-0");
+        CombatSnapshot damaged = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => combatant.WithCurrentHp(combatant.MaximumHp - 4));
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            damaged,
+            new CombatCommand("party-0", CureId, ["party-0"]));
+
+        HealingApplied healing = Assert.IsType<HealingApplied>(resolution.Events[1]);
+        Assert.Equal(4, healing.Amount);
+        Assert.Equal(party.MaximumHp, healing.CurrentHp);
+        Assert.Equal(party.MaximumHp, resolution.Next.GetRequiredCombatant("party-0").CurrentHp);
+    }
+
+    [Fact]
+    public void Resolve_CureCannotTargetEnemy()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(WhiteMageId);
+
+        CombatCommandValidationException exception = Assert.Throws<CombatCommandValidationException>(
+            () => new CombatResolver(battle.Content).Resolve(
+                battle.Snapshot,
+                new CombatCommand("party-0", CureId, ["enemy-0"])));
+
+        Assert.Equal(CombatCommandProblemCodes.TargetAllyRequired, exception.ProblemCode);
+    }
+
+    [Fact]
+    public void Resolve_CureCannotTargetDefeatedAlly()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(WhiteMageId);
+        CombatantSnapshot party = battle.Snapshot.GetRequiredCombatant("party-0");
+        var defeatedAlly = new CombatantSnapshot(
+            new FormationPlacement(
+                "party-1",
+                "actor.hero.james",
+                new FormationCell(BattleSide.Party, 1, 0),
+                FormationFootprint.SingleCell),
+            party.Statistics,
+            Array.Empty<string>(),
+            currentHp: 0,
+            currentMp: party.CurrentMp);
+        var withDefeatedAlly = new CombatSnapshot(
+            battle.Snapshot.Round,
+            battle.Snapshot.Combatants.Concat([defeatedAlly]).ToArray());
+
+        CombatCommandValidationException exception = Assert.Throws<CombatCommandValidationException>(
+            () => new CombatResolver(battle.Content).Resolve(
+                withDefeatedAlly,
+                new CombatCommand("party-0", CureId, ["party-1"])));
+
+        Assert.Equal(CombatCommandProblemCodes.TargetDefeated, exception.ProblemCode);
+    }
+
+    [Fact]
+    public void Resolve_InsufficientCureMpRejectsWithoutChangingHpOrMp()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle(WhiteMageId);
+        CombatSnapshot insufficientMp = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => combatant.WithCurrentHp(60).WithCurrentMp(2));
+
+        CombatCommandValidationException exception = Assert.Throws<CombatCommandValidationException>(
+            () => new CombatResolver(battle.Content).Resolve(
+                insufficientMp,
+                new CombatCommand("party-0", CureId, ["party-0"])));
+
+        Assert.Equal(CombatCommandProblemCodes.AbilityResourceInsufficient, exception.ProblemCode);
+        Assert.Equal(60, insufficientMp.GetRequiredCombatant("party-0").CurrentHp);
+        Assert.Equal(2, insufficientMp.GetRequiredCombatant("party-0").CurrentMp);
     }
 
     [Fact]

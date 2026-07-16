@@ -16,8 +16,8 @@ it, and learning a spell without a matching discipline does not make it executab
 The current code validates and resolves this structure. A learned, cost-free Magic ability can
 reuse the same single-enemy damage formula as Attack and assign Fire, Ice, Lightning, Slash, or
 Energy through `damageTypeId`. It still uses Strength and Defense until a dedicated magical
-stat formula is designed. Guard effects, healing, MP spending, and a visible Magic menu remain
-deferred.
+stat formula is designed. Guard effects remain deferred, while MP spending and a visible Magic
+menu are implemented.
 
 ## Step 1: create a magic discipline
 
@@ -37,8 +37,9 @@ effect. Future UI can use its stable ID to open the appropriate spell list.
 
 ## Step 2: create one Magic ability
 
-Until a dedicated healing or magical-damage ruleset exists, use a currently supported contract.
-This example creates a free defensive spell using the Guard-style ruleset:
+For elemental attacks, reuse the existing physical-damage contract. For single-target healing,
+use `target.ally.single` plus `rules.healing.flat`; its positive whole-number `power` restores
+that many HP before max-HP clamping. Cure is the checked-in example.
 
 `game/content/abilities/aegis.json`
 
@@ -79,11 +80,11 @@ resource IDs are not implemented.
 
 ## Step 3: grant container access and the individual spell
 
-The checked-in Black Mage kit is the production example: it unlocks
+The checked-in Black Mage kit unlocks
 `magic-discipline.black-magic` and each of `ability.black-magic.fire`,
-`ability.black-magic.ice`, and `ability.black-magic.lightning` at level one. White Mage has
-`magic-discipline.white-magic` access without any learned spell; container access alone never
-grants a spell. This is intentional until Cure can use a real healing resolver.
+`ability.black-magic.ice`, and `ability.black-magic.lightning` at level one. White Mage unlocks
+both `magic-discipline.white-magic` and `ability.white-magic.cure`. Container access alone
+still never grants an unlearned spell.
 
 For a base-game class you own, add both unlocks:
 

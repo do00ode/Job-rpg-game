@@ -322,10 +322,10 @@ See `LOOT_TABLE_AUTHORING_GUIDE.md`.
 | `displayNameKey`, `descriptionKey` | string | Localization keys. |
 | `abilityKindId` | ID | Optional; defaults to `ability-kind.skill`. Supported values are `ability-kind.skill` and `ability-kind.magic`. |
 | `magicDisciplineIds` | ID array | Empty for Skills; required and nonempty for Magic. References `magic-disciplines/`. |
-| `targetingId` | ID | Closed code-owned target contract; currently `target.self` or `target.enemy.single`. |
+| `targetingId` | ID | Closed code-owned target contract; currently `target.self`, `target.enemy.single`, or `target.ally.single`. |
 | `costStatisticId` | ID or null | Null/zero for no cost, or `stat.max-mp` to spend transient current MP. |
 | `costAmount` | integer | Nonnegative amount from the selected supported resource pool. |
-| `rulesetId` | ID | Selects one supported code-owned behavior; currently `rules.defense.guard` or `rules.damage.physical`. |
+| `rulesetId` | ID | Selects one supported code-owned behavior; currently `rules.defense.guard`, `rules.damage.physical`, or `rules.healing.flat`. |
 | `damageTypeId` | ID or null | Optional code-owned type for a damage ruleset: `damage-type.slash`, `damage-type.energy`, `damage-type.fire`, `damage-type.ice`, or `damage-type.lightning`. Omitted legacy physical damage defaults to Energy. |
 | `numericParameters` | object of string → number | Exact required keys and ranges are owned by the selected ruleset. Extra keys are errors. |
 
@@ -357,9 +357,10 @@ Current authored contracts are:
 |---|---|---|
 | `target.self` | `rules.defense.guard` | `damage-reduction` greater than `0` and at most `1` |
 | `target.enemy.single` | `rules.damage.physical` | `power` greater than `0` |
+| `target.ally.single` | `rules.healing.flat` | `power` positive whole number no greater than `Int32.MaxValue` |
 
-Milestone 3.10 executes only the free `target.enemy.single` plus
-`rules.damage.physical` combination. For integer HP, its deterministic calculation is:
+Physical damage uses `target.enemy.single` plus `rules.damage.physical`. For integer HP, its
+deterministic calculation is:
 
 ```text
 rawDamage = max(1, attacker Strength + authored power - defender Defense)
@@ -373,9 +374,10 @@ appliedDamage = min(roundedDamage, target CurrentHp)
 The signed target modifier is read from the matching enemy damage type: positive values are
 weaknesses, negative values are resistances, omitted values are neutral, and `-100` is
 immunity. Reaching zero current HP
-marks the transient combatant defeated. Current HP and current MP are runtime combat state, not
-ability or save/content fields. Guard remains a validated authoring contract but is not executed
-yet.
+marks the transient combatant defeated. `rules.healing.flat` uses a living same-side target and
+adds its positive whole-number `power`, clamped to the target's resolved maximum HP. Current HP
+and current MP are runtime combat state, not ability or save/content fields. Guard remains a
+validated authoring contract but is not executed yet.
 
 Milestone 3.12 does not add an AI field or change this schema. Its basic enemy planner scans an
 enemy's existing `abilityIds` in authored order and selects the first cost-free ability using

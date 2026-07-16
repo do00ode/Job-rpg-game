@@ -397,11 +397,12 @@ resolver defensively validates all class unlock entries, including future-level 
 an editor/test catalog bypasses the production loader.
 
 Ability target modes and rulesets are closed, code-owned contracts. Current JSON can select
-`target.self` with `rules.defense.guard` or `target.enemy.single` with
-`rules.damage.physical`; each ruleset has an exact required numeric-parameter shape and range.
-Unknown IDs and extra keys are errors rather than dormant behavior. This validation does not
-execute an ability. Milestone 3.10's pure-core resolver owns the first physical state change,
-while Godot remains responsible only for presentation.
+`target.self` with `rules.defense.guard`, `target.enemy.single` with
+`rules.damage.physical`, or `target.ally.single` with `rules.healing.flat`; each ruleset has an
+exact required numeric-parameter shape and range. Unknown IDs and extra keys are errors rather
+than dormant behavior. This validation does not execute an ability. `CombatResolver` owns both
+physical damage and flat same-side healing state changes, while Godot remains responsible only
+for presentation.
 
 `AbilityDefinitionContractValidator` owns only that ability-specific semantic table and returns
 path/code/message problems to the broader `ContentValidator`. It does not read files or resolve
@@ -428,9 +429,10 @@ never serializes it as campaign state.
 Milestone 3.10 implements the first narrow use of the reserved `ICombatResolver`,
 `CombatCommand`, `CombatResolution`, and `CombatEvent` contracts. `CombatResolver` receives an
 already validated `IContentCatalog`; it does not read files or discover behavior dynamically.
-It accepts only a living combatant using an owned, affordable supported ability. The current
-executable effect contract remains `target.enemy.single` plus `rules.damage.physical` against
-one living opposing combatant.
+It accepts only a living combatant using an owned, affordable supported ability. The executable
+contracts are `target.enemy.single` plus `rules.damage.physical` against one living opposing
+combatant, and `target.ally.single` plus `rules.healing.flat` against one living same-side
+combatant.
 
 ```mermaid
 flowchart TD
@@ -528,8 +530,8 @@ campaign dependency. See `MILESTONE_3_13_GUIDE.md`.
 resolver, `ICombatRoundResolver`, and `IEnemyCommandPlanner`. It projects structured party
 Skills and Magic-discipline submenus, displays HP/MP from snapshots, submits the selected
 authored ability ID with its authored supported target route, and submits planner-produced
-commands for each living slime. It renders `ResourceSpent`, `DamageApplied`,
-`CombatantDefeated`, and `BattleEnded`; it never repeats the physical formula, Speed ordering,
+commands for each living slime. It renders `ResourceSpent`, `DamageApplied`, `HealingApplied`,
+`CombatantDefeated`, and `BattleEnded`; it never repeats combat formulas, Speed ordering,
 HP/MP mutation, or terminal-side query.
 
 ```mermaid

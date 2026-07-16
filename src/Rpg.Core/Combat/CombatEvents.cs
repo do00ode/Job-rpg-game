@@ -28,6 +28,15 @@ public sealed record ResourceSpent(
     int PreviousValue,
     int CurrentValue) : CombatEvent;
 
+/// <summary>Reports authoritative HP restored by one accepted healing ability.</summary>
+public sealed record HealingApplied(
+    string ActingCombatantId,
+    string TargetCombatantId,
+    string AbilityId,
+    int Amount,
+    int PreviousHp,
+    int CurrentHp) : CombatEvent;
+
 /// <summary>Reports that one combatant reached zero HP during the resolved action.</summary>
 /// <remarks>
 /// This is a fact about one combatant. When the defeated combatant was the last living member of
