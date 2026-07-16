@@ -413,6 +413,12 @@ public partial class BattleFormationView : Control
             return;
         }
 
+        if (placement.Anchor.Side == BattleSide.Party
+            && _partyTextureByDefinitionId.ContainsKey(placement.DefinitionId))
+        {
+            return;
+        }
+
         Rect2 occupied = GetPlacementRectangle(placement);
         var labelArea = new Rect2(
             occupied.Position + new Vector2(5.0f, 4.0f),

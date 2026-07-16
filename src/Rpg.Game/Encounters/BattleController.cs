@@ -84,7 +84,7 @@ public partial class BattleController : Control
         _inputHint = GetNode<Label>("Margin/VBox/InputHint");
 
         _continueButton.Pressed += RequestCompletion;
-        _gridDebugToggle.Pressed += ToggleFormationGrid;
+        _gridDebugToggle.Toggled += ToggleFormationGrid;
         ConfigureLowerBattlePanel();
         SetProcessUnhandledInput(false);
     }
@@ -116,9 +116,8 @@ public partial class BattleController : Control
         commandArea.SizeFlagsStretchRatio = 1.35f;
     }
 
-    private void ToggleFormationGrid()
+    private void ToggleFormationGrid(bool showGrid)
     {
-        bool showGrid = _gridDebugToggle.ButtonPressed;
         _formationView.SetGridVisible(showGrid);
         _gridDebugToggle.Text = showGrid ? "Hide Grid (Debug)" : "Show Grid (Debug)";
     }
