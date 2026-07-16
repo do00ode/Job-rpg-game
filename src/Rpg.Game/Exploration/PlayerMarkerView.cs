@@ -8,8 +8,6 @@ public partial class PlayerMarkerView : Node2D
     private string _facing = "south";
     private readonly Dictionary<string, Texture2D[]> _frames = new(StringComparer.Ordinal);
     private Texture2D? _currentFrame;
-    private bool _walking;
-    private double _animationTimer;
     private int _animationFrame;
 
     public override void _Ready()
@@ -25,40 +23,37 @@ public partial class PlayerMarkerView : Node2D
     /// <summary>Updates the logical direction rendered on the next frame.</summary>
     public void SetFacing(string facing)
     {
+        bool changed = !string.Equals(_facing, facing, StringComparison.Ordinal);
         _facing = facing;
-        _animationFrame = 0;
-        _animationTimer = 0.0;
-        _currentFrame = _frames.TryGetValue(facing, out Texture2D[]? frames)
-            ? frames[0]
-            : _frames["south"][0];
+        if (changed)
+        {
+            _animationFrame = 0;
+        }
+        if (changed || !_frames.TryGetValue(facing, out Texture2D[]? frames))
+        {
+            _currentFrame = _frames.TryGetValue(facing, out frames)
+                ? frames[0]
+                : _frames["south"][0];
+        }
         QueueRedraw();
     }
 
     public void SetWalking(bool walking)
     {
-        _walking = walking;
         if (!walking)
         {
             _animationFrame = 0;
-            _animationTimer = 0.0;
             SetFacing(_facing);
         }
     }
 
-    public override void _Process(double delta)
+    public void AdvanceStepAnimation()
     {
-        if (!_walking || !_frames.TryGetValue(_facing, out Texture2D[]? frames))
+        if (!_frames.TryGetValue(_facing, out Texture2D[]? frames))
         {
             return;
         }
 
-        _animationTimer += delta;
-        if (_animationTimer < 0.16)
-        {
-            return;
-        }
-
-        _animationTimer = 0.0;
         _animationFrame = (_animationFrame + 1) % frames.Length;
         _currentFrame = frames[_animationFrame];
         QueueRedraw();
@@ -72,7 +67,7 @@ public partial class PlayerMarkerView : Node2D
             // character readable against the 48x48 exploration tile without blur.
             DrawTextureRect(
                 _currentFrame,
-                new Rect2(-16.0f, -48.0f, 32.0f, 48.0f),
+                new Rect2(-16.0f, -24.0f, 32.0f, 48.0f),
                 tile: false,
                 modulate: Colors.White,
                 transpose: false);

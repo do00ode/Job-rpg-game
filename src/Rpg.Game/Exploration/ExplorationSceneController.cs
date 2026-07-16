@@ -292,7 +292,6 @@ public partial class ExplorationSceneController : Node2D
 
 	private void BeginHeldMovement(string action, Vector2I delta, string facing)
 	{
-		_player.SetWalking(true);
 		bool changedDirection = !string.Equals(
 			RequireSession().Current.Location.Facing,
 			facing,
@@ -386,6 +385,8 @@ public partial class ExplorationSceneController : Node2D
 		{
 			return;
 		}
+
+		_player.AdvanceStepAnimation();
 
 		if (_room.TryGetTransitionAt(acceptedTile, out MapTransitionDefinition? transition)
 			&& transition is not null)
