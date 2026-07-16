@@ -8,26 +8,39 @@ namespace RpgGame.Core.Tests.Combat;
 public sealed class AbilityAvailabilityResolverTests
 {
     [Fact]
-    public void ResolvePartyActor_CheckedInVanguard_HasOnlyIntrinsicAttack()
+    public void ResolvePartyActor_CheckedInKnightHasAttackAndPowerStrike()
     {
         CombatantSnapshot james = CombatTestFixture.CreateFixedBattle()
             .Snapshot.GetRequiredCombatant("party-0");
 
-        Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
+        Assert.Equal([CombatTestFixture.AttackId, "ability.knight.power-strike"], james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
-        Assert.Equal([CombatTestFixture.AttackId], james.AbilityIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, "ability.knight.power-strike"],
+            james.AbilityIds);
     }
 
     [Fact]
-    public void ResolvePartyActor_CheckedInBlackMage_KeepsOnlyIntrinsicAttack()
+    public void ResolvePartyActor_CheckedInBlackMageHasLearnedBlackMagic()
     {
         CombatantSnapshot james = CombatTestFixture
             .CreateFixedBattle(CombatTestFixture.BlackMageId)
             .Snapshot.GetRequiredCombatant("party-0");
 
         Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
-        Assert.Empty(james.MagicDisciplines);
-        Assert.Equal([CombatTestFixture.AttackId], james.AbilityIds);
+        MagicDisciplineAvailability discipline = Assert.Single(james.MagicDisciplines);
+        Assert.Equal("magic-discipline.black-magic", discipline.MagicDisciplineId);
+        Assert.Equal(
+            ["ability.black-magic.fire", "ability.black-magic.ice", "ability.black-magic.lightning"],
+            discipline.SpellAbilityIds);
+        Assert.Equal(
+            [
+                CombatTestFixture.AttackId,
+                "ability.black-magic.fire",
+                "ability.black-magic.ice",
+                "ability.black-magic.lightning",
+            ],
+            james.AbilityIds);
     }
 
     [Fact]

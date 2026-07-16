@@ -1,10 +1,16 @@
 {
   "schemaVersion": 1,
   "id": "class.martial.vanguard",
-  "displayNameKey": "class.vanguard.name",
+  "displayNameKey": "class.knight.name",
   "baseStatisticBonuses": {
 	"stat.max-hp": 12,
 	"stat.defense": 2
   },
-  "abilityUnlocks": []
+  "abilityUnlocks": [
+	{
+	  "level": 1,
+	  "abilityId": "ability.knight.power-strike"
+	}
+  ],
+  "magicDisciplineUnlocks": []
 }

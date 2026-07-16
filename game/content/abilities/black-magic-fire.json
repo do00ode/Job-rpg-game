@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.black-magic.fire",
+  "displayNameKey": "ability.black-magic.fire.name",
+  "descriptionKey": "ability.black-magic.fire.description",
+  "abilityKindId": "ability-kind.magic",
+  "magicDisciplineIds": ["magic-discipline.black-magic"],
+  "targetingId": "target.enemy.single",
+  "costStatisticId": "stat.max-mp",
+  "costAmount": 3,
+  "rulesetId": "rules.damage.physical",
+  "damageTypeId": "damage-type.fire",
+  "numericParameters": {
+    "power": 7
+  }
+}

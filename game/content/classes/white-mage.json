@@ -6,5 +6,11 @@
 	"stat.max-mp": 8,
 	"stat.defense": 1
   },
-  "abilityUnlocks": []
+  "abilityUnlocks": [],
+  "magicDisciplineUnlocks": [
+	{
+	  "level": 1,
+	  "magicDisciplineId": "magic-discipline.white-magic"
+	}
+  ]
 }

@@ -6,5 +6,24 @@
 	"stat.max-mp": 10,
 	"stat.speed": 1
   },
-  "abilityUnlocks": []
+  "abilityUnlocks": [
+	{
+	  "level": 1,
+	  "abilityId": "ability.black-magic.fire"
+	},
+	{
+	  "level": 1,
+	  "abilityId": "ability.black-magic.ice"
+	},
+	{
+	  "level": 1,
+	  "abilityId": "ability.black-magic.lightning"
+	}
+  ],
+  "magicDisciplineUnlocks": [
+	{
+	  "level": 1,
+	  "magicDisciplineId": "magic-discipline.black-magic"
+	}
+  ]
 }

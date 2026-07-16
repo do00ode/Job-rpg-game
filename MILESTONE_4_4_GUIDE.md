@@ -32,9 +32,10 @@ Menu/Cancel returns from a magic submenu to the top-level menu, or from target s
 the menu that selected the ability. Movement cycles command buttons in insertion order and
 target buttons in snapshot order; remappable input actions remain unchanged.
 
-Names are temporary stable-ID-derived placeholders. Localized display names, MP affordability
-explanations, command icons, multi-actor queues, items, and new targeting/effect contracts are
-outside this milestone.
+Milestone 4.6 supplies the first authored kits that use this projection: Knight Power Strike
+and Black Mage's Black Magic spell list. Names remain temporary stable-ID-derived placeholders.
+Localized display names, MP affordability explanations, command icons, multi-actor queues,
+items, and new targeting/effect contracts remain outside this milestone.
 
 ## Compatibility
 

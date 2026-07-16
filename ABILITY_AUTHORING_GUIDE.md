@@ -80,6 +80,17 @@ implemented.
 
 ## Decide who learns it
 
+### First class-kit examples
+
+Milestone 4.6 uses class-owned level-one unlocks for the first real kits. Knight's permanent
+legacy class ID `class.martial.vanguard` grants the direct Skill
+`ability.knight.power-strike`. Black Mage grants the individual Fire, Ice, and Lightning spell
+IDs through `abilityUnlocks`; it also grants the separate Black Magic container through
+`magicDisciplineUnlocks`. A Magic spell needs both facts before it becomes executable.
+
+White Mage grants White Magic access but no spell until healing is implemented. Do not add Cure
+as a damage ability or add an unimplemented ruleset just to populate the submenu.
+
 Creating an ability record does not grant it to anyone. Choose the owner that matches the game
 design.
 
@@ -111,9 +122,9 @@ Add its ID to an actor's `startingAbilityIds`:
 
 Use this only when the ability belongs to that character regardless of selected class. James
 is intentionally class-neutral, so class abilities normally belong on the class record.
-`ability.command.attack` is James's class-independent basic combat command. The current
-vanilla classes deliberately ship with empty `abilityUnlocks`; future class abilities should
-still be connected through the class records when their gameplay is actually designed.
+`ability.command.attack` is James's class-independent basic combat command. Milestone 4.6 adds
+class-owned level-one grants; future class abilities should continue to use class records rather
+than changing James's identity record.
 
 ### Give it to an enemy
 

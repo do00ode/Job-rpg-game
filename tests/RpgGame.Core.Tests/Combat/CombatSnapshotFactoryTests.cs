@@ -89,7 +89,9 @@ public sealed class CombatSnapshotFactoryTests
             .Snapshot.GetRequiredCombatant("party-0");
 
         Assert.NotNull(james.PartyAbilityAvailability);
-        Assert.Equal([CombatTestFixture.AttackId], james.DirectSkillIds);
+        Assert.Equal(
+            [CombatTestFixture.AttackId, "ability.knight.power-strike"],
+            james.DirectSkillIds);
         Assert.Empty(james.MagicDisciplines);
         Assert.Equal(james.PartyAbilityAvailability!.ExecutableAbilityIds, james.AbilityIds);
     }

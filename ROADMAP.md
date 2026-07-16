@@ -409,6 +409,22 @@ Explicitly excluded: new spell content, magic damage formulas, healing, MP recov
 out-of-battle resources, save persistence, and additional mutable resource families. See
 `MILESTONE_4_5_GUIDE.md`.
 
+### Milestone 4.6 - First real class kits
+
+- Make Knight, Black Mage, and White Mage class choice visible through authored level-one
+  ability and magic-discipline unlocks.
+- Add Knight Power Strike and Black Mage Fire, Ice, and Lightning using the existing
+  single-target typed-damage formula and MP cost path.
+- Prepare White Magic access without faking Cure before a healing ruleset exists.
+
+Exit criteria: the selected class changes the available battle commands; Black Mage spells use
+their authored elemental damage types and pay MP exactly once; the permanent Vanguard class ID
+continues to load as the Knight kit for existing saves.
+
+Explicitly excluded: Cure/healing, extra classes, magical-stat formulas, area targets,
+equipment, items, status effects, animations, and class progression UI. See
+`MILESTONE_4_6_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

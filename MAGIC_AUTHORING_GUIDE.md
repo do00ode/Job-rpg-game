@@ -79,6 +79,12 @@ resource IDs are not implemented.
 
 ## Step 3: grant container access and the individual spell
 
+The checked-in Black Mage kit is the production example: it unlocks
+`magic-discipline.black-magic` and each of `ability.black-magic.fire`,
+`ability.black-magic.ice`, and `ability.black-magic.lightning` at level one. White Mage has
+`magic-discipline.white-magic` access without any learned spell; container access alone never
+grants a spell. This is intentional until Cure can use a real healing resolver.
+
 For a base-game class you own, add both unlocks:
 
 ```json

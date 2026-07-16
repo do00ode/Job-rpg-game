@@ -57,6 +57,8 @@ a general-purpose RPG engine.
     navigation, target routing, or battle command focus behavior.
 29. Read `MILESTONE_4_5_GUIDE.md` before changing current MP, ability costs, resource payment,
     resource domain events, or MP presentation.
+30. Read `MILESTONE_4_6_GUIDE.md` before changing the Knight, Black Mage, or White Mage kits,
+    their class ability unlocks, or their starter magic-discipline access.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

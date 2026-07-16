@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.black-magic.ice",
+  "displayNameKey": "ability.black-magic.ice.name",
+  "descriptionKey": "ability.black-magic.ice.description",
+  "abilityKindId": "ability-kind.magic",
+  "magicDisciplineIds": ["magic-discipline.black-magic"],
+  "targetingId": "target.enemy.single",
+  "costStatisticId": "stat.max-mp",
+  "costAmount": 3,
+  "rulesetId": "rules.damage.physical",
+  "damageTypeId": "damage-type.ice",
+  "numericParameters": {
+    "power": 7
+  }
+}

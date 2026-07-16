@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.knight.power-strike",
+  "displayNameKey": "ability.knight.power-strike.name",
+  "descriptionKey": "ability.knight.power-strike.description",
+  "abilityKindId": "ability-kind.skill",
+  "magicDisciplineIds": [],
+  "targetingId": "target.enemy.single",
+  "costStatisticId": "stat.max-mp",
+  "costAmount": 3,
+  "rulesetId": "rules.damage.physical",
+  "damageTypeId": "damage-type.slash",
+  "numericParameters": {
+    "power": 9
+  }
+}

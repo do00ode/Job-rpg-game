@@ -7,11 +7,11 @@ namespace RpgGame.Core.Tests.Content;
 public sealed class AbilityMagicFrameworkContentTests
 {
     [Fact]
-    public void FixturePack_BaseAbilitiesAreSkillsWithoutConcreteDisciplines()
+    public void FixturePack_ContainsAuthoredClassSkillsAndMagicDisciplines()
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Empty(catalog.GetAll<MagicDisciplineDefinition>());
+        Assert.Equal(2, catalog.GetAll<MagicDisciplineDefinition>().Count);
         AbilityDefinition attack = catalog.GetRequired<AbilityDefinition>(
             "ability.command.attack");
         AbilityDefinition tackle = catalog.GetRequired<AbilityDefinition>(
@@ -22,12 +22,13 @@ public sealed class AbilityMagicFrameworkContentTests
         Assert.Equal(AbilityKindIds.Skill, tackle.AbilityKindId);
         Assert.Empty(tackle.MagicDisciplineIds);
 
-        // Vanilla class progression is intentionally blank until class skills are designed.
-        // Keeping this assertion beside the checked-in ability proof prevents a later content
-        // edit from silently reintroducing a class grant before its gameplay is approved.
-        Assert.All(
-            catalog.GetAll<ClassDefinition>(),
-            classDefinition => Assert.Empty(classDefinition.AbilityUnlocks));
+        ClassDefinition knight = catalog.GetRequired<ClassDefinition>("class.martial.vanguard");
+        Assert.Equal("ability.knight.power-strike", Assert.Single(knight.AbilityUnlocks).AbilityId);
+        ClassDefinition blackMage = catalog.GetRequired<ClassDefinition>("class.magic.black-mage");
+        Assert.Equal(3, blackMage.AbilityUnlocks.Count);
+        Assert.Equal(
+            "magic-discipline.black-magic",
+            Assert.Single(blackMage.MagicDisciplineUnlocks).MagicDisciplineId);
     }
 
     [Fact]
