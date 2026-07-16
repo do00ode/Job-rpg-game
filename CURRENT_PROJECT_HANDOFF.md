@@ -1,8 +1,27 @@
 # Current Project Handoff
 
-> Current update: Milestone 4.96 is implemented locally and intentionally uncommitted for review.
-> `main` is at `c3c1e55 Set Black Mage spell unlock levels`; the sections below are retained only as
-> a historical Milestone 4.1 record and must not be treated as the current repository state.
+> Current update: Milestone 5.0 is implemented locally and intentionally uncommitted for review.
+> The live battle path now uses deterministic wait-mode timeline initiative. The older sections
+> below remain historical unless explicitly superseded by the 5.0 notes.
+
+## Current Milestone 5.0 summary
+
+Milestone 5.0 adds transient `TimelineTime` and `NextActionTime` state, a deterministic
+`CombatTimelineResolver`, and an immutable `TurnOrderPreviewService`. The live battle now resolves
+one ready actor at a time, waits while James chooses a command, and runs enemy planning only when
+an enemy is ready. The UI shows the current actor and an eight-entry forecast. The old Round API
+remains only for compatibility with historical headless callers; new runtime battle composition
+uses the timeline interface.
+
+The action delay is integer-only: `max(1, 100 * 10 / max(1, Speed))`. Ties are next action time,
+higher Speed, Party before Enemy, then ordinal instance ID. Timeline state is transient and does
+does not change save or content schemas.
+
+Validation for this ticket passed: 369 core tests; base content validation loaded 41 definitions;
+base plus example mod validation loaded 44 definitions; the solution build completed with 0
+warnings and 0 errors; Godot 4.7 headless editor validation exited with code 0; and `git diff
+--check` reported no whitespace errors. No interactive Godot session or screenshot capture was
+run.
 
 ## Current Milestone 4.9 summary
 

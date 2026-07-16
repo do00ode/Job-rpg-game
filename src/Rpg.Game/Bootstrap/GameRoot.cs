@@ -340,7 +340,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
             enemyPlacements,
             partyPlacements);
         var actionResolver = new CombatResolver(Content);
-        var roundResolver = new CombatRoundResolver(actionResolver);
+        var timelineResolver = new CombatTimelineResolver(actionResolver);
         var enemyPlanner = new EnemyCommandPlanner(Content);
         var commandAvailabilityResolver = new BattleCommandAvailabilityResolver(Content);
 
@@ -358,7 +358,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
                 Content,
                 commandAvailabilityResolver,
                 initialSnapshot,
-                roundResolver,
+                timelineResolver,
                 enemyPlanner,
                 InputBindings);
             scene.CompletionRequested += OnBattleCompletionRequested;

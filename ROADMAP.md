@@ -496,6 +496,25 @@ Exit criteria: all selectable controls and text remain visible and keyboard-reac
 Explicitly excluded: mobile safe areas, controller navigation, localization expansion, dynamic
 font scaling, and any campaign/core-rules changes. See `MILESTONE_4_96_GUIDE.md`.
 
+### Milestone 5.0 - Deterministic ATB timeline initiative
+
+- Replace live battle's complete-round command collection with one ready actor at a time.
+- Store transient timeline time and each combatant's next action time in `CombatSnapshot`.
+- Schedule successful actions with `max(1, 100 * 10 / max(1, Speed))` using integer arithmetic.
+- Resolve ties by next action time, higher Speed, party side, then ordinal instance ID.
+- Forecast the next eight turns through a non-mutating projection and refresh it after actions.
+- Preserve the existing command, enemy-planner, MP, typed damage/healing, victory, reward, and
+  encounter-clearance paths.
+
+Exit criteria: a non-ready command is rejected without state mutation; a successful action
+reschedules exactly one actor; defeated actors disappear from initiative; the battle waits for
+player input; enemy actions occur only when an enemy is ready; and the battle UI shows the
+current actor and upcoming turn forecast.
+
+Explicitly excluded: real-time ATB, active/wait toggles, live menu pressure, Haste/Slow/Stop/Stun,
+status effects, duration systems, production turn-manipulation abilities, boss scripting, and
+new battle content. See `MILESTONE_5_0_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

@@ -13,7 +13,7 @@ namespace RpgGame.Encounters;
 /// <remarks>
 /// This Godot controller owns buttons, focus, labels, and event-log text. It never calculates
 /// damage, changes HP or MP directly, orders actions, or decides victory. Those facts arrive through
-/// <see cref="ICombatRoundResolver"/>, replacement <see cref="CombatSnapshot"/> instances, and
+/// <see cref="ICombatTimelineResolver"/>, replacement <see cref="CombatSnapshot"/> instances, and
 /// typed <see cref="CombatEvent"/> values. The controller also receives no GameSession, so it
 /// cannot accidentally clear an encounter before GameRoot handles a confirmed terminal result.
 /// </remarks>
@@ -25,6 +25,7 @@ public partial class BattleController : Control
     private VBoxContainer _partyStatus = null!;
     private VBoxContainer _enemyStatus = null!;
     private Label _phaseLabel = null!;
+    private Label _turnOrderLabel = null!;
     private VBoxContainer _commandMenu = null!;
     private HBoxContainer _targetRow = null!;
     private Label _targetPrompt = null!;
@@ -44,7 +45,7 @@ public partial class BattleController : Control
     private IContentCatalog? _content;
     private BattleCommandAvailabilityResolver? _commandAvailabilityResolver;
     private InputBindingService? _inputBindings;
-    private ICombatRoundResolver? _roundResolver;
+    private ICombatTimelineResolver? _timelineResolver;
     private IEnemyCommandPlanner? _enemyPlanner;
     private CombatSnapshot? _snapshot;
     private string? _encounterId;
@@ -68,6 +69,7 @@ public partial class BattleController : Control
         _partyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/PartyStatus");
         _enemyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/EnemyStatus");
         _phaseLabel = GetNode<Label>("Margin/VBox/CommandArea/Phase");
+        _turnOrderLabel = GetNode<Label>("Margin/VBox/TurnOrder");
         _commandMenu = GetNode<VBoxContainer>("Margin/VBox/CommandArea/CommandMenu");
         _targetRow = GetNode<HBoxContainer>("Margin/VBox/CommandArea/TargetRow");
         _targetPrompt = GetNode<Label>("Margin/VBox/CommandArea/TargetRow/TargetPrompt");
@@ -89,7 +91,7 @@ public partial class BattleController : Control
         IContentCatalog content,
         BattleCommandAvailabilityResolver commandAvailabilityResolver,
         CombatSnapshot initialSnapshot,
-        ICombatRoundResolver roundResolver,
+        ICombatTimelineResolver timelineResolver,
         IEnemyCommandPlanner enemyPlanner,
         InputBindingService inputBindings)
     {
@@ -97,7 +99,7 @@ public partial class BattleController : Control
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(commandAvailabilityResolver);
         ArgumentNullException.ThrowIfNull(initialSnapshot);
-        ArgumentNullException.ThrowIfNull(roundResolver);
+        ArgumentNullException.ThrowIfNull(timelineResolver);
         ArgumentNullException.ThrowIfNull(enemyPlanner);
         ArgumentNullException.ThrowIfNull(inputBindings);
         if (_snapshot is not null)
@@ -118,7 +120,7 @@ public partial class BattleController : Control
         _content = content;
         _commandAvailabilityResolver = commandAvailabilityResolver;
         _snapshot = initialSnapshot;
-        _roundResolver = roundResolver;
+        _timelineResolver = timelineResolver;
         _enemyPlanner = enemyPlanner;
         _inputBindings = inputBindings;
         _inputBindings.BindingsChanged += OnBindingsChanged;
@@ -136,9 +138,9 @@ public partial class BattleController : Control
                 .ToArray());
 
         CreateCombatantControls(initialSnapshot);
-        AppendLog($"Battle started. Round {initialSnapshot.Round}.");
-        _phase = BattleInputPhase.Command;
-        ShowTopLevelCommands();
+        AppendLog("Battle started. Wait-mode timeline active.");
+        _phase = BattleInputPhase.Resolving;
+        AdvanceToReadyActor();
         SetProcessUnhandledInput(true);
     }
 
@@ -517,7 +519,11 @@ public partial class BattleController : Control
         }
 
         CombatSnapshot current = RequireSnapshot();
-        CombatantSnapshot partyActor = RequireSingleLivingPartyActor(current);
+        CombatantSnapshot partyActor = CombatTimeline.SelectReadyActor(current);
+        if (partyActor.Side != BattleSide.Party)
+        {
+            return;
+        }
         AbilityDefinition ability = RequireContent().GetRequired<AbilityDefinition>(_selectedAbilityId);
         if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleEnemy, StringComparison.Ordinal))
         {
@@ -556,15 +562,9 @@ public partial class BattleController : Control
         _phase = BattleInputPhase.Resolving;
         RefreshPresentation();
 
-        var commands = new List<CombatCommand>
-        {
-            new(partyActor.InstanceId, ability.Id, [targetId]),
-        };
-        commands.AddRange(current.Combatants
-            .Where(combatant => combatant.Side == BattleSide.Enemy && !combatant.IsDefeated)
-            .Select(combatant => RequireEnemyPlanner().Plan(current, combatant.InstanceId)));
-
-        CombatResolution resolution = RequireRoundResolver().ResolveRound(current, commands);
+        CombatResolution resolution = RequireTimelineResolver().ResolveNext(
+            current,
+            new CombatCommand(partyActor.InstanceId, ability.Id, [targetId]));
         CombatSnapshot next = resolution.Next;
         _snapshot = next;
         AppendEvents(resolution.Events);
@@ -574,8 +574,8 @@ public partial class BattleController : Control
             _selectedAbilityId = null;
             _selectedMagicDisciplineId = null;
             _selectedTargetId = null;
-            _phase = BattleInputPhase.Command;
-            ShowTopLevelCommands();
+            _phase = BattleInputPhase.Resolving;
+            AdvanceToReadyActor();
             return;
         }
 
@@ -595,6 +595,36 @@ public partial class BattleController : Control
         _phase = BattleInputPhase.Completed;
         RefreshPresentation();
         _continueButton.GrabFocus();
+    }
+
+    private void AdvanceToReadyActor()
+    {
+        while (true)
+        {
+            CombatSnapshot current = RequireSnapshot();
+            if (current.Outcome != BattleOutcome.InProgress)
+            {
+                _phase = BattleInputPhase.Completed;
+                RefreshPresentation();
+                _continueButton.GrabFocus();
+                return;
+            }
+
+            CombatantSnapshot ready = CombatTimeline.SelectReadyActor(current);
+            if (ready.Side == BattleSide.Party)
+            {
+                _phase = BattleInputPhase.Command;
+                ShowTopLevelCommands();
+                return;
+            }
+
+            _phase = BattleInputPhase.Resolving;
+            RefreshPresentation();
+            CombatCommand enemyCommand = RequireEnemyPlanner().Plan(current, ready.InstanceId);
+            CombatResolution resolution = RequireTimelineResolver().ResolveNext(current, enemyCommand);
+            _snapshot = resolution.Next;
+            AppendEvents(resolution.Events);
+        }
     }
 
     private void AppendEvents(IReadOnlyList<CombatEvent> events)
@@ -691,13 +721,13 @@ public partial class BattleController : Control
 
         _phaseLabel.Text = _phase switch
         {
-            BattleInputPhase.Command => $"Round {snapshot.Round}: choose a command.",
+            BattleInputPhase.Command => $"{DisplayName(CombatTimeline.SelectReadyActor(snapshot).InstanceId)}'s turn: choose a command.",
             BattleInputPhase.MagicSelection =>
                 $"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
             BattleInputPhase.TargetSelection =>
                 $"{ShortDefinitionName(_selectedAbilityId ?? "ability")}: choose a living "
                 + $"{TargetSideLabel(RequireSelectedTargetSide())}.",
-            BattleInputPhase.Resolving => "Resolving the round...",
+            BattleInputPhase.Resolving => "Resolving the next turn...",
             BattleInputPhase.Completed => "Battle ended.",
             _ => string.Empty,
         };
@@ -709,6 +739,11 @@ public partial class BattleController : Control
         };
 
         RefreshInputHint();
+
+        TurnOrderPreview preview = new TurnOrderPreviewService().Create(snapshot);
+        _turnOrderLabel.Text = "Turn Order: " + string.Join(
+            "  >  ",
+            preview.Entries.Select(entry => DisplayName(entry.CombatantInstanceId)));
     }
 
     private void RequestCompletion()
@@ -821,7 +856,7 @@ public partial class BattleController : Control
     private BattleCommandAvailabilityResolver RequireCommandAvailabilityResolver() => _commandAvailabilityResolver
         ?? throw new InvalidOperationException("Battle scene is not initialized.");
 
-    private ICombatRoundResolver RequireRoundResolver() => _roundResolver
+    private ICombatTimelineResolver RequireTimelineResolver() => _timelineResolver
         ?? throw new InvalidOperationException("Battle scene is not initialized.");
 
     private IEnemyCommandPlanner RequireEnemyPlanner() => _enemyPlanner

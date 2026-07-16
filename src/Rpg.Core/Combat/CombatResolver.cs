@@ -190,7 +190,7 @@ public sealed class CombatResolver : ICombatResolver
 
             nextCombatants[target.Index] = target.Value.WithCurrentHp(nextHp);
         }
-        var nextSnapshot = new CombatSnapshot(current.Round, nextCombatants);
+        var nextSnapshot = new CombatSnapshot(current.Round, current.TimelineTime, nextCombatants);
 
         var events = new List<CombatEvent>();
         if (costAmount > 0)
@@ -266,7 +266,7 @@ public sealed class CombatResolver : ICombatResolver
 
             nextCombatants[target.Index] = target.Value.WithCurrentHp(nextHp);
         }
-        var nextSnapshot = new CombatSnapshot(current.Round, nextCombatants);
+        var nextSnapshot = new CombatSnapshot(current.Round, current.TimelineTime, nextCombatants);
         var events = new List<CombatEvent>();
         if (costAmount > 0)
         {

@@ -542,6 +542,35 @@ Round coordination and planning remain pure .NET and transient. Milestone 3.14 c
 from Godot without moving their decisions into the scene and does not reintroduce Guard or
 vanilla class abilities. See `MILESTONE_3_12_GUIDE.md`.
 
+### Deterministic timeline initiative
+
+Milestone 5.0 supersedes the live battle's round collection with a wait-mode timeline. The
+transient snapshot carries `TimelineTime`; each combatant carries `NextActionTime`. The pure
+`CombatTimelineResolver` selects one living ready actor, advances to that actor's absolute time,
+delegates legality/effects to `CombatResolver`, and reschedules the actor only after success.
+
+```mermaid
+flowchart TD
+    Snapshot["CombatSnapshot timeline state"] --> Ready["CombatTimeline ready selection"]
+    Ready --> Input["One player or enemy CombatCommand"]
+    Input --> Action["CombatResolver"]
+    Action --> Schedule["Reschedule acting combatant"]
+    Schedule --> Snapshot
+    Snapshot --> Preview["TurnOrderPreviewService"]
+```
+
+The action delay is `max(1, 100 * 10 / max(1, EffectiveSpeed))`. Ready ties use lower
+`NextActionTime`, higher effective Speed, Party before Enemy, and ordinal instance ID. The
+preview simulates only ordinary delays and living actors without mutating authoritative state;
+deaths, statuses, target choices, and resource use can invalidate the forecast.
+
+The Godot controller displays the current ready actor, pauses for party input, and uses the same
+timeline resolver for enemy commands. It never advances time or predicts order itself. The legacy
+round interface remains temporarily for compatibility tests and old callers, but it is not used
+by live battle composition. Future Haste/Slow/Stop/Stun should alter timeline state through core
+operations before preview projection; a full status system is deferred. See
+`MILESTONE_5_0_GUIDE.md`.
+
 ### Battle outcome
 
 Milestone 3.13 makes the terminal query a closed core contract. `CombatSnapshot.Outcome`

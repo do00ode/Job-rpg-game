@@ -31,6 +31,12 @@ public interface ICombatRoundResolver
         IReadOnlyList<CombatCommand> commands);
 }
 
+/// <summary>Resolves exactly one command for the currently ready timeline actor.</summary>
+public interface ICombatTimelineResolver
+{
+    CombatResolution ResolveNext(CombatSnapshot current, CombatCommand command);
+}
+
 /// <summary>Creates an ordinary combat command for one living enemy combatant.</summary>
 /// <remarks>
 /// The planner chooses intent only. It does not resolve damage, mutate the snapshot, or receive
@@ -74,6 +80,14 @@ public enum BattleOutcome
 public sealed record CombatSnapshot
 {
     public CombatSnapshot(int round, IReadOnlyList<CombatantSnapshot> combatants)
+        : this(round, timelineTime: 0, combatants)
+    {
+    }
+
+    public CombatSnapshot(
+        int round,
+        long timelineTime,
+        IReadOnlyList<CombatantSnapshot> combatants)
     {
         if (round < 1)
         {
@@ -91,7 +105,16 @@ public sealed record CombatSnapshot
                 nameof(combatants));
         }
 
+        if (timelineTime < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(timelineTime),
+                timelineTime,
+                "Combat timeline time cannot be negative.");
+        }
+
         Round = round;
+        TimelineTime = timelineTime;
 
         // Copy before wrapping. A ReadOnlyCollection over the caller's original List would
         // still change if that caller later edited the list.
@@ -102,6 +125,9 @@ public sealed record CombatSnapshot
     /// Initial snapshots start at one. A completed nonterminal round advances this by one.
     /// </summary>
     public int Round { get; }
+
+    /// <summary>Current deterministic wait-mode ATB time. This is transient battle state.</summary>
+    public long TimelineTime { get; }
 
     /// <summary>Party combatants first, then enemies, each in supplied placement order.</summary>
     public IReadOnlyList<CombatantSnapshot> Combatants { get; }
@@ -180,7 +206,8 @@ public sealed record CombatantSnapshot
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers = null,
         int? currentMp = null,
         int equippedWeaponAttack = 0,
-        string? equippedWeaponDamageTypeId = null)
+        string? equippedWeaponDamageTypeId = null,
+        long nextActionTime = 0)
         : this(
             placement,
             statistics,
@@ -190,7 +217,8 @@ public sealed record CombatantSnapshot
             damageTypePercentModifiers,
             currentMp,
             equippedWeaponAttack,
-            equippedWeaponDamageTypeId)
+            equippedWeaponDamageTypeId,
+            nextActionTime)
     {
     }
 
@@ -202,7 +230,8 @@ public sealed record CombatantSnapshot
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers = null,
         int? currentMp = null,
         int equippedWeaponAttack = 0,
-        string? equippedWeaponDamageTypeId = null)
+        string? equippedWeaponDamageTypeId = null,
+        long nextActionTime = 0)
         : this(
             placement,
             statistics,
@@ -213,7 +242,8 @@ public sealed record CombatantSnapshot
             damageTypePercentModifiers,
             currentMp,
             equippedWeaponAttack,
-            equippedWeaponDamageTypeId)
+            equippedWeaponDamageTypeId,
+            nextActionTime)
     {
     }
 
@@ -226,11 +256,20 @@ public sealed record CombatantSnapshot
         IReadOnlyDictionary<string, int>? damageTypePercentModifiers,
         int? currentMp,
         int equippedWeaponAttack,
-        string? equippedWeaponDamageTypeId)
+        string? equippedWeaponDamageTypeId,
+        long nextActionTime)
     {
         ArgumentNullException.ThrowIfNull(placement);
         ArgumentNullException.ThrowIfNull(statistics);
         ArgumentNullException.ThrowIfNull(abilityIds);
+
+        if (nextActionTime < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(nextActionTime),
+                nextActionTime,
+                "A combatant next action time cannot be negative.");
+        }
 
         if (string.IsNullOrWhiteSpace(placement.InstanceId))
         {
@@ -359,6 +398,7 @@ public sealed record CombatantSnapshot
         CurrentMp = resolvedCurrentMp;
         EquippedWeaponAttack = equippedWeaponAttack;
         EquippedWeaponDamageTypeId = equippedWeaponDamageTypeId;
+        NextActionTime = nextActionTime;
     }
 
     public FormationPlacement Placement { get; }
@@ -404,6 +444,9 @@ public sealed record CombatantSnapshot
     /// </summary>
     public string? EquippedWeaponDamageTypeId { get; }
 
+    /// <summary>Absolute deterministic timeline position at which this actor next acts.</summary>
+    public long NextActionTime { get; }
+
     public string InstanceId => Placement.InstanceId;
 
     public string DefinitionId => Placement.DefinitionId;
@@ -441,7 +484,8 @@ public sealed record CombatantSnapshot
                 DamageTypePercentModifiers,
                 CurrentMp,
                 EquippedWeaponAttack,
-                EquippedWeaponDamageTypeId)
+                EquippedWeaponDamageTypeId,
+                NextActionTime)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
@@ -450,7 +494,8 @@ public sealed record CombatantSnapshot
                 DamageTypePercentModifiers,
                 CurrentMp,
                 EquippedWeaponAttack,
-                EquippedWeaponDamageTypeId);
+                EquippedWeaponDamageTypeId,
+                NextActionTime);
 
     /// <summary>
     /// Creates a replacement state with different current MP while preserving every other
@@ -466,7 +511,8 @@ public sealed record CombatantSnapshot
                 DamageTypePercentModifiers,
                 currentMp,
                 EquippedWeaponAttack,
-                EquippedWeaponDamageTypeId)
+                EquippedWeaponDamageTypeId,
+                NextActionTime)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
@@ -475,7 +521,31 @@ public sealed record CombatantSnapshot
                 DamageTypePercentModifiers,
                 currentMp,
                 EquippedWeaponAttack,
-                EquippedWeaponDamageTypeId);
+                EquippedWeaponDamageTypeId,
+                NextActionTime);
+
+    public CombatantSnapshot WithNextActionTime(long nextActionTime) =>
+        PartyAbilityAvailability is null
+            ? new CombatantSnapshot(
+                Placement,
+                Statistics,
+                AbilityIds,
+                CurrentHp,
+                DamageTypePercentModifiers,
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId,
+                nextActionTime)
+            : new CombatantSnapshot(
+                Placement,
+                Statistics,
+                PartyAbilityAvailability,
+                CurrentHp,
+                DamageTypePercentModifiers,
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId,
+                nextActionTime);
 }
 
 /// <summary>
