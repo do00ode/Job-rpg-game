@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "weapon-family.hammer",
+  "displayNameKey": "weapon-family.hammer.name",
+  "damageVariance": { "minimumPercent": 90, "maximumPercent": 110 },
+  "weaponDamagePercentages": { "damage-type.blunt": 100 }
+}

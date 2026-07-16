@@ -3,5 +3,5 @@
   "id": "weapon-family.gun",
   "displayNameKey": "weapon-family.gun.name",
   "damageVariance": { "minimumPercent": 90, "maximumPercent": 110 },
-  "weaponDamagePercentages": { "damage-type.slash": 100 }
+  "weaponDamagePercentages": { "damage-type.pierce": 100 }
 }

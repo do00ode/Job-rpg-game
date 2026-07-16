@@ -3,5 +3,8 @@
   "id": "weapon-family.axe",
   "displayNameKey": "weapon-family.axe.name",
   "damageVariance": { "minimumPercent": 75, "maximumPercent": 125 },
-  "weaponDamagePercentages": { "damage-type.slash": 100 }
+  "weaponDamagePercentages": {
+    "damage-type.blunt": 50,
+    "damage-type.slash": 50
+  }
 }

@@ -11,6 +11,8 @@ The code-owned stable IDs are:
 | Category | ID |
 |---|---|
 | Weapon/physical | `damage-type.slash` |
+| Weapon/physical | `damage-type.blunt` |
+| Weapon/physical | `damage-type.pierce` |
 | Weapon/physical | `damage-type.energy` |
 | Elemental | `damage-type.fire` |
 | Elemental | `damage-type.ice` |

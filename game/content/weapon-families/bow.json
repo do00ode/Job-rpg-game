@@ -3,5 +3,5 @@
   "id": "weapon-family.bow",
   "displayNameKey": "weapon-family.bow.name",
   "damageVariance": { "minimumPercent": 85, "maximumPercent": 115 },
-  "weaponDamagePercentages": { "damage-type.slash": 100 }
+  "weaponDamagePercentages": { "damage-type.pierce": 100 }
 }

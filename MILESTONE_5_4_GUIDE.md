@@ -10,7 +10,8 @@ rolls.
 Weapon-family records live in `game/content/weapon-families/` and use IDs beginning with
 `weapon-family.`. Each record supplies `displayNameKey`, a default `weaponDamagePercentages`
 profile, and `damageVariance` bounds. The five
-vanilla families are sword (95-105), spear (90-110), axe (75-125), bow (85-115), and gun (90-110).
+vanilla families are sword (95-105 Slash), hammer (90-110 Blunt), axe (75-125 50/50 Blunt/Slash),
+bow (85-115 Pierce), and gun (90-110 Pierce).
 
 Weapon equipment may reference `weaponFamilyId`; its nonempty `weaponDamagePercentages` map
 overrides the family profile, which allows elemental or mixed-damage weapons. An empty map uses
