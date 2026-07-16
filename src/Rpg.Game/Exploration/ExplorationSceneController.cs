@@ -59,8 +59,8 @@ public partial class ExplorationSceneController : Node2D
 	public override void _Ready()
 	{
 		_mapNode = GetNode<Node2D>("Map");
-        _room = _mapNode as IExplorationMapView
-            ?? throw new InvalidOperationException("Exploration map node must implement IExplorationMapView.");
+		_room = _mapNode as IExplorationMapView
+			?? throw new InvalidOperationException("Exploration map node must implement IExplorationMapView.");
 		_player = GetNode<PlayerMarkerView>("Player");
 		_guide = GetNode<TestGuideNpc>("Guide");
 		_dialogue = GetNode<DialoguePanel>("Interface/Dialogue");
@@ -99,7 +99,7 @@ public partial class ExplorationSceneController : Node2D
 			throw new InvalidOperationException("The exploration scene is already initialized.");
 		}
 
-        _content = content;
+		_content = content;
 		_text = text;
 		_session = session;
 		_developmentCommands = developmentCommands;
@@ -111,9 +111,9 @@ public partial class ExplorationSceneController : Node2D
 		_gameMenuPanel.EquipmentRequested += OnEquipmentRequested;
 		_gameMenuPanel.ControlsRequested += OnControlsRequested;
 		_gameMenuPanel.DisplayRequested += OnDisplayRequested;
-        _equipmentPanel.Initialize(_content, _session, text);
-        _room.Initialize(new RpgGame.Core.Maps.MapQueryService(
-            _content.GetRequired<MapDefinition>(_room.MapId)));
+		_equipmentPanel.Initialize(_content, _session, text);
+		_room.Initialize(new RpgGame.Core.Maps.MapQueryService(
+			_content.GetRequired<MapDefinition>(_room.MapId)));
 		RefreshInstructionText();
 		ApplyAuthoritativeState();
 		SetProcessUnhandledInput(true);
@@ -353,8 +353,8 @@ public partial class ExplorationSceneController : Node2D
 			return;
 		}
 
-        if (_room.TryGetTransitionAt(acceptedTile, out MapTransitionDefinition? transition)
-            && transition is not null)
+		if (_room.TryGetTransitionAt(acceptedTile, out MapTransitionDefinition? transition)
+			&& transition is not null)
 		{
 			_encounterTransitionRequested = true;
 			SetProcessUnhandledInput(false);
@@ -366,11 +366,16 @@ public partial class ExplorationSceneController : Node2D
 	private void TryInteract()
 	{
 		IGameSession session = RequireSession();
+		if (_room.GuideTile.X < 0 || !_guide.Visible)
+		{
+			return;
+		}
+
 		MapLocationState location = session.Current.Location;
 		var playerTile = new Vector2I(location.X, location.Y);
 		Vector2I targetTile = playerTile + FacingToOffset(location.Facing);
 
-		if (targetTile != _guide.TilePosition)
+		if (targetTile != _room.GuideTile)
 		{
 			return;
 		}

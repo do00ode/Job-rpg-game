@@ -14,162 +14,162 @@ namespace RpgGame.Core.Combat;
 /// </remarks>
 public sealed class CombatResolver : ICombatResolver
 {
-    private const string BasicAttackAbilityId = "ability.command.attack";
-    private readonly IContentCatalog _content;
+	private const string BasicAttackAbilityId = "ability.command.attack";
+	private readonly IContentCatalog _content;
 
-    public CombatResolver(IContentCatalog content)
-    {
-        _content = content ?? throw new ArgumentNullException(nameof(content));
-    }
+	public CombatResolver(IContentCatalog content)
+	{
+		_content = content ?? throw new ArgumentNullException(nameof(content));
+	}
 
-    /// <summary>
-    /// Resolves one free, single-enemy physical ability and returns new state plus typed events.
-    /// </summary>
-    /// <exception cref="CombatCommandValidationException">
-    /// The command is not currently legal for the supplied snapshot.
-    /// </exception>
-    public CombatResolution Resolve(CombatSnapshot current, CombatCommand command)
-    {
-        ArgumentNullException.ThrowIfNull(current);
-        ArgumentNullException.ThrowIfNull(command);
+	/// <summary>
+	/// Resolves one free, single-enemy physical ability and returns new state plus typed events.
+	/// </summary>
+	/// <exception cref="CombatCommandValidationException">
+	/// The command is not currently legal for the supplied snapshot.
+	/// </exception>
+	public CombatResolution Resolve(CombatSnapshot current, CombatCommand command)
+	{
+		ArgumentNullException.ThrowIfNull(current);
+		ArgumentNullException.ThrowIfNull(command);
 
-        BattleOutcome startingOutcome = current.Outcome;
-        if (startingOutcome != BattleOutcome.InProgress)
-        {
-            Reject(
-                CombatCommandProblemCodes.BattleAlreadyEnded,
-                $"Combat command cannot be resolved because the battle outcome is "
-                + $"'{startingOutcome}'.");
-        }
+		BattleOutcome startingOutcome = current.Outcome;
+		if (startingOutcome != BattleOutcome.InProgress)
+		{
+			Reject(
+				CombatCommandProblemCodes.BattleAlreadyEnded,
+				$"Combat command cannot be resolved because the battle outcome is "
+				+ $"'{startingOutcome}'.");
+		}
 
-        LocatedCombatant actor = FindRequiredCombatant(
-            current,
-            command.ActingCombatantId,
-            CombatCommandProblemCodes.ActorMissing,
-            "Acting combatant");
-        if (actor.Value.IsDefeated)
-        {
-            Reject(
-                CombatCommandProblemCodes.ActorDefeated,
-                $"Defeated combatant '{actor.Value.InstanceId}' cannot act.");
-        }
+		LocatedCombatant actor = FindRequiredCombatant(
+			current,
+			command.ActingCombatantId,
+			CombatCommandProblemCodes.ActorMissing,
+			"Acting combatant");
+		if (actor.Value.IsDefeated)
+		{
+			Reject(
+				CombatCommandProblemCodes.ActorDefeated,
+				$"Defeated combatant '{actor.Value.InstanceId}' cannot act.");
+		}
 
-        if (string.IsNullOrWhiteSpace(command.AbilityId)
-            || !actor.Value.AbilityIds.Contains(command.AbilityId, StringComparer.Ordinal))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityNotOwned,
-                $"Combatant '{actor.Value.InstanceId}' cannot use ability "
-                + $"'{command.AbilityId ?? "<null>"}'.");
-        }
+		if (string.IsNullOrWhiteSpace(command.AbilityId)
+			|| !actor.Value.AbilityIds.Contains(command.AbilityId, StringComparer.Ordinal))
+		{
+			Reject(
+				CombatCommandProblemCodes.AbilityNotOwned,
+				$"Combatant '{actor.Value.InstanceId}' cannot use ability "
+				+ $"'{command.AbilityId ?? "<null>"}'.");
+		}
 
-        if (!_content.TryGet<AbilityDefinition>(command.AbilityId, out AbilityDefinition? ability))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityMissing,
-                $"Owned ability '{command.AbilityId}' is missing from the content catalog.");
-        }
+		if (!_content.TryGet<AbilityDefinition>(command.AbilityId, out AbilityDefinition? ability))
+		{
+			Reject(
+				CombatCommandProblemCodes.AbilityMissing,
+				$"Owned ability '{command.AbilityId}' is missing from the content catalog.");
+		}
 
-        if (!CombatAbilityExecutionSupport.HasSupportedCost(ability))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityCostUnsupported,
-                $"Ability '{ability.Id}' has unsupported cost statistic "
-                + $"'{ability.CostStatisticId ?? "<null>"}'. Only null and "
-                + $"'{CombatStatisticIds.MaxMp}' are supported.");
-        }
+		if (!CombatAbilityExecutionSupport.HasSupportedCost(ability))
+		{
+			Reject(
+				CombatCommandProblemCodes.AbilityCostUnsupported,
+				$"Ability '{ability.Id}' has unsupported cost statistic "
+				+ $"'{ability.CostStatisticId ?? "<null>"}'. Only null and "
+				+ $"'{CombatStatisticIds.MaxMp}' are supported.");
+		}
 
-        if (!CombatAbilityExecutionSupport.HasSufficientResource(actor.Value, ability))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityResourceInsufficient,
-                $"Combatant '{actor.Value.InstanceId}' has {actor.Value.CurrentMp} current MP, "
-                + $"but ability '{ability.Id}' requires {ability.CostAmount}.");
-        }
+		if (!CombatAbilityExecutionSupport.HasSufficientResource(actor.Value, ability))
+		{
+			Reject(
+				CombatCommandProblemCodes.AbilityResourceInsufficient,
+				$"Combatant '{actor.Value.InstanceId}' has {actor.Value.CurrentMp} current MP, "
+				+ $"but ability '{ability.Id}' requires {ability.CostAmount}.");
+		}
 
-        if (command.TargetCombatantIds.Count != 1)
-        {
-            Reject(
-                CombatCommandProblemCodes.TargetCountInvalid,
-                $"Ability '{ability.Id}' requires exactly one target; received "
-                + $"{command.TargetCombatantIds.Count}.");
-        }
+		if (command.TargetCombatantIds.Count != 1)
+		{
+			Reject(
+				CombatCommandProblemCodes.TargetCountInvalid,
+				$"Ability '{ability.Id}' requires exactly one target; received "
+				+ $"{command.TargetCombatantIds.Count}.");
+		}
 
-        LocatedCombatant target = FindRequiredCombatant(
-            current,
-            command.TargetCombatantIds[0],
-            CombatCommandProblemCodes.TargetMissing,
-            "Target combatant");
-        if (target.Value.IsDefeated)
-        {
-            Reject(
-                CombatCommandProblemCodes.TargetDefeated,
-                $"Defeated combatant '{target.Value.InstanceId}' cannot be targeted by "
-                + $"ability '{ability.Id}'.");
-        }
+		LocatedCombatant target = FindRequiredCombatant(
+			current,
+			command.TargetCombatantIds[0],
+			CombatCommandProblemCodes.TargetMissing,
+			"Target combatant");
+		if (target.Value.IsDefeated)
+		{
+			Reject(
+				CombatCommandProblemCodes.TargetDefeated,
+				$"Defeated combatant '{target.Value.InstanceId}' cannot be targeted by "
+				+ $"ability '{ability.Id}'.");
+		}
 
-        if (!CombatAbilityExecutionSupport.HasSupportedContract(ability))
-        {
-            Reject(
-                CombatCommandProblemCodes.AbilityContractUnsupported,
-                $"Ability '{ability.Id}' uses targeting '{ability.TargetingId}' and ruleset "
-                + $"'{ability.RulesetId}', which is not executable.");
-        }
+		if (!CombatAbilityExecutionSupport.HasSupportedContract(ability))
+		{
+			Reject(
+				CombatCommandProblemCodes.AbilityContractUnsupported,
+				$"Ability '{ability.Id}' uses targeting '{ability.TargetingId}' and ruleset "
+				+ $"'{ability.RulesetId}', which is not executable.");
+		}
 
-        return ability.RulesetId switch
-        {
-            AbilityRulesetIds.PhysicalDamage => ResolvePhysicalDamage(
-                current,
-                actor,
-                target,
-                ability),
-            AbilityRulesetIds.FlatHealing => ResolveFlatHealing(
-                current,
-                actor,
-                target,
-                ability),
-            _ => throw new InvalidDataException(
-                $"Supported ability '{ability.Id}' has unknown ruleset '{ability.RulesetId}'."),
-        };
-    }
+		return ability.RulesetId switch
+		{
+			AbilityRulesetIds.PhysicalDamage => ResolvePhysicalDamage(
+				current,
+				actor,
+				target,
+				ability),
+			AbilityRulesetIds.FlatHealing => ResolveFlatHealing(
+				current,
+				actor,
+				target,
+				ability),
+			_ => throw new InvalidDataException(
+				$"Supported ability '{ability.Id}' has unknown ruleset '{ability.RulesetId}'."),
+		};
+	}
 
-    private static CombatResolution ResolvePhysicalDamage(
-        CombatSnapshot current,
-        LocatedCombatant actor,
-        LocatedCombatant target,
-        AbilityDefinition ability)
-    {
-        if (target.Value.Side == actor.Value.Side)
-        {
-            Reject(
-                CombatCommandProblemCodes.TargetSameSide,
-                $"Ability '{ability.Id}' requires an opposing target, but "
-                + $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are both on "
-                + $"the '{actor.Value.Side}' side.");
-        }
+	private static CombatResolution ResolvePhysicalDamage(
+		CombatSnapshot current,
+		LocatedCombatant actor,
+		LocatedCombatant target,
+		AbilityDefinition ability)
+	{
+		if (target.Value.Side == actor.Value.Side)
+		{
+			Reject(
+				CombatCommandProblemCodes.TargetSameSide,
+				$"Ability '{ability.Id}' requires an opposing target, but "
+				+ $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are both on "
+				+ $"the '{actor.Value.Side}' side.");
+		}
 
-        decimal power = RequirePositivePower(ability);
-        bool isBasicAttack = string.Equals(ability.Id, BasicAttackAbilityId, StringComparison.Ordinal);
-        string damageTypeId = isBasicAttack && actor.Value.EquippedWeaponDamageTypeId is not null
-            ? actor.Value.EquippedWeaponDamageTypeId
-            : RequireDamageTypeId(ability);
-        int strength = RequireStatistic(actor.Value, CombatStatisticIds.Strength);
-        int defense = RequireStatistic(target.Value, CombatStatisticIds.Defense);
-        int damagePercentModifier = target.Value.DamageTypePercentModifiers.TryGetValue(
-            damageTypeId,
-            out int authoredModifier)
-            ? authoredModifier
-            : 0;
-        int appliedDamage = CalculateAppliedDamage(
-            strength,
-            isBasicAttack ? actor.Value.EquippedWeaponAttack : 0,
-            power,
-            defense,
-            target.Value.CurrentHp,
-            damagePercentModifier);
-        int nextHp = target.Value.CurrentHp - appliedDamage;
+		decimal power = RequirePositivePower(ability);
+		bool isBasicAttack = string.Equals(ability.Id, BasicAttackAbilityId, StringComparison.Ordinal);
+		string damageTypeId = isBasicAttack && actor.Value.EquippedWeaponDamageTypeId is not null
+			? actor.Value.EquippedWeaponDamageTypeId
+			: RequireDamageTypeId(ability);
+		int strength = RequireStatistic(actor.Value, CombatStatisticIds.Strength);
+		int defense = RequireStatistic(target.Value, CombatStatisticIds.Defense);
+		int damagePercentModifier = target.Value.DamageTypePercentModifiers.TryGetValue(
+			damageTypeId,
+			out int authoredModifier)
+			? authoredModifier
+			: 0;
+		int appliedDamage = CalculateAppliedDamage(
+			strength,
+			isBasicAttack ? actor.Value.EquippedWeaponAttack : 0,
+			power,
+			defense,
+			target.Value.CurrentHp,
+			damagePercentModifier);
+		int nextHp = target.Value.CurrentHp - appliedDamage;
 
-        // Copy the ordered collection and replace exactly the target's slot. Every unaffected
+		// Copy the ordered collection and replace exactly the target's slot. Every unaffected
         // combatant keeps the same immutable instance; the CombatSnapshot constructor then owns
         // a new read-only list and preserves formation/order/round data.
         int costAmount = ability.CostAmount;
@@ -240,8 +240,8 @@ public sealed class CombatResolver : ICombatResolver
         {
             Reject(
                 CombatCommandProblemCodes.TargetAllyRequired,
-                $"Ability '{ability.Id}' requires an ally target, but "
-                + $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are on "
+				$"Ability '{ability.Id}' requires an ally target, but "
+				+ $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are on "
                 + "opposing sides.");
         }
 
@@ -313,7 +313,7 @@ public sealed class CombatResolver : ICombatResolver
             {
                 throw new InvalidDataException(
                     $"Combat snapshot contains duplicate battle-local instance ID "
-                    + $"'{instanceId}'.");
+					+ $"'{instanceId}'.");
             }
 
             found = new LocatedCombatant(candidate, index);
@@ -321,7 +321,7 @@ public sealed class CombatResolver : ICombatResolver
 
         if (found is null)
         {
-            Reject(missingProblemCode, $"{role} '{instanceId}' does not exist.");
+			Reject(missingProblemCode, $"{role} '{instanceId}' does not exist.");
         }
 
         return found;
@@ -332,8 +332,8 @@ public sealed class CombatResolver : ICombatResolver
         if (!combatant.Statistics.TryGetValue(statisticId, out int value))
         {
             throw new InvalidDataException(
-                $"Combatant '{combatant.InstanceId}' is missing required combat statistic "
-                + $"'{statisticId}'.");
+				$"Combatant '{combatant.InstanceId}' is missing required combat statistic "
+				+ $"'{statisticId}'.");
         }
 
         return value;
@@ -343,13 +343,13 @@ public sealed class CombatResolver : ICombatResolver
     {
         IReadOnlyDictionary<string, decimal> parameters = ability.NumericParameters
             ?? throw new InvalidDataException(
-                $"Ability '{ability.Id}' has a null numeric-parameter map.");
+				$"Ability '{ability.Id}' has a null numeric-parameter map.");
         if (!parameters.TryGetValue(AbilityNumericParameterIds.Power, out decimal power)
             || power <= 0m)
         {
             throw new InvalidDataException(
-                $"Physical-damage ability '{ability.Id}' must have a positive "
-                + $"'{AbilityNumericParameterIds.Power}' parameter.");
+				$"Physical-damage ability '{ability.Id}' must have a positive "
+				+ $"'{AbilityNumericParameterIds.Power}' parameter.");
         }
 
         return power;
@@ -361,8 +361,8 @@ public sealed class CombatResolver : ICombatResolver
         if (decimal.Truncate(power) != power || power > int.MaxValue)
         {
             throw new InvalidDataException(
-                $"Flat-healing ability '{ability.Id}' must have a positive whole "
-                + $"'{AbilityNumericParameterIds.Power}' parameter no greater than "
+				$"Flat-healing ability '{ability.Id}' must have a positive whole "
+				+ $"'{AbilityNumericParameterIds.Power}' parameter no greater than "
                 + $"{int.MaxValue}.");
         }
 
@@ -375,8 +375,8 @@ public sealed class CombatResolver : ICombatResolver
         if (!DamageTypeIds.IsSupported(damageTypeId))
         {
             throw new InvalidDataException(
-                $"Physical-damage ability '{ability.Id}' has unsupported damage type "
-                + $"'{damageTypeId}'.");
+				$"Physical-damage ability '{ability.Id}' has unsupported damage type "
+				+ $"'{damageTypeId}'.");
         }
 
         return damageTypeId;
