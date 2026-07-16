@@ -147,8 +147,9 @@ public partial class BattleController : Control
     {
         _showFormationGrid = !_showFormationGrid;
         _formationView.SetGridVisible(_showFormationGrid);
-        _encounterLabel.Visible = _showFormationGrid;
-        _battlefieldLabel.Visible = _showFormationGrid;
+        Color debugTextColor = new Color(1.0f, 1.0f, 1.0f, _showFormationGrid ? 1.0f : 0.0f);
+        _encounterLabel.Modulate = debugTextColor;
+        _battlefieldLabel.Modulate = debugTextColor;
         _gridDebugToggle.Text = _showFormationGrid
             ? "Hide Grid (Debug)"
             : "Show Grid (Debug)";
@@ -614,7 +615,6 @@ public partial class BattleController : Control
             _ => "Choose a combatant target.",
         });
         RefreshPresentation();
-        _targetButtonByInstanceId[_selectedTargetId].GrabFocus();
     }
 
     private void CancelTargetSelection()
@@ -653,7 +653,6 @@ public partial class BattleController : Control
             : (currentIndex + offset + livingTargets.Length) % livingTargets.Length;
         _selectedTargetId = livingTargets[nextIndex];
         RefreshPresentation();
-        _targetButtonByInstanceId[_selectedTargetId].GrabFocus();
     }
 
     private void SelectFocusedTarget(string instanceId)
@@ -933,9 +932,9 @@ public partial class BattleController : Control
         }
 
         _commandMenu.Visible = _phase is BattleInputPhase.Command or BattleInputPhase.MagicSelection;
-        _targetRow.Visible = _phase == BattleInputPhase.TargetSelection;
-        _targetPrompt.Visible = _phase == BattleInputPhase.TargetSelection;
-        _targetButtons.Visible = _phase == BattleInputPhase.TargetSelection;
+        _targetRow.Visible = false;
+        _targetPrompt.Visible = false;
+        _targetButtons.Visible = false;
         _formationView.SetTargetedCombatant(
             _phase == BattleInputPhase.TargetSelection ? _selectedTargetId : null);
         _formationView.SetHighlightedCombatant(_phase switch
@@ -1021,6 +1020,7 @@ public partial class BattleController : Control
 
     private string[] GetLivingTargetIds(BattleSide? side) => RequireSnapshot().Combatants
         .Where(combatant => (side is null || combatant.Side == side) && !combatant.IsDefeated)
+        .OrderBy(combatant => combatant.Side == BattleSide.Party ? 1 : 0)
         .Select(combatant => combatant.InstanceId)
         .ToArray();
 
