@@ -16,13 +16,16 @@ public static class TestRoomEncounterProgress
     public const string EncounterId = "encounter.forest.slimes-01";
 
     public const string ClearedFlagId = "flag.encounter.forest.slimes-01.cleared";
+    public const string TestForestEncounterId = "encounter.test-forest.slime-01";
+    public const string TestForestClearedFlagId = "flag.encounter.test-forest.slime-01.cleared";
 
     /// <summary>Maps the one supported encounter ID to its persistent clearance flag.</summary>
-    public static string GetClearanceFlagId(string encounterId)
+    public static string GetClearanceFlagId(string encounterId) => encounterId switch
     {
-        RequireSupportedEncounter(encounterId);
-        return ClearedFlagId;
-    }
+        EncounterId => ClearedFlagId,
+        TestForestEncounterId => TestForestClearedFlagId,
+        _ => throw new ArgumentException($"Unsupported encounter '{encounterId}'.", nameof(encounterId)),
+    };
 
     /// <summary>Reads the fixed persistent clearance fact; an absent flag means not cleared.</summary>
     public static bool IsCleared(IGameSession session, string encounterId)
@@ -31,14 +34,4 @@ public static class TestRoomEncounterProgress
         return session.GetEventFlag(GetClearanceFlagId(encounterId));
     }
 
-    private static void RequireSupportedEncounter(string encounterId)
-    {
-        if (!string.Equals(encounterId, EncounterId, StringComparison.Ordinal))
-        {
-            throw new ArgumentException(
-                $"Campaign handoff supports only fixed encounter '{EncounterId}', but received "
-                + $"'{encounterId}'.",
-                nameof(encounterId));
-        }
-    }
 }

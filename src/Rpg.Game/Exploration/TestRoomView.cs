@@ -11,8 +11,9 @@ namespace RpgGame.Exploration;
 /// framework would be premature with only one room. The scene owns pixels and blocked tiles;
 /// save data stores only logical coordinates and never depends on this drawing code.
 /// </remarks>
-public partial class TestRoomView : Node2D
+public partial class TestRoomView : Node2D, IExplorationMapView
 {
+    public const string MapId = "map.prologue.test-room";
     public const int TileSize = 48;
     public const int WidthInTiles = 12;
     public const int HeightInTiles = 9;
@@ -24,6 +25,8 @@ public partial class TestRoomView : Node2D
     /// James currently stands.
     /// </summary>
     public static Vector2I EncounterTile { get; } = new(3, 4);
+    public Vector2I GuideTile => new(7, 4);
+    string IExplorationMapView.MapId => MapId;
 
     // The room begins below the two-line, remappable-controls HUD. Logical tile coordinates
     // remain unchanged; this is presentation-only spacing owned by the exploration scene.

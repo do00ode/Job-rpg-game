@@ -535,6 +535,18 @@ Silence, Sleep, status resistance/immunity, random hit chance, cleansing, revive
 status animations, and status-duration gameplay beyond timeline-time foundation. See
 `MILESTONE_5_1_GUIDE.md`.
 
+### Milestone 5.2 - Map transitions and second encounter map
+
+Milestone 5.2 adds authored `MapDefinition` and `MapTransitionDefinition` records, persistent
+map-aware exploration scene selection, and a small visually distinct test forest. The player can
+step from the original room into the forest, fight one reusable slime encounter, and return via
+the authored transition. Encounter clearance remains a persistent map/encounter-specific flag.
+Existing location state already stored map ID, tile coordinates, and facing, so old saves with no
+map ID normalize to the original room start.
+
+Deferred: random encounters, roaming enemies, respawns, world maps, doors/keys, cutscenes, map
+editing tools, and final map art polish. See the Milestone 5.2 handoff for manual verification.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

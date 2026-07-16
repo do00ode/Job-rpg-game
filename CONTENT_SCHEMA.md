@@ -37,6 +37,20 @@ The initial directory-to-type mapping is:
 | `quests/` | `QuestDefinition` |
 | `starting-class-rules/` | `StartingClassRuleDefinition` |
 | `status-effects/` | `StatusEffectDefinition` |
+| `maps/` | `MapDefinition` |
+| `map-transitions/` | `MapTransitionDefinition` |
+
+### Map and transition
+
+`maps/` records own stable exploration map identities and named logical spawn points. A spawn
+contains only tile coordinates and facing; it never contains a Godot scene path. The composition
+root maps supported IDs to scenes.
+
+`map-transitions/` records contain `sourceMapId`, one `sourceCell`, `destinationMapId`, and a
+`destinationSpawnId`. The validator requires both maps and the destination spawn to exist. The
+exploration controller evaluates the authored source cell after a successful step and sends the
+typed transition request to `GameRoot`, which updates `GameState.Location` before replacing the
+disposable map scene.
 
 ## Stable IDs
 

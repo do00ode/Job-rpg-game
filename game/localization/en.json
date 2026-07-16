@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "locale": "en",
   "texts": {
+    "map.prologue.test-room.name": "Test Room",
+    "map.test-forest.name": "Test Forest",
     "item.iron-sword.description": "A dependable blade with enough nicks to have its own opinions.",
     "item.wooden-shield.description": "A round shield that has met more arguments than arrows.",
     "item.leather-armor.description": "Practical leather armor. It smells faintly of rain and old victories.",

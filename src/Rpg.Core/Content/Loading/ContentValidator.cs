@@ -82,6 +82,12 @@ internal sealed class ContentValidator
                 case LootTableDefinition lootTable:
                     ValidateLootTable(item, lootTable);
                     break;
+                case MapDefinition map:
+                    ValidateMap(item, map);
+                    break;
+                case MapTransitionDefinition transition:
+                    ValidateMapTransition(item, transition);
+                    break;
                 case MagicDisciplineDefinition magicDiscipline:
                     ValidateMagicDiscipline(item, magicDiscipline);
                     break;
@@ -755,6 +761,58 @@ internal sealed class ContentValidator
         {
             RequireStableKey(item, "$.musicCueId", encounter.MusicCueId, "music.");
         }
+    }
+
+    private void ValidateMap(LoadedContent item, MapDefinition map)
+    {
+        RequireNonBlank(item, "$.displayNameKey", map.DisplayNameKey);
+        IReadOnlyList<MapSpawnDefinition> spawns = RequireList(item, "$.spawns", map.Spawns);
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < spawns.Count; index++)
+        {
+            MapSpawnDefinition? spawn = spawns[index];
+            string path = $"$.spawns[{index}]";
+            if (spawn is null)
+            {
+                Add(item, path, "value.null", "Array entries cannot be null.");
+                continue;
+            }
+
+            RequireStableKey(item, $"{path}.id", spawn.Id, "spawn.");
+            if (!ids.Add(spawn.Id))
+            {
+                Add(item, $"{path}.id", "map.spawn-duplicate", $"Spawn ID '{spawn.Id}' is duplicated.");
+            }
+            if (spawn.X < 0 || spawn.Y < 0)
+            {
+                Add(item, path, "map.spawn-coordinate-invalid", "Spawn coordinates cannot be negative.");
+            }
+            if (spawn.Facing is not ("north" or "east" or "south" or "west"))
+            {
+                Add(item, $"{path}.facing", "map.spawn-facing-invalid", "Spawn facing must be north, east, south, or west.");
+            }
+        }
+    }
+
+    private void ValidateMapTransition(LoadedContent item, MapTransitionDefinition transition)
+    {
+        MapDefinition? source = RequireReference<MapDefinition>(item, "$.sourceMapId", transition.SourceMapId);
+        MapDefinition? destination = RequireReference<MapDefinition>(item, "$.destinationMapId", transition.DestinationMapId);
+        if (transition.SourceCell is null)
+        {
+            Add(item, "$.sourceCell", "value.null", "Source cell cannot be null.");
+        }
+        else if (transition.SourceCell.X < 0 || transition.SourceCell.Y < 0)
+        {
+            Add(item, "$.sourceCell", "map.cell-coordinate-invalid", "Source coordinates cannot be negative.");
+        }
+
+        if (destination is not null
+            && !destination.Spawns.Any(spawn => string.Equals(spawn.Id, transition.DestinationSpawnId, StringComparison.Ordinal)))
+        {
+            Add(item, "$.destinationSpawnId", "reference.missing", $"Map '{destination.Id}' has no spawn '{transition.DestinationSpawnId}'.");
+        }
+        _ = source;
     }
 
     private void ValidateEnemyFootprint(LoadedContent item, EnemyDefinition enemy)

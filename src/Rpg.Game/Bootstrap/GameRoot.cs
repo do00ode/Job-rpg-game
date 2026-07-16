@@ -48,6 +48,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
     private const string PowerRingItemId = "item.equipment.power-ring";
     private const string SpiritCharmItemId = "item.equipment.spirit-charm";
     private const string TestRoomScenePath = "res://game/scenes/exploration/TestRoom.tscn";
+    private const string TestForestScenePath = "res://game/scenes/exploration/TestForest.tscn";
     private const string BattleScenePath = "res://game/scenes/encounters/Battle.tscn";
     private const string RewardSummaryScenePath =
         "res://game/scenes/rewards/RewardSummary.tscn";
@@ -181,7 +182,23 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
             return false;
         }
 
+        bool mapChanged = !string.Equals(
+            Session.Current.Location.MapId,
+            loadedState.Location.MapId,
+            StringComparison.Ordinal);
+        if (mapChanged)
+        {
+            // StateChanged is synchronous. Detach the current map presenter before replacing
+            // state so it cannot attempt to render a loaded location from another map.
+            RemoveActiveGameplayScene();
+        }
+
         Session.ReplaceState(loadedState);
+        if (mapChanged)
+        {
+            ShowExploration("Loaded saved map and location.");
+        }
+
         return true;
     }
 
@@ -281,9 +298,16 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
     /// </remarks>
     private void ShowExploration(string? developmentStatus = null)
     {
-        PackedScene packedScene = ResourceLoader.Load<PackedScene>(TestRoomScenePath)
+        string mapId = Session.Current.Location.MapId;
+        string scenePath = mapId switch
+        {
+            TestRoomView.MapId => TestRoomScenePath,
+            TestForestView.MapId => TestForestScenePath,
+            _ => throw new InvalidOperationException($"No exploration scene is registered for map '{mapId}'."),
+        };
+        PackedScene packedScene = ResourceLoader.Load<PackedScene>(scenePath)
             ?? throw new InvalidOperationException(
-                $"Could not load exploration scene '{TestRoomScenePath}'.");
+                $"Could not load exploration scene '{scenePath}'.");
         var scene = packedScene.Instantiate<ExplorationSceneController>();
 
         RemoveActiveGameplayScene();
@@ -293,6 +317,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
             scene.Initialize(Content, Session, this, InputBindings, DisplaySettings, Text);
             scene.ReloadRequested += OnExplorationReloadRequested;
             scene.EncounterRequested += OnEncounterRequested;
+            scene.TransitionRequested += OnTransitionRequested;
             if (developmentStatus is not null)
             {
                 scene.ShowDevelopmentStatus(developmentStatus);
@@ -411,6 +436,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         {
             exploration.ReloadRequested -= OnExplorationReloadRequested;
             exploration.EncounterRequested -= OnEncounterRequested;
+            exploration.TransitionRequested -= OnTransitionRequested;
         }
         else if (_activeGameplayScene is BattleController battle)
         {
@@ -430,6 +456,39 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
         object? sender,
         EncounterLaunchRequestedEventArgs eventArgs) =>
         ShowBattle(eventArgs.Request);
+
+    private void OnTransitionRequested(
+        object? sender,
+        MapTransitionRequestedEventArgs eventArgs)
+    {
+        MapTransitionDefinition transition = Content.GetRequired<MapTransitionDefinition>(
+            eventArgs.Request.TransitionId);
+        if (!string.Equals(transition.SourceMapId, Session.Current.Location.MapId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                $"Transition '{transition.Id}' expects map '{transition.SourceMapId}', "
+                + $"but the session is on '{Session.Current.Location.MapId}'.");
+        }
+
+        MapDefinition destination = Content.GetRequired<MapDefinition>(transition.DestinationMapId);
+        MapSpawnDefinition spawn = destination.Spawns.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, transition.DestinationSpawnId, StringComparison.Ordinal))
+            ?? throw new InvalidDataException(
+                $"Map '{destination.Id}' has no destination spawn '{transition.DestinationSpawnId}'.");
+
+        // Remove the old presenter before publishing the new map location. StateChanged is
+        // synchronous; leaving the old room subscribed would make it try to render the
+        // destination map and throw before the replacement scene can initialize.
+        RemoveActiveGameplayScene();
+        Session.UpdateLocation(Session.Current.Location with
+        {
+            MapId = destination.Id,
+            X = spawn.X,
+            Y = spawn.Y,
+            Facing = spawn.Facing,
+        });
+        ShowExploration($"Entered {destination.Id}.");
+    }
 
     private void OnBattleCompletionRequested(
         object? sender,

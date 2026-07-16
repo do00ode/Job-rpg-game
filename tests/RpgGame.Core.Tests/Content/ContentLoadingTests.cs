@@ -17,7 +17,7 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(41, catalog.Count);
+        Assert.Equal(46, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Single(catalog.GetAll<DialogueDefinition>());
@@ -28,7 +28,9 @@ public sealed class ContentLoadingTests
         Assert.Equal(7, catalog.GetAll<AbilityDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<MagicDisciplineDefinition>().Count);
         Assert.Single(catalog.GetAll<EnemyDefinition>());
-        Assert.Single(catalog.GetAll<EncounterDefinition>());
+        Assert.Equal(2, catalog.GetAll<EncounterDefinition>().Count);
+        Assert.Equal(2, catalog.GetAll<MapDefinition>().Count);
+        Assert.Equal(2, catalog.GetAll<MapTransitionDefinition>().Count);
         Assert.Single(catalog.GetAll<QuestDefinition>());
         Assert.Single(catalog.GetAll<StartingClassRuleDefinition>());
 
@@ -66,6 +68,11 @@ public sealed class ContentLoadingTests
         LootEntryDefinition slimeDrop = Assert.Single(slimeLoot.Entries);
         Assert.Equal("item.consumable.potion", slimeDrop.ItemId);
         Assert.Equal(0.25m, slimeDrop.Chance);
+
+        MapTransitionDefinition transition = catalog.GetRequired<MapTransitionDefinition>(
+            "transition.test-room.to-test-forest");
+        Assert.Equal("map.test-forest", transition.DestinationMapId);
+        Assert.Equal("spawn.from-test-room", transition.DestinationSpawnId);
     }
 
     /// <summary>

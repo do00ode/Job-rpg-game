@@ -1,8 +1,35 @@
 # Current Project Handoff
 
-> Current update: Milestone 5.1 is implemented locally and intentionally uncommitted for review.
+> Current update: Milestone 5.2 is implemented locally and intentionally uncommitted for review.
 > The live battle path now uses deterministic wait-mode timeline initiative plus the transient
 > status foundation. Older sections below remain historical unless explicitly superseded above.
+
+## Current Milestone 5.2 summary
+
+Milestone 5.2 adds two validated content categories: `maps/` (`MapDefinition` with named tile
+spawns) and `map-transitions/` (`MapTransitionDefinition` with a one-cell source and destination
+spawn). `GameRoot` selects `TestRoom.tscn` or `TestForest.tscn` from the persistent map ID, while
+both scenes use the same disposable `ExplorationSceneController` and the narrow
+`IExplorationMapView` presentation contract. Stepping onto an authored source cell raises a typed
+transition request; GameRoot resolves the destination spawn and replaces the scene without
+recreating `GameSession`.
+
+The second map has a green-gray forest palette and one stable encounter,
+`encounter.test-forest.slime-01`, reusing the existing green slime battle and reward pipeline.
+Its clearance flag is `flag.encounter.test-forest.slime-01.cleared`; the original encounter flag
+is preserved unchanged. Saves already contained `MapLocationState`, so map, tile, and facing are
+persisted without a schema expansion. A legacy save with a blank map ID normalizes to
+`map.prologue.test-room` at `(4,4)` facing south.
+
+The transition and cross-map save-load handoffs remove the old exploration presenter before
+publishing a different map location because `GameSession.StateChanged` is synchronous. This
+prevents the old map view from trying to render the new map during a transition or load.
+Validation for the ticket: `dotnet build
+RpgGame.sln --no-restore` passed with 0 warnings and 0 errors; `dotnet test
+tests/RpgGame.Core.Tests/RpgGame.Core.Tests.csproj --no-restore` passed 382 tests; and `dotnet run
+--project tools/content-validation/RpgGame.ContentValidation.csproj -- game/content` passed with
+46 definitions and 0 data mods. No interactive Godot playtest was run in this session because the
+`godot` command is not available on `PATH`.
 
 ## Current Milestone 5.1 summary
 

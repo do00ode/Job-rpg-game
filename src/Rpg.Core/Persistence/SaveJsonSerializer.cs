@@ -68,13 +68,38 @@ public sealed class SaveJsonSerializer
 
         try
         {
-            return migrated.Deserialize<SaveEnvelope>(_options)
+            SaveEnvelope envelope = migrated.Deserialize<SaveEnvelope>(_options)
                 ?? throw new InvalidDataException("Save JSON deserialized to null.");
+            return NormalizeLocation(envelope);
         }
         catch (JsonException exception)
         {
             throw new InvalidDataException("Save JSON does not match the current schema.", exception);
         }
+    }
+
+    private static SaveEnvelope NormalizeLocation(SaveEnvelope envelope)
+    {
+        if (!string.IsNullOrWhiteSpace(envelope.State.Location.MapId))
+        {
+            return envelope;
+        }
+
+        // Saves from the first exploration milestone may not contain a map identity. Their
+        // only valid destination is the original starting map and spawn.
+        return envelope with
+        {
+            State = envelope.State with
+            {
+                Location = envelope.State.Location with
+                {
+                    MapId = "map.prologue.test-room",
+                    X = 4,
+                    Y = 4,
+                    Facing = "south",
+                },
+            },
+        };
     }
 
     private static JsonSerializerOptions CreateOptions()

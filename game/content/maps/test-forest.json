@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "map.test-forest",
+  "displayNameKey": "map.test-forest.name",
+  "spawns": [
+    { "id": "spawn.from-test-room", "x": 1, "y": 7, "facing": "north" }
+  ]
+}

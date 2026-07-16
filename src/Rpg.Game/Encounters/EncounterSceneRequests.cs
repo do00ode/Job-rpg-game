@@ -10,7 +10,16 @@ namespace RpgGame.Encounters;
 /// campaign progress, so it deliberately does not belong in GameState or a save file.
 /// GameRoot resolves the ID through IContentCatalog before it removes exploration.
 /// </remarks>
-public sealed record EncounterLaunchRequest(string EncounterId);
+public sealed record EncounterLaunchRequest(
+    string EncounterId,
+    string SourceMapId = "map.prologue.test-room");
+
+public sealed record MapTransitionRequest(string TransitionId);
+
+public sealed class MapTransitionRequestedEventArgs(MapTransitionRequest request) : EventArgs
+{
+    public MapTransitionRequest Request { get; } = request ?? throw new ArgumentNullException(nameof(request));
+}
 
 /// <summary>Typed event payload raised when exploration enters an encounter tile.</summary>
 public sealed class EncounterLaunchRequestedEventArgs : EventArgs
