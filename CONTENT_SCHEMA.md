@@ -644,7 +644,8 @@ unable to distinguish old content from an authoring omission.
 ## Weapon Families
 
 Weapon-family records are stored under `game/content/weapon-families/`. They contain `id`,
-`schemaVersion`, `displayNameKey`, and a `damageVariance` object with inclusive integer
+`schemaVersion`, `displayNameKey`, a nonempty `weaponDamagePercentages` profile, and a
+`damageVariance` object with inclusive integer
 `minimumPercent` and `maximumPercent` values. Equipment can reference a family with
 `weaponFamilyId` or override its range with its own `damageVariance`; abilities can author the
 same override.

@@ -608,6 +608,38 @@ internal sealed class ContentValidator
             Add(item, "$.damageVariance", "damage-variance.missing", "Weapon families require damage variance.");
         }
         ValidateDamageVariance(item, "$.damageVariance", family.DamageVariance);
+        ValidateWeaponDamagePercentages(item, family.WeaponDamagePercentages);
+    }
+
+    private void ValidateWeaponDamagePercentages(
+        LoadedContent item,
+        IReadOnlyDictionary<string, int> percentages)
+    {
+        if (percentages.Count == 0)
+        {
+            Add(item, "$.weaponDamagePercentages", "weapon-family.damage-profile-missing",
+                "Weapon families require a nonempty default damage profile.");
+            return;
+        }
+
+        long total = 0;
+        foreach ((string damageTypeId, int percentage) in percentages)
+        {
+            ValidateDamageTypeId(item, $"$.weaponDamagePercentages.{damageTypeId}", damageTypeId);
+            if (percentage <= 0)
+            {
+                Add(item, $"$.weaponDamagePercentages.{damageTypeId}",
+                    "weapon-family.damage-percentage-invalid",
+                    $"Weapon damage percentage must be positive; received {percentage}.");
+            }
+            total += percentage;
+        }
+
+        if (total != 100)
+        {
+            Add(item, "$.weaponDamagePercentages", "weapon-family.damage-total-invalid",
+                $"Weapon damage percentages must total exactly 100; received {total}.");
+        }
     }
 
     private void ValidateDamageVariance(

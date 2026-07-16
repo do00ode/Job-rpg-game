@@ -2,5 +2,6 @@
   "schemaVersion": 1,
   "id": "weapon-family.spear",
   "displayNameKey": "weapon-family.spear.name",
-  "damageVariance": { "minimumPercent": 90, "maximumPercent": 110 }
+  "damageVariance": { "minimumPercent": 90, "maximumPercent": 110 },
+  "weaponDamagePercentages": { "damage-type.slash": 100 }
 }

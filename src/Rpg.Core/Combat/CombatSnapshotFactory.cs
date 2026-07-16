@@ -253,13 +253,13 @@ public sealed class CombatSnapshotFactory
                 $"Equipped item '{itemId}' is not compatible with the main-hand weapon slot.");
         }
 
-        IReadOnlyDictionary<string, int> profile = weapon.WeaponDamagePercentages
-            ?? throw new InvalidDataException($"Weapon '{weapon.Id}' has a null damage profile.");
-        if (profile.Count == 0)
-        {
-            return new EquippedWeaponSnapshot(weapon.Attack, null, ResolveWeaponVariance(weapon));
-        }
-
+        WeaponFamilyDefinition? family = weapon.WeaponFamilyId is null
+            ? null
+            : _content.GetRequired<WeaponFamilyDefinition>(weapon.WeaponFamilyId);
+        IReadOnlyDictionary<string, int> profile = weapon.WeaponDamagePercentages.Count > 0
+            ? weapon.WeaponDamagePercentages
+            : family?.WeaponDamagePercentages
+                ?? throw new InvalidDataException($"Weapon '{weapon.Id}' has no damage profile.");
         if (profile.Count != 1 || profile.Single().Value != 100)
         {
             throw new InvalidDataException(

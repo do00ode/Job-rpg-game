@@ -2,5 +2,6 @@
   "schemaVersion": 1,
   "id": "weapon-family.sword",
   "displayNameKey": "weapon-family.sword.name",
-  "damageVariance": { "minimumPercent": 95, "maximumPercent": 105 }
+  "damageVariance": { "minimumPercent": 95, "maximumPercent": 105 },
+  "weaponDamagePercentages": { "damage-type.slash": 100 }
 }

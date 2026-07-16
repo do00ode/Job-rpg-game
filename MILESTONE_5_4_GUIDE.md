@@ -8,10 +8,13 @@ rolls.
 ## Authoring
 
 Weapon-family records live in `game/content/weapon-families/` and use IDs beginning with
-`weapon-family.`. Each record supplies `displayNameKey` and `damageVariance` bounds. The five
+`weapon-family.`. Each record supplies `displayNameKey`, a default `weaponDamagePercentages`
+profile, and `damageVariance` bounds. The five
 vanilla families are sword (95-105), spear (90-110), axe (75-125), bow (85-115), and gun (90-110).
 
-Weapon equipment may reference `weaponFamilyId` and may provide a `damageVariance` override.
+Weapon equipment may reference `weaponFamilyId`; its nonempty `weaponDamagePercentages` map
+overrides the family profile, which allows elemental or mixed-damage weapons. An empty map uses
+the family default. Equipment may also provide a `damageVariance` override.
 Abilities may also provide a `damageVariance` override. Bounds are inclusive, nonnegative, ordered,
 and capped at 500 percent by content validation.
 
