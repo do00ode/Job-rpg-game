@@ -1,8 +1,24 @@
 # Current Project Handoff
 
-> Current update: Milestone 5.0 is implemented locally and intentionally uncommitted for review.
-> The live battle path now uses deterministic wait-mode timeline initiative. The older sections
-> below remain historical unless explicitly superseded by the 5.0 notes.
+> Current update: Milestone 5.1 is implemented locally and intentionally uncommitted for review.
+> The live battle path now uses deterministic wait-mode timeline initiative plus the transient
+> status foundation. Older sections below remain historical unless explicitly superseded above.
+
+## Current Milestone 5.1 summary
+
+Milestone 5.1 adds the transient status foundation. `StatusEffectDefinition` is a registered
+data category but no production status JSON was added. `ActiveStatusEffect` is immutable combat
+state attached to `CombatantSnapshot`; it stores source, application time, duration, and stack
+count. `CombatStatusService` applies, removes, queries, and expires statuses through replacement
+snapshots and typed events. Supported stacking is refresh-duration, ignore-if-present, and replace.
+
+Only the closed `status-effect.modify-speed-percent` hook is wired, and it is exercised through
+test-only definitions. Timeline scheduling and preview use the centralized status-aware effective
+Speed resolver. Timeline-time status expiration is evaluated deterministically; active statuses
+remain transient and are not written to saves. No production Haste, Slow, Stop, Stun, Poison,
+Regen, Protect, Shell, Blind, Silence, or Sleep content exists. Validation now passes with 381
+core tests, 41 base definitions, 44 base-plus-mod definitions, a clean solution build, and
+Godot headless validation.
 
 ## Current Milestone 5.0 summary
 

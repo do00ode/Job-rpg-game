@@ -67,3 +67,32 @@ public sealed record BattleEnded : CombatEvent
 
     public BattleOutcome Outcome { get; }
 }
+
+public sealed record StatusApplied(
+    string? SourceCombatantId,
+    string TargetCombatantId,
+    string StatusEffectId,
+    long Duration,
+    int StackCount) : CombatEvent;
+
+public sealed record StatusRefreshed(
+    string? SourceCombatantId,
+    string TargetCombatantId,
+    string StatusEffectId,
+    long Duration,
+    int StackCount) : CombatEvent;
+
+public sealed record StatusIgnored(
+    string? SourceCombatantId,
+    string TargetCombatantId,
+    string StatusEffectId,
+    string Reason) : CombatEvent;
+
+public sealed record StatusRemoved(
+    string TargetCombatantId,
+    string StatusEffectId,
+    string Reason) : CombatEvent;
+
+public sealed record StatusExpired(
+    string TargetCombatantId,
+    string StatusEffectId) : CombatEvent;

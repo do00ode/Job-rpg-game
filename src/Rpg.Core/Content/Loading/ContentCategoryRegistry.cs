@@ -48,6 +48,7 @@ internal static class ContentCategoryRegistry
         Create<QuestDefinition>("quests", "quest."),
         Create<StartingClassRuleDefinition>("starting-class-rules", "newgame.class-rule."),
         Create<StatisticDefinition>("statistics", "stat."),
+        Create<StatusEffectDefinition>("status-effects", "status."),
     ];
 
     private static readonly IReadOnlyDictionary<string, ContentCategoryDescriptor>

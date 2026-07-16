@@ -573,6 +573,29 @@ by live battle composition. Future Haste/Slow/Stop/Stun should alter timeline st
 operations before preview projection; a full status system is deferred. See
 `MILESTONE_5_0_GUIDE.md`.
 
+### Status effect foundation
+
+Milestone 5.1 keeps authored status definitions separate from active battle state. The registered
+`StatusEffectDefinition` category contains only stable IDs, validated duration/stacking values,
+and closed behavior selectors. `CombatantSnapshot.ActiveStatusEffects` owns immutable encounter
+instances; `CombatStatusService` returns replacement snapshots and typed status events.
+
+```mermaid
+flowchart TD
+    Definition["StatusEffectDefinition"] --> Service["CombatStatusService"]
+    Snapshot["CombatSnapshot"] --> Service
+    Service --> Replacement["Replacement snapshot + status events"]
+    Replacement --> Speed["Central effective-speed resolver"]
+    Speed --> Timeline["Timeline scheduler + preview"]
+```
+
+Only timeline-time durations and refresh-duration, ignore-if-present, and replace stacking are
+implemented. Expiration is checked against deterministic timeline time; no active status is saved
+to `GameState`. The only wired effect hook is a testable speed-percent modifier. Future Haste,
+Slow, Stop, Stun, stat modifiers, ticking, resistance, cleansing, and production status content
+must extend the closed core contracts rather than add logic to Godot or authored scripts. See
+`MILESTONE_5_1_GUIDE.md`.
+
 ### Battle outcome
 
 Milestone 3.13 makes the terminal query a closed core contract. `CombatSnapshot.Outcome`

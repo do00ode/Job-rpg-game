@@ -94,11 +94,85 @@ internal sealed class ContentValidator
                 case StatisticDefinition statistic:
                     ValidateStatistic(item, statistic);
                     break;
+                case StatusEffectDefinition status:
+                    ValidateStatusEffect(item, status);
+                    break;
             }
         }
 
         ValidateEquipmentItemUniqueness();
         ValidateStartingClassPool();
+    }
+
+    private void ValidateStatusEffect(
+        LoadedContent item,
+        StatusEffectDefinition status)
+    {
+        RequireNonBlank(item, "$.displayNameKey", status.DisplayNameKey);
+        if (status.DescriptionKey is not null)
+        {
+            RequireNonBlank(item, "$.descriptionKey", status.DescriptionKey);
+        }
+
+        if (!StatusStackingRuleIds.IsSupported(status.StackingRuleId))
+        {
+            Add(item, "$.stackingRuleId", "status.unknown-stacking-rule",
+                $"Status stacking rule '{status.StackingRuleId}' is not supported.");
+        }
+
+        if (status.DefaultDuration <= 0)
+        {
+            Add(item, "$.defaultDuration", "status.invalid-duration",
+                "Status default duration must be greater than zero.");
+        }
+
+        if (!string.Equals(
+                status.DurationUnitId,
+                StatusDurationUnitIds.TimelineTime,
+                StringComparison.Ordinal))
+        {
+            Add(item, "$.durationUnitId", "status.unknown-duration-unit",
+                $"Status duration unit '{status.DurationUnitId}' is not supported.");
+        }
+
+        IReadOnlyList<string> effectKindIds = RequireList(
+            item,
+            "$.effectKindIds",
+            status.EffectKindIds);
+        var seenKinds = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < effectKindIds.Count; index++)
+        {
+            string effectKindId = effectKindIds[index];
+            if (!StatusEffectKindIds.IsSupported(effectKindId))
+            {
+                Add(item, $"$.effectKindIds[{index}]", "status.unknown-effect-kind",
+                    $"Status effect kind '{effectKindId}' is not supported.");
+            }
+
+            if (!seenKinds.Add(effectKindId))
+            {
+                Add(item, $"$.effectKindIds[{index}]", "status.duplicate-effect-kind",
+                    $"Status effect kind '{effectKindId}' is listed more than once.");
+            }
+        }
+
+        if (effectKindIds.Contains(
+                StatusEffectKindIds.ModifySpeedPercent,
+                StringComparer.Ordinal)
+            && (status.SpeedPercentModifier < -99 || status.SpeedPercentModifier > 999))
+        {
+            Add(item, "$.speedPercentModifier", "status.invalid-speed-modifier",
+                "Speed percent modifier must be between -99 and 999.");
+        }
+
+        if (!effectKindIds.Contains(
+                StatusEffectKindIds.ModifySpeedPercent,
+                StringComparer.Ordinal)
+            && status.SpeedPercentModifier != 0)
+        {
+            Add(item, "$.speedPercentModifier", "status.unbound-speed-modifier",
+                "Speed percent modifier requires the modify-speed-percent effect kind.");
+        }
     }
 
     private void ValidateActor(LoadedContent item, ActorDefinition actor)

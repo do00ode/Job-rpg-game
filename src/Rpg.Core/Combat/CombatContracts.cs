@@ -207,7 +207,8 @@ public sealed record CombatantSnapshot
         int? currentMp = null,
         int equippedWeaponAttack = 0,
         string? equippedWeaponDamageTypeId = null,
-        long nextActionTime = 0)
+        long nextActionTime = 0,
+        IReadOnlyList<ActiveStatusEffect>? activeStatusEffects = null)
         : this(
             placement,
             statistics,
@@ -218,7 +219,8 @@ public sealed record CombatantSnapshot
             currentMp,
             equippedWeaponAttack,
             equippedWeaponDamageTypeId,
-            nextActionTime)
+            nextActionTime,
+            activeStatusEffects)
     {
     }
 
@@ -231,7 +233,8 @@ public sealed record CombatantSnapshot
         int? currentMp = null,
         int equippedWeaponAttack = 0,
         string? equippedWeaponDamageTypeId = null,
-        long nextActionTime = 0)
+        long nextActionTime = 0,
+        IReadOnlyList<ActiveStatusEffect>? activeStatusEffects = null)
         : this(
             placement,
             statistics,
@@ -243,7 +246,8 @@ public sealed record CombatantSnapshot
             currentMp,
             equippedWeaponAttack,
             equippedWeaponDamageTypeId,
-            nextActionTime)
+            nextActionTime,
+            activeStatusEffects)
     {
     }
 
@@ -257,7 +261,8 @@ public sealed record CombatantSnapshot
         int? currentMp,
         int equippedWeaponAttack,
         string? equippedWeaponDamageTypeId,
-        long nextActionTime)
+        long nextActionTime,
+        IReadOnlyList<ActiveStatusEffect>? activeStatusEffects)
     {
         ArgumentNullException.ThrowIfNull(placement);
         ArgumentNullException.ThrowIfNull(statistics);
@@ -392,6 +397,25 @@ public sealed record CombatantSnapshot
         Placement = placement;
         Statistics = new ReadOnlyDictionary<string, int>(statisticCopy);
         AbilityIds = Array.AsReadOnly(abilityIds.ToArray());
+        if (activeStatusEffects is not null && activeStatusEffects.Any(status => status is null))
+        {
+            throw new ArgumentException(
+                $"Combatant '{placement.InstanceId}' cannot contain null active statuses.",
+                nameof(activeStatusEffects));
+        }
+
+        if (activeStatusEffects is not null
+            && activeStatusEffects
+                .GroupBy(status => status.StatusEffectId, StringComparer.Ordinal)
+                .Any(group => group.Count() > 1))
+        {
+            throw new ArgumentException(
+                $"Combatant '{placement.InstanceId}' cannot contain duplicate active status IDs.",
+                nameof(activeStatusEffects));
+        }
+
+        ActiveStatusEffects = Array.AsReadOnly((activeStatusEffects ?? [])
+            .ToArray());
         DamageTypePercentModifiers = new ReadOnlyDictionary<string, int>(damageModifierCopy);
         PartyAbilityAvailability = partyAbilityAvailability;
         CurrentHp = currentHp;
@@ -447,6 +471,9 @@ public sealed record CombatantSnapshot
     /// <summary>Absolute deterministic timeline position at which this actor next acts.</summary>
     public long NextActionTime { get; }
 
+    /// <summary>Immutable transient statuses currently attached to this battle combatant.</summary>
+    public IReadOnlyList<ActiveStatusEffect> ActiveStatusEffects { get; }
+
     public string InstanceId => Placement.InstanceId;
 
     public string DefinitionId => Placement.DefinitionId;
@@ -485,7 +512,8 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                NextActionTime)
+                NextActionTime,
+                ActiveStatusEffects)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
@@ -495,7 +523,8 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                NextActionTime);
+                NextActionTime,
+                ActiveStatusEffects);
 
     /// <summary>
     /// Creates a replacement state with different current MP while preserving every other
@@ -512,7 +541,8 @@ public sealed record CombatantSnapshot
                 currentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                NextActionTime)
+                NextActionTime,
+                ActiveStatusEffects)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
@@ -522,7 +552,8 @@ public sealed record CombatantSnapshot
                 currentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                NextActionTime);
+                NextActionTime,
+                ActiveStatusEffects);
 
     public CombatantSnapshot WithNextActionTime(long nextActionTime) =>
         PartyAbilityAvailability is null
@@ -535,7 +566,8 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                nextActionTime)
+                nextActionTime,
+                ActiveStatusEffects)
             : new CombatantSnapshot(
                 Placement,
                 Statistics,
@@ -545,7 +577,34 @@ public sealed record CombatantSnapshot
                 CurrentMp,
                 EquippedWeaponAttack,
                 EquippedWeaponDamageTypeId,
-                nextActionTime);
+                nextActionTime,
+                ActiveStatusEffects);
+
+    public CombatantSnapshot WithActiveStatusEffects(
+        IReadOnlyList<ActiveStatusEffect> activeStatusEffects) =>
+        PartyAbilityAvailability is null
+            ? new CombatantSnapshot(
+                Placement,
+                Statistics,
+                AbilityIds,
+                CurrentHp,
+                DamageTypePercentModifiers,
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId,
+                NextActionTime,
+                activeStatusEffects)
+            : new CombatantSnapshot(
+                Placement,
+                Statistics,
+                PartyAbilityAvailability,
+                CurrentHp,
+                DamageTypePercentModifiers,
+                CurrentMp,
+                EquippedWeaponAttack,
+                EquippedWeaponDamageTypeId,
+                NextActionTime,
+                activeStatusEffects);
 }
 
 /// <summary>

@@ -36,6 +36,7 @@ The initial directory-to-type mapping is:
 | `encounters/` | `EncounterDefinition` |
 | `quests/` | `QuestDefinition` |
 | `starting-class-rules/` | `StartingClassRuleDefinition` |
+| `status-effects/` | `StatusEffectDefinition` |
 
 ## Stable IDs
 
@@ -427,6 +428,24 @@ are never submitted as `CombatCommand.AbilityId`.
 A magic discipline is a non-executable authored container such as a future spellbook category.
 It has no targeting rule, cost, ruleset, effect, or command behavior. Milestone 3.05 defines
 the category but intentionally adds no concrete base-game disciplines or spells.
+
+### Status effect
+
+| Field | Type | Notes |
+|---|---|---|
+| `displayNameKey` | string | Localization key for future status presentation. |
+| `descriptionKey` | string or null | Optional localization key. |
+| `stackingRuleId` | ID | Closed rule: `refresh-duration`, `ignore-if-present`, or `replace`. |
+| `defaultDuration` | integer | Positive timeline-time duration. |
+| `durationUnitId` | ID | Currently only `timeline-time`. |
+| `effectKindIds` | ID array | Closed behavior selectors; current hook is `status-effect.modify-speed-percent`. |
+| `speedPercentModifier` | integer | Nonzero only with the speed-modifier effect kind; bounded by validation. |
+
+Status definitions are declarative and cannot contain scripts, formulas, reflection names, or
+runtime code. Active status instances live only in transient `CombatSnapshot` state. Milestone
+5.1 adds the category and validation contract but no production status records; test fixtures may
+author status definitions in memory. Status resistance, immunity, random hit chance, stat/damage
+hooks, ticking effects, and player-facing status content remain deferred.
 
 ### Enemy
 

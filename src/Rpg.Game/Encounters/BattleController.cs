@@ -519,7 +519,7 @@ public partial class BattleController : Control
         }
 
         CombatSnapshot current = RequireSnapshot();
-        CombatantSnapshot partyActor = CombatTimeline.SelectReadyActor(current);
+        CombatantSnapshot partyActor = CombatTimeline.SelectReadyActor(current, RequireContent());
         if (partyActor.Side != BattleSide.Party)
         {
             return;
@@ -610,7 +610,7 @@ public partial class BattleController : Control
                 return;
             }
 
-            CombatantSnapshot ready = CombatTimeline.SelectReadyActor(current);
+            CombatantSnapshot ready = CombatTimeline.SelectReadyActor(current, RequireContent());
             if (ready.Side == BattleSide.Party)
             {
                 _phase = BattleInputPhase.Command;
@@ -675,6 +675,36 @@ public partial class BattleController : Control
                         : "Party defeat.");
                     break;
 
+                case StatusApplied applied:
+                    AppendLog(
+                        $"{DisplayName(applied.TargetCombatantId)} gained "
+                        + $"{ShortDefinitionName(applied.StatusEffectId)}.");
+                    break;
+
+                case StatusRefreshed refreshed:
+                    AppendLog(
+                        $"{DisplayName(refreshed.TargetCombatantId)} refreshed "
+                        + $"{ShortDefinitionName(refreshed.StatusEffectId)}.");
+                    break;
+
+                case StatusIgnored ignored:
+                    AppendLog(
+                        $"{DisplayName(ignored.TargetCombatantId)} ignored "
+                        + $"{ShortDefinitionName(ignored.StatusEffectId)}.");
+                    break;
+
+                case StatusRemoved removed:
+                    AppendLog(
+                        $"{DisplayName(removed.TargetCombatantId)} lost "
+                        + $"{ShortDefinitionName(removed.StatusEffectId)}.");
+                    break;
+
+                case StatusExpired expired:
+                    AppendLog(
+                        $"{DisplayName(expired.TargetCombatantId)}'s "
+                        + $"{ShortDefinitionName(expired.StatusEffectId)} expired.");
+                    break;
+
                 default:
                     throw new NotSupportedException(
                         $"Battle presentation does not handle event "
@@ -721,7 +751,7 @@ public partial class BattleController : Control
 
         _phaseLabel.Text = _phase switch
         {
-            BattleInputPhase.Command => $"{DisplayName(CombatTimeline.SelectReadyActor(snapshot).InstanceId)}'s turn: choose a command.",
+            BattleInputPhase.Command => $"{DisplayName(CombatTimeline.SelectReadyActor(snapshot, RequireContent()).InstanceId)}'s turn: choose a command.",
             BattleInputPhase.MagicSelection =>
                 $"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
             BattleInputPhase.TargetSelection =>
@@ -740,7 +770,7 @@ public partial class BattleController : Control
 
         RefreshInputHint();
 
-        TurnOrderPreview preview = new TurnOrderPreviewService().Create(snapshot);
+        TurnOrderPreview preview = new TurnOrderPreviewService(RequireContent()).Create(snapshot);
         _turnOrderLabel.Text = "Turn Order: " + string.Join(
             "  >  ",
             preview.Entries.Select(entry => DisplayName(entry.CombatantInstanceId)));

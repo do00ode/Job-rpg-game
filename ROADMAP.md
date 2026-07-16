@@ -516,6 +516,25 @@ Explicitly excluded: real-time ATB, active/wait toggles, live menu pressure, Has
 status effects, duration systems, production turn-manipulation abilities, boss scripting, and
 new battle content. See `MILESTONE_5_0_GUIDE.md`.
 
+### Milestone 5.1 - Status effect foundation
+
+- Add data-authored status definitions with closed stacking, duration, and effect-kind IDs.
+- Store immutable transient active statuses on combatants with timeline-time expiration.
+- Support refresh-duration, ignore-if-present, and replace stacking behavior.
+- Add typed status application, refresh, ignore, remove, and expiration events.
+- Centralize status-aware effective Speed for timeline delay and turn-order preview.
+- Keep status application/removal headless and test-driven without production status content.
+
+Exit criteria: valid status records pass the production content pipeline; malformed stacking,
+duration, or effect kinds fail clearly; status state remains immutable and transient; expiration
+is deterministic; stacking is tested; and a test-only speed modifier changes the central effective
+speed calculation without changing persistent saves.
+
+Explicitly excluded: production Haste, Slow, Stop, Stun, Poison, Regen, Protect, Shell, Blind,
+Silence, Sleep, status resistance/immunity, random hit chance, cleansing, revive, full status UI,
+status animations, and status-duration gameplay beyond timeline-time foundation. See
+`MILESTONE_5_1_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.
