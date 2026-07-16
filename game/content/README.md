@@ -1,5 +1,8 @@
 # Content source
 
+Use the repository-root `CONTENT_AUTHORING_GUIDE.md` for the practical workflow and examples.
+`CONTENT_SCHEMA.md` is the strict field reference.
+
 Content is authored as UTF-8 JSON, one top-level record per file. Category folders
 are scanned recursively at startup and by the command-line validator. The exact
 contract and stable ID rules are defined in `CONTENT_SCHEMA.md`.

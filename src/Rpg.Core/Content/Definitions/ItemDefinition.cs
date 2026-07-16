@@ -6,6 +6,8 @@ namespace RpgGame.Core.Content.Definitions;
 /// </summary>
 public sealed record ItemDefinition : ContentDefinition
 {
+    private int _maxStack = 99;
+
     /// <summary>Localization key for the short player-facing item name.</summary>
     public required string DisplayNameKey { get; init; }
 
@@ -19,5 +21,15 @@ public sealed record ItemDefinition : ContentDefinition
     public int SellPrice { get; init; }
 
     /// <summary>Maximum quantity represented by one inventory stack.</summary>
-    public int MaxStack { get; init; } = 99;
+    public int MaxStack
+    {
+        get => Unique ? 1 : _maxStack;
+        init => _maxStack = value;
+    }
+
+    /// <summary>
+    /// Marks story, quest, or other one-of-a-kind items. Unique items always use a stack
+    /// limit of one; ordinary items default to ninety-nine.
+    /// </summary>
+    public bool Unique { get; init; }
 }

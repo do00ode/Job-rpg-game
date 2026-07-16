@@ -1,5 +1,8 @@
 # Content schema
 
+For a friend-friendly workflow and examples, start with `CONTENT_AUTHORING_GUIDE.md`. This file
+is the strict field, ID, and validation reference behind that guide.
+
 ## Format
 
 Content definitions are UTF-8 JSON with one top-level record per file. The folder
@@ -257,7 +260,8 @@ This keeps common inventory/shop data in exactly one place.
 |---|---|---|
 | `displayNameKey`, `descriptionKey` | string | Localization keys. |
 | `buyPrice`, `sellPrice` | integer | Nonnegative base values. |
-| `maxStack` | integer | At least `1`. |
+| `maxStack` | integer, optional | Defaults to `99` for ordinary items. Unique items always use an effective maximum of `1`. |
+| `unique` | boolean, optional | Defaults to `false`. Use for one-of-a-kind story or quest items; it forces an effective max stack of `1`. |
 
 | Equipment field | Type | Notes |
 |---|---|---|
