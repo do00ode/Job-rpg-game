@@ -17,6 +17,7 @@ public sealed class CombatStatisticResolverTests
     private const string JamesId = "actor.hero.james";
     private const string VanguardId = "class.martial.vanguard";
     private const string BlackMageId = "class.magic.black-mage";
+    private const string WhiteMageId = "class.magic.white-mage";
     private const string GreenSlimeId = "enemy.forest.green-slime";
 
     [Fact]
@@ -33,11 +34,13 @@ public sealed class CombatStatisticResolverTests
         IReadOnlyDictionary<string, int> result = resolver.ResolvePartyActor(
             Progress(VanguardId));
 
-        Assert.Equal(5, result.Count);
+        Assert.Equal(7, result.Count);
         Assert.Equal(96, result["stat.max-hp"]);
         Assert.Equal(12, result["stat.max-mp"]);
         Assert.Equal(9, result["stat.strength"]);
+        Assert.Equal(7, result["stat.intelligence"]);
         Assert.Equal(9, result["stat.defense"]);
+        Assert.Equal(7, result["stat.spirit"]);
         Assert.Equal(6, result["stat.speed"]);
     }
 
@@ -52,7 +55,9 @@ public sealed class CombatStatisticResolverTests
         Assert.Equal(84, result["stat.max-hp"]);
         Assert.Equal(22, result["stat.max-mp"]);
         Assert.Equal(9, result["stat.strength"]);
+        Assert.Equal(10, result["stat.intelligence"]);
         Assert.Equal(7, result["stat.defense"]);
+        Assert.Equal(7, result["stat.spirit"]);
         Assert.Equal(7, result["stat.speed"]);
     }
 
@@ -67,14 +72,29 @@ public sealed class CombatStatisticResolverTests
             Progress(BlackMageId));
 
         Assert.Equal(vanguard["stat.strength"], blackMage["stat.strength"]);
+        Assert.Equal(7, vanguard["stat.intelligence"]);
+        Assert.Equal(10, blackMage["stat.intelligence"]);
         Assert.Equal(96, vanguard["stat.max-hp"]);
         Assert.Equal(84, blackMage["stat.max-hp"]);
         Assert.Equal(12, vanguard["stat.max-mp"]);
         Assert.Equal(22, blackMage["stat.max-mp"]);
         Assert.Equal(9, vanguard["stat.defense"]);
         Assert.Equal(7, blackMage["stat.defense"]);
+        Assert.Equal(vanguard["stat.spirit"], blackMage["stat.spirit"]);
         Assert.Equal(6, vanguard["stat.speed"]);
         Assert.Equal(7, blackMage["stat.speed"]);
+    }
+
+    [Fact]
+    public void ResolvePartyActor_WhiteMageClassId_AddsSpiritWithoutChangingIntelligence()
+    {
+        var resolver = new CombatStatisticResolver(TestContent.LoadCatalog());
+
+        IReadOnlyDictionary<string, int> result = resolver.ResolvePartyActor(
+            Progress(WhiteMageId));
+
+        Assert.Equal(7, result["stat.intelligence"]);
+        Assert.Equal(10, result["stat.spirit"]);
     }
 
     [Fact]
@@ -191,11 +211,13 @@ public sealed class CombatStatisticResolverTests
 
         IReadOnlyDictionary<string, int> result = resolver.ResolveEnemy(GreenSlimeId);
 
-        Assert.Equal(5, result.Count);
+        Assert.Equal(7, result.Count);
         Assert.Equal(22, result["stat.max-hp"]);
         Assert.Equal(0, result["stat.max-mp"]);
         Assert.Equal(3, result["stat.strength"]);
+        Assert.Equal(1, result["stat.intelligence"]);
         Assert.Equal(2, result["stat.defense"]);
+        Assert.Equal(1, result["stat.spirit"]);
         Assert.Equal(2, result["stat.speed"]);
     }
 

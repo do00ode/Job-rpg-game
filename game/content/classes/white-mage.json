@@ -4,7 +4,8 @@
   "displayNameKey": "class.white-mage.name",
   "baseStatisticBonuses": {
 	"stat.max-mp": 8,
-	"stat.defense": 1
+	"stat.defense": 1,
+	"stat.spirit": 3
   },
   "abilityUnlocks": [
 	{

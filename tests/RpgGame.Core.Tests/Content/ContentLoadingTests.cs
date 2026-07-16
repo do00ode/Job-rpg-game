@@ -17,11 +17,11 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(27, catalog.Count);
+        Assert.Equal(29, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Single(catalog.GetAll<DialogueDefinition>());
-        Assert.Equal(5, catalog.GetAll<StatisticDefinition>().Count);
+        Assert.Equal(7, catalog.GetAll<StatisticDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<ItemDefinition>().Count);
         Assert.Single(catalog.GetAll<EquipmentDefinition>());
         Assert.Single(catalog.GetAll<LootTableDefinition>());

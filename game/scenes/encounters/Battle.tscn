@@ -29,48 +29,41 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 60
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 60
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 3
 
 [node name="Title" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "Milestone 4.4 — Playable Battle Commands"
+text = "Battle"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 25
-
-[node name="Explanation" type="Label" parent="Margin/VBox"]
-layout_mode = 2
-text = "Choose an available Skill or Magic command. Core combat resolves both sides; this scene only presents the result."
-horizontal_alignment = 1
-autowrap_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.82, 1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 
 [node name="EncounterId" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 text = "Encounter loads here."
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 
 [node name="BattlefieldId" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 text = "Battlefield loads here."
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 
 [node name="FormationView" type="Control" parent="Margin/VBox"]
-custom_minimum_size = Vector2(900, 230)
+custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
+size_flags_vertical = 3
 script = ExtResource("2_formation")
 
 [node name="StatusRow" type="HBoxContainer" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_constants/separation = 40
+theme_override_constants/separation = 12
 
 [node name="PartyStatus" type="VBoxContainer" parent="Margin/VBox/StatusRow"]
 layout_mode = 2
@@ -80,7 +73,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "PARTY STATUS"
 theme_override_colors/font_color = Color(0.66, 0.82, 1, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 
 [node name="EnemyStatus" type="VBoxContainer" parent="Margin/VBox/StatusRow"]
 layout_mode = 2
@@ -90,7 +83,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "ENEMY STATUS"
 theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 
 [node name="CommandArea" type="VBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -106,7 +99,7 @@ theme_override_font_sizes/font_size = 15
 [node name="CommandMenu" type="VBoxContainer" parent="Margin/VBox/CommandArea"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="TargetRow" type="HBoxContainer" parent="Margin/VBox/CommandArea"]
 layout_mode = 2
@@ -123,15 +116,15 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="EventLog" type="RichTextLabel" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_vertical = 3
 scroll_following = true
 theme_override_colors/default_color = Color(0.88, 0.9, 0.96, 1)
-theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/normal_font_size = 12
 
 [node name="ResultRow" type="HBoxContainer" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 12
@@ -141,10 +134,10 @@ layout_mode = 2
 text = "Terminal result loads here."
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.55, 1, 0.65, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 13
 
 [node name="Continue" type="Button" parent="Margin/VBox/ResultRow"]
-custom_minimum_size = Vector2(130, 34)
+custom_minimum_size = Vector2(110, 28)
 layout_mode = 2
 text = "Continue"
 
@@ -154,4 +147,4 @@ text = "Current battle bindings load here."
 horizontal_alignment = 1
 autowrap_mode = 2
 theme_override_colors/font_color = Color(0.62, 1, 0.72, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12

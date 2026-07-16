@@ -65,6 +65,9 @@ a general-purpose RPG engine.
     weapon Attack, or the intrinsic basic Attack weapon profile.
 33. Read `MILESTONE_4_9_GUIDE.md` before changing the exploration equipment menu, its
     projection, or the UI-to-core equipment mutation boundary.
+34. Read `MILESTONE_4_95_GUIDE.md` before changing character equipment comparison previews.
+35. Read `MILESTONE_4_96_GUIDE.md` before changing viewport configuration, scene layout,
+    resolution safety, or adaptive battle-formation presentation.
 
 When a requested feature conflicts with those documents, update the relevant design
 document in the same change or explain why the exception is temporary.

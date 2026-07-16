@@ -11,22 +11,14 @@ namespace RpgGame.Encounters;
 /// </remarks>
 public partial class BattleFormationView : Control
 {
-    private const float CellWidth = 104.0f;
-    private const float CellHeight = 42.0f;
-    private const float GridTop = 56.0f;
-    // These offsets center both grids inside the battle scene's 1080-pixel content width.
-    private const float EnemyLeft = 168.0f;
-    private const float FormationGap = 112.0f;
-    private const float PartyLeft =
-        EnemyLeft
-        + (BattleFormationRules.EnemyColumnCount * CellWidth)
-        + FormationGap;
-
     private IReadOnlyList<FormationPlacement> _enemyPlacements = [];
     private IReadOnlyList<FormationPlacement> _partyPlacements = [];
     private IReadOnlyDictionary<string, string> _labelByInstanceId =
         new Dictionary<string, string>(StringComparer.Ordinal);
+    private readonly List<Label> _layoutLabels = [];
     private bool _initialized;
+
+    public override void _Ready() => Resized += OnResized;
 
     /// <summary>Receives placements already built and validated by plain .NET core rules.</summary>
     public void Initialize(
@@ -59,12 +51,7 @@ public partial class BattleFormationView : Control
         _labelByInstanceId = BuildDisplayLabels(_enemyPlacements, _partyPlacements);
         _initialized = true;
 
-        CreateGridLabels();
-        foreach (FormationPlacement placement in _enemyPlacements.Concat(_partyPlacements))
-        {
-            CreatePlacementLabel(placement);
-        }
-
+        RefreshLayoutLabels();
         QueueRedraw();
     }
 
@@ -111,20 +98,21 @@ public partial class BattleFormationView : Control
                 $"Formation view has no combatant instance '{instanceId}'.");
     }
 
-    private static Rect2 GetCellRectangle(FormationCell cell)
+    private Rect2 GetCellRectangle(FormationCell cell)
     {
+        FormationLayout layout = GetLayout();
         int visualColumn = cell.Side == BattleSide.Enemy
             ? BattleFormationRules.EnemyColumnCount - 1 - cell.Column
             : cell.Column;
-        float left = cell.Side == BattleSide.Enemy ? EnemyLeft : PartyLeft;
+        float left = cell.Side == BattleSide.Enemy ? layout.EnemyLeft : layout.PartyLeft;
         return new Rect2(
             new Vector2(
-                left + (visualColumn * CellWidth),
-                GridTop + (cell.Row * CellHeight)),
-            new Vector2(CellWidth, CellHeight));
+                left + (visualColumn * layout.CellWidth),
+                layout.GridTop + (cell.Row * layout.CellHeight)),
+            new Vector2(layout.CellWidth, layout.CellHeight));
     }
 
-    private static Rect2 GetPlacementRectangle(FormationPlacement placement)
+    private Rect2 GetPlacementRectangle(FormationPlacement placement)
     {
         IReadOnlyList<FormationCell> cells =
             BattleFormationRules.GetOccupiedCells(placement);
@@ -178,47 +166,47 @@ public partial class BattleFormationView : Control
         DrawRect(inset, Colors.White, filled: false, width: 2.0f);
     }
 
+    private void RefreshLayoutLabels()
+    {
+        foreach (Label label in _layoutLabels)
+        {
+            RemoveChild(label);
+            label.QueueFree();
+        }
+
+        _layoutLabels.Clear();
+        CreateGridLabels();
+        foreach (FormationPlacement placement in _enemyPlacements.Concat(_partyPlacements))
+        {
+            CreatePlacementLabel(placement);
+        }
+    }
+
     private void CreateGridLabels()
     {
-        float enemyWidth = BattleFormationRules.EnemyColumnCount * CellWidth;
-        float partyWidth = BattleFormationRules.PartyColumnCount * CellWidth;
+        FormationLayout layout = GetLayout();
+        float enemyWidth = BattleFormationRules.EnemyColumnCount * layout.CellWidth;
+        float partyWidth = BattleFormationRules.PartyColumnCount * layout.CellWidth;
         AddLabel(
-            "ENEMY FORMATION — 4 ROWS × 4 COLUMNS",
-            new Rect2(new Vector2(EnemyLeft, 0.0f), new Vector2(enemyWidth, 24.0f)),
-            17,
+            "ENEMIES",
+            new Rect2(new Vector2(layout.EnemyLeft, 0.0f), new Vector2(enemyWidth, 16.0f)),
+            12,
             new Color(1.0f, 0.72f, 0.72f));
         AddLabel(
-            "rear c3   ← depth →   front c0  →",
-            new Rect2(new Vector2(EnemyLeft, 24.0f), new Vector2(enemyWidth, 24.0f)),
-            14,
-            new Color(0.76f, 0.82f, 0.94f));
-        AddLabel(
-            "PARTY FORMATION — 4 ROWS × 2 COLUMNS",
-            new Rect2(new Vector2(PartyLeft, 0.0f), new Vector2(partyWidth, 24.0f)),
-            17,
+            "PARTY",
+            new Rect2(new Vector2(layout.PartyLeft, 0.0f), new Vector2(partyWidth, 16.0f)),
+            12,
             new Color(0.66f, 0.82f, 1.0f));
-        AddLabel(
-            "←  front c0   →   rear c1",
-            new Rect2(new Vector2(PartyLeft, 24.0f), new Vector2(partyWidth, 24.0f)),
-            14,
-            new Color(0.76f, 0.82f, 0.94f));
 
         for (int row = 0; row < BattleFormationRules.RowCount; row++)
         {
-            float top = GridTop + (row * CellHeight);
+            float top = layout.GridTop + (row * layout.CellHeight);
             AddLabel(
                 $"r{row}",
                 new Rect2(
-                    new Vector2(EnemyLeft - 38.0f, top),
-                    new Vector2(34.0f, CellHeight)),
-                13,
-                new Color(0.75f, 0.8f, 0.9f));
-            AddLabel(
-                $"r{row}",
-                new Rect2(
-                    new Vector2(PartyLeft + partyWidth + 4.0f, top),
-                    new Vector2(34.0f, CellHeight)),
-                13,
+                    new Vector2(0.0f, top),
+                    new Vector2(layout.EnemyLeft - 2.0f, layout.CellHeight)),
+                10,
                 new Color(0.75f, 0.8f, 0.9f));
         }
     }
@@ -232,7 +220,7 @@ public partial class BattleFormationView : Control
         AddLabel(
             GetPlacementLabel(placement),
             labelArea,
-            13,
+            11,
             Colors.White);
     }
 
@@ -315,5 +303,36 @@ public partial class BattleFormationView : Control
         label.AddThemeFontSizeOverride("font_size", fontSize);
         label.AddThemeColorOverride("font_color", color);
         AddChild(label);
+        _layoutLabels.Add(label);
     }
+
+    private FormationLayout GetLayout()
+    {
+        const float outerMargin = 18.0f;
+        const float gridGap = 24.0f;
+        float availableWidth = Mathf.Max(1.0f, Size.X - (outerMargin * 2.0f) - gridGap);
+        float cellWidth = availableWidth / (
+            BattleFormationRules.EnemyColumnCount + BattleFormationRules.PartyColumnCount);
+        float gridTop = 20.0f;
+        float cellHeight = Mathf.Max(16.0f, (Mathf.Max(gridTop + 4.0f, Size.Y) - gridTop - 4.0f)
+            / BattleFormationRules.RowCount);
+        float partyLeft = outerMargin + (BattleFormationRules.EnemyColumnCount * cellWidth) + gridGap;
+        return new FormationLayout(cellWidth, cellHeight, gridTop, outerMargin, partyLeft);
+    }
+
+    private void OnResized()
+    {
+        if (_initialized)
+        {
+            RefreshLayoutLabels();
+            QueueRedraw();
+        }
+    }
+
+    private sealed record FormationLayout(
+        float CellWidth,
+        float CellHeight,
+        float GridTop,
+        float EnemyLeft,
+        float PartyLeft);
 }

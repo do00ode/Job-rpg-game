@@ -490,6 +490,18 @@ rebuild their presentation from a read-only `EquipmentMenuProjectionResolver` af
 updates. The panel calls `EquipmentService` for equip/unequip; it never writes dictionaries,
 inventory, or combat values directly. Menu focus and selected slot are disposable UI state.
 
+Milestone 4.95 replaces the compact overlay with full-viewport
+`CharacterEquipmentPanel`. Its opaque presentation keeps exploration out of view, while its
+permanent top slot list remains visible when the lower choice pane opens. The remappable
+`game.equipment` action opens this scene-local panel directly. Highlight previews still come
+from `EquipmentScreenProjectionResolver`; only confirmation reaches `EquipmentService`.
+
+Milestone 4.96 establishes a `640x480` minimum logical viewport and keeps responsive geometry
+in Godot presentation. Scene containers divide the available viewport instead of owning
+desktop-specific pixel rectangles. `BattleFormationView` converts existing core placements into
+a size-dependent grid and rebuilds only view labels after resize; it never changes formation
+rules or combat state.
+
 ### Complete deterministic rounds
 
 Milestone 3.12 composes the single-action resolver without moving its validation or damage

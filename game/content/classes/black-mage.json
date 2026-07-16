@@ -4,6 +4,7 @@
   "displayNameKey": "class.black-mage.name",
   "baseStatisticBonuses": {
 	"stat.max-mp": 10,
+	"stat.intelligence": 3,
 	"stat.speed": 1
   },
   "abilityUnlocks": [

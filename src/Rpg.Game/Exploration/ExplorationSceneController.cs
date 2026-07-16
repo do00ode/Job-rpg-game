@@ -25,7 +25,7 @@ public partial class ExplorationSceneController : Node2D
     private DialoguePanel _dialogue = null!;
     private ControlsPanel _controlsPanel = null!;
     private GameMenuPanel _gameMenuPanel = null!;
-    private EquipmentPanel _equipmentPanel = null!;
+    private CharacterEquipmentPanel _equipmentPanel = null!;
     private Label _instructions = null!;
     private Label _developmentStatus = null!;
     private IContentCatalog? _content;
@@ -52,7 +52,7 @@ public partial class ExplorationSceneController : Node2D
         _dialogue = GetNode<DialoguePanel>("Interface/Dialogue");
         _controlsPanel = GetNode<ControlsPanel>("Interface/Controls");
         _gameMenuPanel = GetNode<GameMenuPanel>("Interface/GameMenu");
-        _equipmentPanel = GetNode<EquipmentPanel>("Interface/Equipment");
+        _equipmentPanel = GetNode<CharacterEquipmentPanel>("Interface/Equipment");
         _instructions = GetNode<Label>("Interface/Instructions");
         _developmentStatus = GetNode<Label>("Interface/DevelopmentStatus");
         SetProcessUnhandledInput(false);
@@ -186,6 +186,13 @@ public partial class ExplorationSceneController : Node2D
             return;
         }
 
+        if (keyEvent.IsActionPressed(GameInputActions.Equipment))
+        {
+            _equipmentPanel.Open();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         if (keyEvent.IsActionPressed(GameInputActions.Menu))
         {
             _gameMenuPanel.Open();
@@ -285,6 +292,7 @@ public partial class ExplorationSceneController : Node2D
             + $"L[{bindings.FormatBindings(GameInputActions.MoveLeft)}]"
             + System.Environment.NewLine
             + $"Interact[{bindings.FormatBindings(GameInputActions.Interact)}]    "
+            + $"Equipment[{bindings.FormatBindings(GameInputActions.Equipment)}]    "
             + $"Menu[{bindings.FormatBindings(GameInputActions.Menu)}]    "
             + "Developer: R rebuild, K save, L load";
     }

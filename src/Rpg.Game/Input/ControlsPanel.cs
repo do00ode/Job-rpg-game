@@ -114,11 +114,12 @@ public partial class ControlsPanel : PanelContainer
         foreach (GameInputActionDefinition definition in GameInputActions.Definitions)
         {
             var row = new HBoxContainer();
-            row.AddThemeConstantOverride("separation", 10);
+            row.AddThemeConstantOverride("separation", 6);
             var actionLabel = new Label
             {
                 Text = definition.DisplayName,
-                CustomMinimumSize = new Vector2(220.0f, 0.0f),
+                CustomMinimumSize = new Vector2(150.0f, 0.0f),
+                ClipText = true,
             };
             row.AddChild(actionLabel);
 
@@ -128,7 +129,7 @@ public partial class ControlsPanel : PanelContainer
                 string capturedActionId = definition.Id;
                 var button = new Button
                 {
-                    CustomMinimumSize = new Vector2(135.0f, 36.0f),
+                    CustomMinimumSize = new Vector2(70.0f, 32.0f),
                 };
                 button.Pressed += () => BeginCapture(capturedActionId, capturedIndex);
                 row.AddChild(button);

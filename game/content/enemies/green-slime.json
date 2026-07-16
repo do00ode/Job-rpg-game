@@ -6,7 +6,9 @@
   "statistics": {
 	"stat.max-hp": 22,
 	"stat.strength": 3,
+	"stat.intelligence": 1,
 	"stat.defense": 2,
+	"stat.spirit": 1,
 	"stat.speed": 2
   },
   "abilityIds": [

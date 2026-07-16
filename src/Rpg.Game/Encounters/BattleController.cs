@@ -247,7 +247,7 @@ public partial class BattleController : Control
             string instanceId = combatant.InstanceId;
             var targetButton = new Button
             {
-                CustomMinimumSize = new Vector2(150.0f, 34.0f),
+                CustomMinimumSize = new Vector2(110.0f, 28.0f),
             };
             targetButton.Pressed += () => SelectTargetAndResolve(instanceId);
             targetButton.FocusEntered += () => SelectFocusedTarget(instanceId);
@@ -323,7 +323,7 @@ public partial class BattleController : Control
     {
         var button = new Button
         {
-            CustomMinimumSize = new Vector2(180.0f, 34.0f),
+            CustomMinimumSize = new Vector2(150.0f, 28.0f),
             Text = text,
             Disabled = disabled,
         };

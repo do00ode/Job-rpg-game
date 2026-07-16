@@ -467,6 +467,36 @@ Explicitly excluded: shops, full inventory UI, comparison polish, multi-actor eq
 management, per-instance uniqueness, special effects, armor/accessory advanced effects, ATB,
 status effects, and hybrid classes. See `MILESTONE_4_9_GUIDE.md`.
 
+### Milestone 4.95 - Character equipment screen and stat comparison
+
+- Present Weapon, Body, and Accessory slots in a character-focused equipment screen.
+- Open it directly through remappable `game.equipment` (`I` by default) on an opaque full screen.
+- Inspect equipment details and compatible owned choices.
+- Preview a copied loadout's resolved stats before confirming equip or unequip.
+- Keep Weapon Attack separate from Strength and mutate only through `EquipmentService`.
+
+Exit criteria: highlighting Iron Sword previews Weapon Attack without changing Strength, and
+confirmed equipment refreshes from authoritative `GameState` with matching final stats.
+
+Explicitly excluded: inventory UI, shops, best-equipment logic, multi-actor selection,
+per-instance uniqueness, special effects, advanced armor/accessory systems, ATB, statuses, and
+hybrid classes. See `MILESTONE_4_95_GUIDE.md`.
+
+### Milestone 4.96 - Resolution-safe presentation
+
+- Establish `640x480` as the minimum logical viewport for CRT-safe 4:3 presentation.
+- Use expanding widescreen canvas space and container-driven layouts instead of desktop-only
+  fixed scene dimensions.
+- Keep equipment, menus, controls, dialogue, battle, and rewards inside the available viewport.
+- Scale battle formation geometry from its allocated presentation area without changing core
+  formation rules.
+
+Exit criteria: all selectable controls and text remain visible and keyboard-reachable at 640x480,
+800x600, 1280x720, and 1920x1080.
+
+Explicitly excluded: mobile safe areas, controller navigation, localization expansion, dynamic
+font scaling, and any campaign/core-rules changes. See `MILESTONE_4_96_GUIDE.md`.
+
 Remaining vertical-slice work will then:
 
 - Add a three-character party shell, equipment, item rewards, a shop, and one short quest.

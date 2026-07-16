@@ -62,7 +62,9 @@ With the current checked-in content, James as a Vanguard resolves to:
 | `stat.max-hp` | 84 | 12 | 96 |
 | `stat.max-mp` | 12 | 0 | 12 |
 | `stat.strength` | 9 | 0 | 9 |
+| `stat.intelligence` | 7 | 0 | 7 |
 | `stat.defense` | 7 | 2 | 9 |
+| `stat.spirit` | 7 | 0 | 7 |
 | `stat.speed` | 6 | 0 | 6 |
 
 Changing `ClassId` to Black Mage uses Black Mage's bonuses instead. No actor definition is

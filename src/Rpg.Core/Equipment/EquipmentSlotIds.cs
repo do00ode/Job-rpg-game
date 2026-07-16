@@ -4,6 +4,9 @@ namespace RpgGame.Core.Equipment;
 public static class EquipmentSlotIds
 {
     public const string MainHandWeapon = "slot.weapon.main-hand";
+    public const string BodyArmor = "slot.armor.body";
+    public const string AccessoryOne = "slot.accessory.1";
 
-    public static IReadOnlyList<string> Supported { get; } = [MainHandWeapon];
+    public static IReadOnlyList<string> Supported { get; } =
+        [MainHandWeapon, BodyArmor, AccessoryOne];
 }

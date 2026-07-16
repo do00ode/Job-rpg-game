@@ -15,6 +15,7 @@ movement, dialogue, campaign state, or map code.
 | Move Left | `game.move-left` | A, Left Arrow |
 | Interact / Confirm | `game.interact` | E, Space, Enter, Numpad Enter |
 | Menu / Cancel | `game.menu` | Escape, Tab |
+| Equipment | `game.equipment` | I |
 
 R, K, and L remain fixed development shortcuts for room reconstruction, quick-save, and
 quick-load. They are deliberately unavailable in the remapping screen so one key cannot
@@ -71,8 +72,10 @@ next launch.
 3. `ControlsPanel` edits the service through its narrow rebind/reset methods.
 4. `ExplorationSceneController` calls `InputEvent.IsActionPressed` with stable action IDs.
 5. Accepted movement still updates `GameSession`; controls never become campaign state.
-6. The exploration-local Menu panel and Equipment panel read the existing movement, Interact,
-   and Menu actions; no new input action is introduced for equipment.
+6. The exploration-local Menu panel and character Equipment screen read movement, Interact,
+   Menu, and the dedicated Equipment action. `I` opens Equipment directly by default; movement
+   changes slot/item focus, Confirm selects it, Cancel backs out one screen, and Equipment closes
+   the screen directly.
 7. `BattleController` reads the existing movement, Interact, and Menu actions while collecting
    Attack and target intent; it never compares a concrete gameplay keycode.
 

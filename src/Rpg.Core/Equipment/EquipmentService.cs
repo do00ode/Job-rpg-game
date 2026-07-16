@@ -92,7 +92,7 @@ public sealed class EquipmentService
     private static void ValidateSlot(string slotId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slotId);
-        if (slotId != EquipmentSlotIds.MainHandWeapon)
+        if (!EquipmentSlotIds.Supported.Contains(slotId, StringComparer.Ordinal))
         {
             throw new ArgumentException($"Unsupported equipment slot '{slotId}'.", nameof(slotId));
         }

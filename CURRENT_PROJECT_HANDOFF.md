@@ -1,22 +1,30 @@
 # Current Project Handoff
 
-> Current update: Milestone 4.9 is implemented locally and intentionally uncommitted for review.
-> `main` is at `ba94ca0 Add equipment ownership and weapon attack`; the sections below are retained only as
+> Current update: Milestone 4.96 is implemented locally and intentionally uncommitted for review.
+> `main` is at `c3c1e55 Set Black Mage spell unlock levels`; the sections below are retained only as
 > a historical Milestone 4.1 record and must not be treated as the current repository state.
 
 ## Current Milestone 4.9 summary
+
+> Milestone 4.95 adds a character equipment screen and `EquipmentScreenProjectionResolver`.
+> Highlighted equipment previews a copied loadout through the shared statistic resolver, without
+> mutating `GameState`. The latest refinement makes the screen full-viewport and opaque, keeps
+> equipped slots visible while browsing choices, and adds remappable `game.equipment` with
+> default key `I`. The local, uncommitted follow-up adds Intelligence and Spirit as resolved and
+> presented attributes; magic-damage, healing, and magical-resistance formulas remain deferred.
+> Milestone 4.96 then establishes a 640x480 CRT-safe logical viewport, compact container-driven
+> layouts, opaque menu surfaces, and adaptive battle-formation rendering. Validation passes with
+> 355 core tests, base content (29 definitions), base plus example mod (32 definitions), a clean
+> solution build, Godot editor validation, and Godot startup smoke test. Manual checks remain
+> required at the documented 4:3, 16:9, and 16:10 resolutions.
 
 > Milestone 4.9 extends this summary with an exploration-local equipment menu. It uses the
 > read-only `EquipmentMenuProjectionResolver` and authoritative `EquipmentService`; UI state is
 > disposable, while equip selections remain in `GameState`. The existing Menu action opens a
 > small menu containing Equipment and Controls. This 4.9 work is uncommitted.
 >
-> 4.9 validation: solution build succeeds with 0 warnings/errors; focused equipment tests pass
-> (7 tests); content validation passes for base (27 definitions) and base plus mods (30); Godot
-> 4.7 editor validation and a headless game-start smoke test both exit successfully. The complete
-> core suite currently has four expected failures caused by the separate unstaged Black Mage
-> content edit that moves Ice and Lightning unlocks to levels 3 and 5 while older tests expect
-> all three spells at level 1. That content change is intentionally not part of 4.9.
+> This historical 4.9 validation note predates the current 4.95 and attribute work. Use the
+> current update above for the authoritative local validation results.
 
 - `ActorProgressState.EquippedItems` persistently maps slots to owned inventory item IDs;
   omitted old-save maps deserialize empty.

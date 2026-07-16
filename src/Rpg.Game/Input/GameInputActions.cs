@@ -18,6 +18,7 @@ public static class GameInputActions
     public const string MoveLeft = "game.move-left";
     public const string Interact = "game.interact";
     public const string Menu = "game.menu";
+    public const string Equipment = "game.equipment";
 
     /// <summary>
     /// The small current action catalog, including two keyboard choices for movement/menu
@@ -31,6 +32,7 @@ public static class GameInputActions
         new(MoveLeft, "Move Left", [Key.A, Key.Left]),
         new(Interact, "Interact / Confirm", [Key.E, Key.Space, Key.Enter, Key.KpEnter]),
         new(Menu, "Menu / Cancel", [Key.Escape, Key.Tab]),
+        new(Equipment, "Equipment", [Key.I]),
     ];
 }
 

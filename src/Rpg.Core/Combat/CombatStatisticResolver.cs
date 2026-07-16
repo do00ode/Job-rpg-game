@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Equipment;
 using RpgGame.Core.State;
 
 namespace RpgGame.Core.Combat;
@@ -64,6 +65,9 @@ public sealed class CombatStatisticResolver
 			classBonuses,
 			registeredStatisticIds,
 			$"Class '{classDefinition.Id}' BaseStatisticBonuses");
+		IReadOnlyDictionary<string, int> equipmentBonuses = ResolveEquipmentBonuses(
+			progress,
+			registeredStatisticIds);
 
 		var resolved = new SortedDictionary<string, int>(StringComparer.Ordinal);
 		foreach (StatisticDefinition statistic in statistics)
@@ -74,10 +78,13 @@ public sealed class CombatStatisticResolver
 			int classBonus = classBonuses.TryGetValue(statistic.Id, out int authoredBonus)
 				? authoredBonus
 				: 0;
+			int equipmentBonus = equipmentBonuses.TryGetValue(statistic.Id, out int authoredEquipmentBonus)
+				? authoredEquipmentBonus
+				: 0;
 
 			// Use a wider intermediate so two valid Int32 inputs cannot wrap before the
 			// authored statistic range is checked.
-			long calculatedValue = (long)baseValue + classBonus;
+			long calculatedValue = (long)baseValue + classBonus + equipmentBonus;
 			ValidatePartyValue(
 				actor.Id,
 				classDefinition.Id,
@@ -87,6 +94,43 @@ public sealed class CombatStatisticResolver
 		}
 
 		return AsReadOnly(resolved);
+	}
+
+	private IReadOnlyDictionary<string, int> ResolveEquipmentBonuses(
+		ActorProgressState progress,
+		IReadOnlySet<string> registeredStatisticIds)
+	{
+		IReadOnlyDictionary<string, string> equippedItems = progress.EquippedItems
+			?? throw new InvalidDataException(
+				$"Actor '{progress.ActorId}' has a null equipped-item map.");
+		var bonuses = new Dictionary<string, int>(StringComparer.Ordinal);
+		foreach ((string slotId, string itemId) in equippedItems.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+		{
+			if (!EquipmentSlotIds.Supported.Contains(slotId, StringComparer.Ordinal))
+			{
+				throw new InvalidDataException($"Actor '{progress.ActorId}' equips unsupported slot '{slotId}'.");
+			}
+
+			EquipmentDefinition[] matches = _content.GetAll<EquipmentDefinition>()
+				.Where(equipment => string.Equals(equipment.ItemId, itemId, StringComparison.Ordinal))
+				.ToArray();
+			if (matches.Length != 1 || !string.Equals(matches[0].SlotId, slotId, StringComparison.Ordinal))
+			{
+				throw new InvalidDataException(
+					$"Actor '{progress.ActorId}' has invalid equipment item '{itemId}' in slot '{slotId}'.");
+			}
+
+			IReadOnlyDictionary<string, int> modifiers = RequireStatisticMap(
+				matches[0].StatisticModifiers,
+				$"Equipment '{matches[0].Id}' StatisticModifiers");
+			RejectUnknownStatisticIds(modifiers, registeredStatisticIds, $"Equipment '{matches[0].Id}' StatisticModifiers");
+			foreach ((string statisticId, int modifier) in modifiers)
+			{
+				bonuses[statisticId] = checked(bonuses.GetValueOrDefault(statisticId) + modifier);
+			}
+		}
+
+		return bonuses;
 	}
 
 	/// <summary>

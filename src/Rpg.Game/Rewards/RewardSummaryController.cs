@@ -19,9 +19,9 @@ public partial class RewardSummaryController : Control
 
     public override void _Ready()
     {
-        _rewardLines = GetNode<VBoxContainer>("Center/Summary/RewardLines");
-        _continueButton = GetNode<Button>("Center/Summary/Continue");
-        _inputHint = GetNode<Label>("Center/Summary/InputHint");
+        _rewardLines = GetNode<VBoxContainer>("Margin/Summary/RewardLines");
+        _continueButton = GetNode<Button>("Margin/Summary/Continue");
+        _inputHint = GetNode<Label>("Margin/Summary/InputHint");
         _continueButton.Pressed += RequestContinue;
         SetProcessUnhandledInput(false);
     }
@@ -102,7 +102,7 @@ public partial class RewardSummaryController : Control
             HorizontalAlignment = HorizontalAlignment.Center,
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         };
-        label.AddThemeFontSizeOverride("font_size", 19);
+        label.AddThemeFontSizeOverride("font_size", 15);
         _rewardLines.AddChild(label);
     }
 

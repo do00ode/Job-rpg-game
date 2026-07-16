@@ -45,7 +45,8 @@ public sealed class EquipmentMenuProjectionTests
         EquipmentMenuProjection result = new EquipmentMenuProjectionResolver(content)
             .Resolve(state, actorId);
 
-        EquipmentSlotProjection slot = Assert.Single(result.Slots);
+        Assert.Equal(3, result.Slots.Count);
+        EquipmentSlotProjection slot = result.Slots[0];
         Assert.Equal(EquipmentSlotIds.MainHandWeapon, slot.SlotId);
         Assert.Equal(swordItemId, slot.EquippedItemId);
         Assert.Equal([swordItemId], slot.CompatibleOwnedItemIds);
