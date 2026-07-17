@@ -104,7 +104,7 @@ public sealed class InputBindingService
 
         if (!IsBindableKey(key))
         {
-            message = key is Key.R or Key.K or Key.L
+            message = key == Key.R
                 ? $"{DisplayKey(key)} is reserved for the current developer controls."
                 : "That key cannot be assigned.";
             return false;
@@ -317,10 +317,10 @@ public sealed class InputBindingService
         return false;
     }
 
-    // R/K/L belong to the temporary room rebuild/save/load proof. Keeping them out of the
-    // player profile prevents one keypress from triggering both gameplay and a developer tool.
+    // R belongs to the temporary room rebuild proof. Keep it out of the player profile so one
+    // keypress cannot trigger both gameplay and a developer tool.
     private static bool IsBindableKey(Key key) =>
-        (long)key > 0 && key is not (Key.R or Key.K or Key.L);
+        (long)key > 0 && key != Key.R;
 
     private static Dictionary<string, List<Key>> CreateDefaultBindings() =>
         GameInputActions.Definitions.ToDictionary(

@@ -12,7 +12,8 @@ namespace RpgGame.Encounters;
 /// </remarks>
 public sealed record EncounterLaunchRequest(
     string EncounterId,
-    string SourceMapId = "map.prologue.test-room");
+    string SourceMapId = "map.prologue.test-room",
+    string? ClearanceFlagId = null);
 
 public sealed record MapTransitionRequest(string TransitionId);
 

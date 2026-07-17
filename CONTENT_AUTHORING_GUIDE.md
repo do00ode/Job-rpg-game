@@ -117,19 +117,45 @@ Maps live in `game/content/maps/`. Rows are the gameplay logic layer, separate f
     "############"
   ],
   "spawns": [{ "id": "spawn.start", "x": 1, "y": 1, "facing": "east" }],
-  "encounters": []
+  "encounters": [
+    {
+      "id": "encounter-marker.test-grove.imp",
+      "x": 5,
+      "y": 2,
+      "encounterId": "encounter.test-grove.imp",
+      "clearedFlagId": "flag.encounter.test-grove.imp.cleared",
+      "dialogueId": "dialogue.encounter.imp-warning"
+    }
+  ],
+  "randomEncounters": {
+    "rate": 8,
+    "entries": [
+      { "encounterId": "encounter.test-grove.common", "weight": 95 },
+      { "encounterId": "encounter.test-grove.rare", "weight": 5 }
+    ]
+  },
+  "transitions": []
 }
 ```
 
-Symbols: `#` impassable, `.` passable, `E` passable encounter tile, and `T` passable transition
+Symbols: `#` impassable, `.` passable, `E` encounter tile, and `T` passable transition
 tile. Coordinates are zero-based: X increases left to right, Y increases top to bottom, and
 `rows[y][x]` is the symbol at `[x, y]`. `width` must match every row and `height` must match the
 row count.
 
 Spawns contain an ID, X/Y, and facing. Encounter markers contain `id`, X/Y, `encounterId`, and
-`clearedFlagId`; their tile should use `E`. Transition definitions live in
+`clearedFlagId`; their tile must use `E`. Add `dialogueId` to render the encounter's first enemy
+as a blocking map actor that talks when approached, then starts the fight. Omit `dialogueId` for
+an enter-the-tile trigger.
+
+`randomEncounters.rate` uses the FFIV-style byte check: every successful eligible step rolls
+`0..255` and starts a battle when the result is below the authored rate. Rate `8` averages one
+rate success per 32 eligible steps. After success, `entries` are selected by positive integer
+weights, so `95` and `5` make the second encounter 5% of triggered battles. Random encounters
+are repeatable and do not set a clearance flag.
+
 The map's `transitions` array contains transition IDs, source cells, destination map IDs, and
-destination spawn IDs. Their source cell should use `T`, and their destination map and spawn IDs
+destination spawn IDs. Their source cell must use `T`, and their destination map and spawn IDs
 must exist. There is no separate transition file to maintain.
 
 Add the transition directly to the map record:

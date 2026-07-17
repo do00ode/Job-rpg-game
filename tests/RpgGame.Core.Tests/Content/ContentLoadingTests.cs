@@ -17,10 +17,10 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(50, catalog.Count);
+        Assert.Equal(52, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
-        Assert.Single(catalog.GetAll<DialogueDefinition>());
+        Assert.Equal(2, catalog.GetAll<DialogueDefinition>().Count);
         Assert.Equal(7, catalog.GetAll<StatisticDefinition>().Count);
         Assert.Equal(8, catalog.GetAll<ItemDefinition>().Count);
         Assert.Equal(7, catalog.GetAll<EquipmentDefinition>().Count);
@@ -28,7 +28,7 @@ public sealed class ContentLoadingTests
         Assert.Equal(7, catalog.GetAll<AbilityDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<MagicDisciplineDefinition>().Count);
         Assert.Single(catalog.GetAll<EnemyDefinition>());
-        Assert.Equal(2, catalog.GetAll<EncounterDefinition>().Count);
+        Assert.Equal(3, catalog.GetAll<EncounterDefinition>().Count);
         Assert.Equal(3, catalog.GetAll<MapDefinition>().Count);
         Assert.Equal(
             "slot.accessory",
@@ -78,11 +78,26 @@ public sealed class ContentLoadingTests
         Assert.Equal("spawn.from-test-room", transition.DestinationSpawnId);
 
 
-        MapTransitionDefinition forestToClearing = catalog
-            .GetRequired<MapDefinition>("map.test-forest")
+        MapDefinition forest = catalog.GetRequired<MapDefinition>("map.test-forest");
+        MapTransitionDefinition forestToClearing = forest
             .Transitions.Single(candidate => candidate.Id == "transition.test-forest.to-clearing");
         Assert.Equal("map.prologue.clearing", forestToClearing.DestinationMapId);
         Assert.Equal("spawn.from-test-forest", forestToClearing.DestinationSpawnId);
+        Assert.Equal("dialogue.encounter.imp-warning", Assert.Single(forest.Encounters).DialogueId);
+        Assert.NotNull(forest.RandomEncounters);
+        Assert.Equal(8, forest.RandomEncounters.Rate);
+        Assert.Collection(
+            forest.RandomEncounters.Entries,
+            entry =>
+            {
+                Assert.Equal("encounter.test-forest.slime-01", entry.EncounterId);
+                Assert.Equal(90, entry.Weight);
+            },
+            entry =>
+            {
+                Assert.Equal("encounter.test-forest.slimes-rare", entry.EncounterId);
+                Assert.Equal(10, entry.Weight);
+            });
 
         MapDefinition clearing = catalog.GetRequired<MapDefinition>("map.prologue.clearing");
         Assert.Equal("map.prologue.clearing.name", clearing.DisplayNameKey);

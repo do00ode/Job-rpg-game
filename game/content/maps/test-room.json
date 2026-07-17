@@ -26,7 +26,8 @@
 	  "x": 3,
 	  "y": 4,
 	  "encounterId": "encounter.forest.slimes-01",
-	  "clearedFlagId": "flag.encounter.forest.slimes-01.cleared"
+	  "clearedFlagId": "flag.encounter.forest.slimes-01.cleared",
+	  "dialogueId": "dialogue.encounter.imp-warning"
 	}
   ],
   "transitions": [

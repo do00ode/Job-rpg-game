@@ -10,6 +10,7 @@ public sealed record MapDefinition : ContentDefinition
     public required List<string> Rows { get; init; }
     public List<MapSpawnDefinition> Spawns { get; init; } = [];
     public List<MapEncounterMarkerDefinition> Encounters { get; init; } = [];
+    public MapRandomEncounterDefinition? RandomEncounters { get; init; }
     public List<MapTransitionDefinition> Transitions { get; init; } = [];
 }
 
@@ -30,4 +31,21 @@ public sealed record MapEncounterMarkerDefinition
     public int Y { get; init; }
     public required string EncounterId { get; init; }
     public required string ClearedFlagId { get; init; }
+    public string? DialogueId { get; init; }
+}
+
+/// <summary>Per-step encounter chance and authored weighted encounter choices for one map.</summary>
+public sealed record MapRandomEncounterDefinition
+{
+    /// <summary>Encounter threshold compared against a random byte-sized roll.</summary>
+    public int Rate { get; init; }
+
+    public List<MapRandomEncounterEntryDefinition> Entries { get; init; } = [];
+}
+
+/// <summary>One repeatable encounter choice in a map's random encounter table.</summary>
+public sealed record MapRandomEncounterEntryDefinition
+{
+    public required string EncounterId { get; init; }
+    public int Weight { get; init; }
 }

@@ -22,6 +22,7 @@ public sealed class MapQueryService
     public int Width => _map.Width;
     public int Height => _map.Height;
     public IReadOnlyCollection<MapEncounterMarkerDefinition> EncounterMarkers => _map.Encounters;
+    public MapRandomEncounterDefinition? RandomEncounters => _map.RandomEncounters;
     public IReadOnlyCollection<MapTransitionDefinition> TransitionMarkers => _transitions.Values.ToArray();
 
     public bool IsInside(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;

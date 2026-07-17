@@ -56,9 +56,19 @@ evaluates the map-owned source cell after a successful step and sends the typed 
 to `GameRoot`, which updates `GameState.Location` before replacing the disposable map scene.
 
 `MapDefinition` records also require `width`, `height`, and `rows`. Each row is an ASCII string
-using only `#` (blocked), `.` (passable), `E` (passable encounter tile), and `T` (passable
-transition tile). `encounters` contains map-owned marker objects with `x`, `y`, `encounterId`,
-and `clearedFlagId`. Coordinates are zero-based with `Rows[y][x]`.
+using only `#` (blocked), `.` (passable), `E` (encounter tile), and `T` (passable transition
+tile). `encounters` contains map-owned marker objects with `x`, `y`, `encounterId`, and
+`clearedFlagId`. An optional `dialogueId` turns the marker into a blocking visible encounter
+actor: interacting with it presents that dialogue and launches combat after the dialogue closes.
+Without `dialogueId`, entering the marker tile launches combat immediately. Coordinates are
+zero-based with `Rows[y][x]`.
+
+Maps may also own one optional `randomEncounters` object. Its `rate` is an integer from `0`
+through `255`; after each successful eligible step, combat starts when an injected random roll
+from `0` through `255` is less than `rate`. Its nonempty `entries` array contains an
+`encounterId` and positive integer `weight` for each possible formation. A successful rate roll
+performs a separate weighted selection in authored order. Random encounters do not use a
+clearance flag and may repeat.
 
 ## Stable IDs
 
@@ -375,7 +385,7 @@ See `LOOT_TABLE_AUTHORING_GUIDE.md`.
 | `costStatisticId` | ID or null | Null/zero for no cost, or `stat.max-mp` to spend transient current MP. |
 | `costAmount` | integer | Nonnegative amount from the selected supported resource pool. |
 | `rulesetId` | ID | Selects one supported code-owned behavior; currently `rules.defense.guard`, `rules.damage.physical`, or `rules.healing.flat`. |
-| `damageTypeId` | ID or null | Optional code-owned type for a damage ruleset: `damage-type.slash`, `damage-type.blunt`, `damage-type.pierce`, `damage-type.energy`, `damage-type.fire`, `damage-type.ice`, or `damage-type.lightning`. Omitted legacy physical damage defaults to Energy. |
+| `damageTypeId` | ID or null | Optional code-owned type for a damage ruleset: `damage-type.slash`, `damage-type.blunt`, `damage-type.pierce`, `damage-type.energy`, `damage-type.fire`, `damage-type.ice`, `damage-type.lightning`, or `damage-type.psychic`. Omitted legacy physical damage defaults to Blunt. |
 | `numericParameters` | object of string → number | Exact required keys and ranges are owned by the selected ruleset. Extra keys are errors. |
 
 ```json
@@ -638,7 +648,7 @@ added only when their first playable use case is built.
 
 Milestone 4.3 adds optional damage-type fields without changing schema versions or mod API 3.
 Omitted enemy modifier maps are neutral, omitted weapon profiles remain compatible, and
-omitted legacy physical-ability types resolve as Energy. Explicit null maps are invalid.
+omitted legacy physical-ability types resolve as Blunt. Explicit null maps are invalid.
 
 The later API 4 class-identity change retires `class.martial.vanguard` in favor of
 `class.martial.knight`. It intentionally rejects API-3 mods, while save format 2 migrates

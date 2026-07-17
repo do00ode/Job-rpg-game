@@ -148,7 +148,7 @@ nonfinal combatant still emits no `BattleEnded`; see `MILESTONE_3_13_GUIDE.md`.
 
 - No save fields or save migration were added; combat snapshots remain transient.
 - Milestone 4.3 later added optional content fields without changing schema versions or the mod
-  data-API; omitted legacy damage ability types resolve as Energy.
+  data-API; omitted legacy physical-damage ability types resolve as Blunt.
 - Existing saves gain James's intrinsic Attack when content is resolved, just as other authored
   actor/class abilities are resolved from the current catalog.
 - Vanilla classes currently grant no abilities. The generic class-unlock and defensive

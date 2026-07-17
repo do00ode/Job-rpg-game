@@ -570,7 +570,7 @@ GameVersion after the 5.3A migration. It also verifies the scoped English bundle
 existing exploration dialogue in the Godot project. No new gameplay, save schema, or content
 systems are added.
 
-### Milestone 5.4 - Generic data-driven exploration scene (current)
+### Milestone 5.4 - Generic data-driven exploration scene (implemented)
 
 All validated map content now loads through one generic exploration scene and placeholder map
 view. Map JSON owns ASCII passability, spawns, encounter markers, and transitions; `GameRoot`
@@ -578,6 +578,19 @@ owns only the generic exploration scene path and no longer maps map IDs to Godot
 `map.prologue.clearing` proves the workflow with JSON-only content and a round trip from the
 test forest. The test-room guide remains a temporary compatibility fixture; data-authored NPC
 placement is intentionally deferred.
+
+### Milestone 5.4A - Dialogue-driven and random exploration encounters (current)
+
+Map-owned fixed encounter markers may now reference a dialogue. These markers render the first
+enemy as a blocking exploration actor, present the authored dialogue on interaction, and launch
+the existing battle only after the dialogue closes. Maps may also own a deterministic,
+FFIV-inspired per-step rate and weighted encounter list. Random launches intentionally omit a
+clearance flag so they remain repeatable and use the same battle, loot, and reward path.
+
+Exit criteria: exploration walks at the slower authored cadence; the visible imp speaks before
+its fixed battle; successful eligible forest steps use an injected `0..255` rate roll and an
+authored weighted formation choice; rare encounters can be authored without special code; fixed
+clearance and repeatable random rewards remain distinct.
 
 Remaining vertical-slice work will then:
 

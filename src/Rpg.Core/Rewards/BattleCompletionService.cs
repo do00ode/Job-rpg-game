@@ -22,11 +22,14 @@ public sealed class BattleCompletionService
 
     public BattleCompletionResult Complete(
         BattleCompletionRequest request,
-        string clearanceFlagId,
+        string? clearanceFlagId,
         IRandomSource random)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ArgumentException.ThrowIfNullOrWhiteSpace(clearanceFlagId);
+        if (clearanceFlagId is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(clearanceFlagId);
+        }
         ArgumentNullException.ThrowIfNull(random);
 
         if (request.Outcome == BattleOutcome.PartyDefeat)
@@ -34,7 +37,7 @@ public sealed class BattleCompletionService
             return BattleCompletionResult.ForDefeat();
         }
 
-        if (_session.GetEventFlag(clearanceFlagId))
+        if (clearanceFlagId is not null && _session.GetEventFlag(clearanceFlagId))
         {
             return BattleCompletionResult.ForAlreadyCleared();
         }
@@ -42,7 +45,10 @@ public sealed class BattleCompletionService
         VictoryRewardResult rewards = _victoryRewards.Apply(
             request.DefeatedEnemyDefinitionIds,
             random);
-        _session.SetEventFlag(clearanceFlagId);
+        if (clearanceFlagId is not null)
+        {
+            _session.SetEventFlag(clearanceFlagId);
+        }
         return BattleCompletionResult.ForAppliedVictory(rewards);
     }
 }

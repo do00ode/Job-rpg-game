@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "texts": {
+	"dialogue.encounter.imp-warning.speaker": "Imp",
+	"dialogue.encounter.imp-warning.line.001": "You picked the wrong path, traveler. Prepare yourself!"
+  }
+}

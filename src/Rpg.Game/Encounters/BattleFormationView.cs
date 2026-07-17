@@ -2,6 +2,7 @@ using Godot;
 using RpgGame.Core.Combat.Formation;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Loot;
 
 namespace RpgGame.Encounters;
 
@@ -24,6 +25,7 @@ public partial class BattleFormationView : Control
     private readonly List<Label> _layoutLabels = [];
     private IReadOnlySet<string> _defeatedCombatantIds =
         new HashSet<string>(StringComparer.Ordinal);
+    private IReadOnlyList<LootAward> _victoryRewardItems = [];
     private string? _targetedCombatantId;
     private string? _highlightedCombatantId;
     private double _targetPulseTime;
@@ -130,6 +132,8 @@ public partial class BattleFormationView : Control
             }
         }
 
+        DrawVictoryRewardItems();
+
         DrawTargetCursor();
     }
 
@@ -177,6 +181,55 @@ public partial class BattleFormationView : Control
 
         RefreshLayoutLabels();
         QueueRedraw();
+    }
+
+    public void SetVictoryRewardItems(IReadOnlyList<LootAward> awards)
+    {
+        ArgumentNullException.ThrowIfNull(awards);
+        _victoryRewardItems = awards.ToArray();
+        QueueRedraw();
+    }
+
+    private void DrawVictoryRewardItems()
+    {
+        if (_victoryRewardItems.Count == 0)
+        {
+            return;
+        }
+
+        var placementUseCount = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (LootAward award in _victoryRewardItems)
+        {
+            FormationPlacement[] matches = _enemyPlacements
+                .Where(placement => string.Equals(
+                    placement.DefinitionId,
+                    award.EnemyDefinitionId,
+                    StringComparison.Ordinal))
+                .ToArray();
+            if (matches.Length == 0)
+            {
+                continue;
+            }
+
+            int used = placementUseCount.GetValueOrDefault(award.EnemyDefinitionId);
+            FormationPlacement placement = matches[Math.Min(used, matches.Length - 1)];
+            placementUseCount[award.EnemyDefinitionId] = used + 1;
+            string assetName = award.ItemId[(award.ItemId.LastIndexOf('.') + 1)..];
+            Texture2D? texture = ResourceLoader.Load<Texture2D>(
+                $"res://game/assets/items/{assetName}.png");
+            if (texture is null)
+            {
+                continue;
+            }
+
+            Rect2 cell = GetPlacementRectangle(placement);
+            float scale = Mathf.Min(cell.Size.X / texture.GetWidth(), cell.Size.Y / texture.GetHeight());
+            Vector2 size = texture.GetSize() * scale;
+            DrawTextureRect(
+                texture,
+                new Rect2(cell.Position + ((cell.Size - size) * 0.5f), size),
+                false);
+        }
     }
 
     /// <summary>
@@ -272,12 +325,12 @@ public partial class BattleFormationView : Control
     private void DrawEnemyTexture(FormationPlacement placement, Texture2D texture)
     {
         Rect2 occupied = GetPlacementRectangle(placement);
-        // Give enemy art a little visual presence beyond its logical cell while keeping the
+        // Give enemy art strong visual presence beyond its logical cell while keeping the
         // authored footprint authoritative. This follows the classic JRPG composition where
         // enemies read as larger silhouettes than the party sprites on the opposite side.
         float scale = Mathf.Min(
-            (occupied.Size.X * 1.25f) / texture.GetWidth(),
-            (occupied.Size.Y * 1.25f) / texture.GetHeight());
+            (occupied.Size.X * 1.50f) / texture.GetWidth(),
+            (occupied.Size.Y * 1.50f) / texture.GetHeight());
         Vector2 size = new(texture.GetWidth() * scale, texture.GetHeight() * scale);
         Rect2 destination = new(
             occupied.Position + ((occupied.Size - size) / 2.0f),

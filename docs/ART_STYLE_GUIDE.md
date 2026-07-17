@@ -43,8 +43,9 @@ Visible bound up to 96x64 -> likely 96x64 family
 ```
 
 The project standards below are deliberate original-game decisions. They favor FFIV-informed
-pixel density while preserving the current 1280 x 720 authored viewport, 48 x 48 displayed
-exploration cells, logical map data, and tactical formation rules.
+pixel density while using a fixed 320 x 240 internal viewport, native 16 x 16 exploration cells,
+logical map data, and tactical formation rules. The completed frame is scaled with integer
+nearest-neighbor output and pillarboxed when the window is wider than 4:3.
 
 ## 2. Consolidated Project Dimensions
 
@@ -72,7 +73,7 @@ FFIV-style party battle frame: 16 x 24
 | --- | --- | --- |
 | Hardware construction tile | 8 x 8 | Construction unit only |
 | Base map tile | 16 x 16 | One logical map cell |
-| Displayed exploration tile | 48 x 48 | Exact 3x nearest-neighbor presentation |
+| Internal exploration tile | 16 x 16 | One native map cell; output scaling is handled by the viewport |
 | Exploration character | 16 x 16 | One logical map cell |
 | Optional tall exploration character | 16 x 24 | Feet remain in one 16 x 16 cell |
 | Party battle character | 16 x 24 | Presented inside a larger 48 x 48 tactical cell |
@@ -112,7 +113,7 @@ cliffs, roads, buildings, trees, water, and decorations; no hand-painted full-ma
 Collision remains independent from graphics, and decorative objects may extend beyond their tile
 footprint.
 
-The current placeholder renderer displays a native 16 x 16 tile at exactly 3x:
+The runtime renders a native 16 x 16 tile inside the fixed 320 x 240 frame:
 
 ```text
 Native tile       Integer scale       Displayed tile
@@ -237,7 +238,8 @@ the central 72 x 72 safe area so portrait framing can crop consistently.
 
 - Maintain the same head proportions, eye placement, and lighting direction across expressions.
 - Use a simple flat, transparent, or softly framed background; never a noisy painted scene.
-- Crop at a deliberate shoulder or chest line and keep the face large enough to read at 1280 x 720.
+- Crop at a deliberate shoulder or chest line and keep the face readable at native size and in the
+  integer-scaled 320 x 240 presentation.
 - Expression changes should be economical: eyes, brows, mouth, and a few silhouette cues carry most
   of the emotion.
 - Portraits should share palette ramps and pixel density with combat and exploration sprites.
@@ -333,7 +335,7 @@ subtle in-between frames.
 ## 14. UI Standards
 
 The UI should feel like the same pixel world while remaining readable on the project's logical
-1280 x 720 viewport and smaller CRT-safe presentations.
+320 x 240 viewport and integer-scaled CRT-safe presentations.
 
 - Use opaque or controlled-color windows with crisp borders and a restrained number of tones.
 - Keep border thickness consistent within a screen and use corners that tile cleanly.
@@ -376,8 +378,8 @@ remain stable string IDs and are not replaced by file paths.
 - Prefer integer scaling factors; do not introduce fractional pixel scaling.
 - Keep movement and sprite anchors on integer coordinates.
 - Do not use subpixel movement for pixel-art characters or map decorations.
-- Verify assets at native size, at the logical 1280 x 720 viewport, and at the project's CRT-safe
-  4:3 presentations before approval.
+- Verify assets at native size, inside the logical 320 x 240 viewport, and at the project's
+  integer-scaled 4:3 presentations before approval.
 - Keep source files layered and editable outside the repository when the production workflow needs
   them, but commit only approved runtime assets in the documented game asset locations.
 
@@ -511,7 +513,7 @@ Review every new visual asset against this list:
 - [ ] Animation uses the expected frame count and stable anchors.
 - [ ] Exploration character uses the correct direction, ground anchor, and layer order.
 - [ ] Enemy artwork agrees with its logical formation footprint without redefining it.
-- [ ] UI artwork remains legible at 1280 x 720 and CRT-safe output sizes.
+- [ ] UI artwork remains legible at 320 x 240 and integer-scaled CRT-safe output sizes.
 - [ ] Asset is modular where appropriate and does not require a one-off painted background.
 - [ ] Naming uses lowercase kebab-case and stable category terminology.
 - [ ] Export uses PNG, nearest-neighbor filtering, integer scale, and no subpixel assumptions.

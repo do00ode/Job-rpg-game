@@ -1,9 +1,13 @@
-# Milestone 4.96 - Resolution-safe presentation
+# Milestone 4.96 - Pixel-perfect 4:3 presentation
 
-The game retains its authored `1280x720` logical viewport because the fixed exploration room and
-its HUD already own geometry in that coordinate space. Godot uses `canvas_items` stretching, so
-smaller windowed resolutions scale the complete authored canvas instead of changing map geometry
-or reflowing the room into a different coordinate system.
+The game uses a fixed `320x240` internal viewport. This is the complete authored frame: twenty
+16x16 map tiles wide by fifteen tiles high. Godot scales that finished frame to the selected
+window with integer nearest-neighbor scaling and keeps its 4:3 aspect ratio. Widescreen output
+uses pillarbox bars; it never stretches the frame or changes the map coordinate system.
+
+Maps and exploration sprites are authored in native pixels. A map larger than the native frame
+scrolls through a `Camera2D` that follows the player, clamps to map bounds, centers smaller maps,
+uses no zoom or smoothing, and snaps its final position to whole native pixels.
 
 Exploration menus, equipment, controls, battle, and victory rewards must fit wholly inside the
 authored canvas. Presentation uses full-viewport anchors, container size flags, bounded margins,
@@ -20,21 +24,21 @@ exploration does not remain visible behind a menu.
 
 The Game Menu includes a Display entry backed by `DisplaySettingsService`. It immediately applies
 one supported windowed resolution: 640x480, 800x600, 1024x768, 1280x720, 1366x768, or 1920x1080.
-The project launches at 1280x720 by default. Resolution selection is currently session-local;
-persistent display preferences are deferred.
+The project launches at 960x720 by default. Resolution selection is currently session-local;
+persistent display preferences are deferred. The internal viewport remains 320x240 at every size.
 
 `BattleFormationView` owns only adaptable rendering geometry. It calculates cell widths, cell
 heights, grid positions, and presentation labels from its allocated `Control.Size`, then rebuilds
 those labels when resized. Formation rules, placements, command resolution, and `GameState` stay
 unchanged.
 
-Supported manual viewport checks:
+Supported manual output checks:
 
 - 640x480, 800x600, and 1024x768 for 4:3 output scaling;
 - 1280x720 and 1920x1080 for 16:9;
 - 1280x800 and 1920x1200 for 16:10.
 
 At each size, verify the equipment, Game Menu, Controls, dialogue, battle, and reward summary
-have no clipped selectable control or inaccessible keyboard focus. This milestone does not add
-mobile layouts, safe-area handling, controller-specific navigation, localization expansion, or
-dynamic font scaling.
+remain inside the 4:3 frame and that widescreen output has pillarboxes rather than distortion.
+This milestone does not add mobile layouts, safe-area handling, controller-specific navigation,
+localization expansion, or dynamic font scaling.

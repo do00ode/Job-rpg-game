@@ -26,6 +26,7 @@ public sealed class DamageTypeContentTests
         Assert.Equal(4, sword.Attack);
         Assert.False(sword.StatisticModifiers.ContainsKey(CombatStatisticIds.Strength));
         Assert.Contains(DamageTypeIds.Blunt, DamageTypeIds.Supported);
+        Assert.Contains(DamageTypeIds.Psychic, DamageTypeIds.Supported);
     }
 
     [Fact]

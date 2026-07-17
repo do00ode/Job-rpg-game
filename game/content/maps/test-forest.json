@@ -25,9 +25,17 @@
 	  "x": 6,
 	  "y": 4,
 	  "encounterId": "encounter.test-forest.slime-01",
-	  "clearedFlagId": "flag.encounter.test-forest.slime-01.cleared"
+	  "clearedFlagId": "flag.encounter.test-forest.slime-01.cleared",
+	  "dialogueId": "dialogue.encounter.imp-warning"
 	}
   ],
+  "randomEncounters": {
+	"rate": 8,
+	"entries": [
+	  { "encounterId": "encounter.test-forest.slime-01", "weight": 90 },
+	  { "encounterId": "encounter.test-forest.slimes-rare", "weight": 10 }
+	]
+  },
   "transitions": [
 	{
 	  "id": "transition.test-forest.to-test-room",

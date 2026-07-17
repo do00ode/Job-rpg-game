@@ -1,4 +1,5 @@
 using Godot;
+using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Maps;
 
@@ -8,11 +9,13 @@ namespace RpgGame.Exploration;
 public interface IExplorationMapView
 {
     string MapId { get; }
+    int MapPixelWidth { get; }
+    int MapPixelHeight { get; }
     Vector2I GuideTile { get; }
-    void Initialize(MapQueryService map);
+    void Initialize(MapQueryService map, IContentCatalog content);
     Vector2 TileToWorld(Vector2I tile);
     bool IsWalkable(Vector2I tile);
-    bool TryGetEncounterAt(Vector2I tile, out string encounterId);
+    bool TryGetEncounterAt(Vector2I tile, out MapEncounterMarkerDefinition? marker);
     bool TryGetTransitionAt(Vector2I tile, out MapTransitionDefinition? transition);
     void SetClearedEncounterFlags(IReadOnlySet<string> clearedFlagIds);
 }

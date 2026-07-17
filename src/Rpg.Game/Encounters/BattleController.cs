@@ -3,6 +3,7 @@ using RpgGame.Core.Combat;
 using RpgGame.Core.Combat.Formation;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Rewards;
 using RpgGame.Input;
 
 namespace RpgGame.Encounters;
@@ -61,6 +62,7 @@ public partial class BattleController : Control
     private Button? _focusedCommandButton;
     private BattleInputPhase _phase = BattleInputPhase.Uninitialized;
     private bool _completionRequested;
+    private bool _showingVictoryRewards;
     private bool _showFormationGrid = true;
     private bool _showBattleLog;
     private static readonly List<string> PersistentBattleLogLines = [];
@@ -70,6 +72,22 @@ public partial class BattleController : Control
     /// Raised only after the player confirms a core-authored victory or defeat outcome.
     /// </summary>
     public event EventHandler<BattleCompletionRequestedEventArgs>? CompletionRequested;
+    public event EventHandler? VictoryRewardsContinueRequested;
+
+    public void ShowVictoryRewards(VictoryRewardResult rewards)
+    {
+        ArgumentNullException.ThrowIfNull(rewards);
+        _formationView.SetVictoryRewardItems(rewards.Awards);
+        _showingVictoryRewards = true;
+        _completionRequested = false;
+        _resultLabel.Text = rewards.Awards.Count == 0
+            ? "Victory! No items found."
+            : "Victory! Items acquired.";
+        _continueButton.Disabled = false;
+        _continueButton.Visible = true;
+        _continueButton.GrabFocus();
+        SetProcessUnhandledInput(true);
+    }
 
     public override void _Ready()
     {
@@ -1010,6 +1028,15 @@ public partial class BattleController : Control
     {
         if (_phase != BattleInputPhase.Completed || _completionRequested)
         {
+            return;
+        }
+
+        if (_showingVictoryRewards)
+        {
+            _completionRequested = true;
+            _continueButton.Disabled = true;
+            SetProcessUnhandledInput(false);
+            VictoryRewardsContinueRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
 

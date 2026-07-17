@@ -15,7 +15,7 @@ Final CombatSnapshot
     -> LootResolver exactly once
     -> InventoryService.AddItems atomically
     -> encounter-clearance flag
-    -> RewardSummaryController
+    -> BattleFormationView reward-item presentation
     -> confirmed exploration reconstruction
 ```
 
@@ -61,20 +61,17 @@ protects against stale or duplicated scene requests, while the service-level gua
 policy directly testable. Reward failure leaves the fixed encounter uncleared and inventory
 unchanged.
 
-## Reward-summary ownership
+## Reward-presentation ownership
 
-`RewardSummaryController` is a disposable Godot presentation between battle and exploration.
-It receives only immutable `ItemRewardSummary` values and `InputBindingService`. It never
-receives session state, content definitions, inventory, loot resolution, or randomness.
+`BattleController` keeps the battle scene alive after reward application and asks
+`BattleFormationView` to draw the awarded item graphics on the defeated enemies' cells. The
+presentation receives immutable reward facts and never mutates inventory or rerolls loot.
 
-Matching item IDs appear once with their total quantity. Stable IDs use the current placeholder
-short-name formatting. An empty summary displays `No items found.` The current Interact /
-Confirm binding is shown, and mouse or bound-key confirmation raises one typed continue request.
-Duplicate requests are suppressed. Confirming never rerolls or reapplies rewards.
+The existing battle Continue command performs the final handoff to exploration. Duplicate
+requests are suppressed. Confirming never rerolls or reapplies rewards.
 
-`GameRoot` explicitly owns the three current gameplay presentations: exploration, battle, and
-reward summary. No scene stack, route registry, navigator, autoload, service locator, or global
-event bus was introduced.
+`GameRoot` owns one active gameplay presentation at a time: exploration or battle. No scene
+stack, route registry, navigator, autoload, service locator, or global event bus was introduced.
 
 ## Randomness lifetime
 

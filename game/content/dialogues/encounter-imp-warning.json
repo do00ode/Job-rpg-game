@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 2,
+  "id": "dialogue.encounter.imp-warning",
+  "speakerNameKey": "dialogue.encounter.imp-warning.speaker",
+  "lineTextKeys": [
+	"dialogue.encounter.imp-warning.line.001"
+  ]
+}

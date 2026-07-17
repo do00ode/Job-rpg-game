@@ -1,48 +1,52 @@
 using Godot;
+using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
 using RpgGame.Core.Maps;
+using RpgGame.Core.Presentation;
 
 namespace RpgGame.Exploration;
 
 /// <summary>Generic placeholder presentation for any authored ASCII exploration map.</summary>
 public partial class DataDrivenMapView : Node2D, IExplorationMapView
 {
-    private const int TileSize = 16;
-    private const float WorldScale = 3.0f;
-    private static readonly Vector2 DrawingOrigin = new(32, 32);
+    private const int TileSize = PixelPerfectGeometry.NativeTileSize;
     private static readonly Vector2I TestRoomGuideTile = new(7, 4);
     private const string TestRoomMapId = "map.prologue.test-room";
 
     private MapQueryService _map = null!;
+    private IReadOnlyDictionary<string, Texture2D> _encounterTextureByMarkerId =
+        new Dictionary<string, Texture2D>(StringComparer.Ordinal);
     private IReadOnlySet<string> _clearedEncounterFlags = new HashSet<string>(StringComparer.Ordinal);
 
     public string MapId => _map.MapId;
+    public int MapPixelWidth => _map.Width * TileSize;
+    public int MapPixelHeight => _map.Height * TileSize;
     public Vector2I GuideTile => MapId == TestRoomMapId ? TestRoomGuideTile : new Vector2I(-1, -1);
 
-    public void Initialize(MapQueryService map)
+    public void Initialize(MapQueryService map, IContentCatalog content)
     {
         _map = map ?? throw new ArgumentNullException(nameof(map));
-        Scale = Vector2.One * WorldScale;
+        ArgumentNullException.ThrowIfNull(content);
+        _encounterTextureByMarkerId = LoadEncounterTextures(map, content);
         QueueRedraw();
     }
 
-    public Vector2 TileToWorld(Vector2I tile) => (DrawingOrigin + new Vector2(
-        (tile.X + 0.5f) * TileSize,
-        (tile.Y + 0.5f) * TileSize)) * WorldScale;
+    public Vector2 TileToWorld(Vector2I tile) => TileToLocal(tile);
 
     public bool IsWalkable(Vector2I tile) => _map.IsPassable(tile.X, tile.Y);
 
-    public bool TryGetEncounterAt(Vector2I tile, out string encounterId)
+    public bool TryGetEncounterAt(
+        Vector2I tile,
+        out MapEncounterMarkerDefinition? marker)
     {
-        if (_map.TryGetEncounterAt(tile.X, tile.Y, out MapEncounterMarkerDefinition? marker)
+        if (_map.TryGetEncounterAt(tile.X, tile.Y, out marker)
             && marker is not null
             && !_clearedEncounterFlags.Contains(marker.ClearedFlagId))
         {
-            encounterId = marker.EncounterId;
             return true;
         }
 
-        encounterId = string.Empty;
+        marker = null;
         return false;
     }
 
@@ -71,7 +75,7 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
         for (int y = 0; y < _map.Height; y++)
         for (int x = 0; x < _map.Width; x++)
         {
-            Rect2 rectangle = new(DrawingOrigin + new Vector2(x * TileSize, y * TileSize),
+            Rect2 rectangle = new(new Vector2(x * TileSize, y * TileSize),
                 new Vector2(TileSize, TileSize));
             DrawRect(rectangle, _map.GetSymbol(x, y) == '#' ? wall : ((x + y) % 2 == 0 ? floor : alternateFloor));
         }
@@ -80,20 +84,20 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
         // creates the thicker center lines visible in the placeholder map.
         for (int x = 0; x <= _map.Width; x++)
         {
-            float position = DrawingOrigin.X + x * TileSize;
+            float position = x * TileSize;
             DrawLine(
-                new Vector2(position, DrawingOrigin.Y),
-                new Vector2(position, DrawingOrigin.Y + _map.Height * TileSize),
+                new Vector2(position, 0),
+                new Vector2(position, _map.Height * TileSize),
                 grid,
                 1.0f);
         }
 
         for (int y = 0; y <= _map.Height; y++)
         {
-            float position = DrawingOrigin.Y + y * TileSize;
+            float position = y * TileSize;
             DrawLine(
-                new Vector2(DrawingOrigin.X, position),
-                new Vector2(DrawingOrigin.X + _map.Width * TileSize, position),
+                new Vector2(0, position),
+                new Vector2(_map.Width * TileSize, position),
                 grid,
                 1.0f);
         }
@@ -101,7 +105,19 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
         foreach (MapEncounterMarkerDefinition marker in _map.EncounterMarkers)
         {
             if (_clearedEncounterFlags.Contains(marker.ClearedFlagId)) continue;
-            Vector2 center = TileToWorld(new Vector2I(marker.X, marker.Y));
+            Vector2 center = TileToLocal(new Vector2I(marker.X, marker.Y));
+            if (marker.DialogueId is not null
+                && _encounterTextureByMarkerId.TryGetValue(marker.Id, out Texture2D? texture))
+            {
+                Vector2 size = texture.GetSize();
+                DrawTextureRect(
+                    texture,
+                    new Rect2(center.X - size.X * 0.5f, center.Y + TileSize * 0.5f - size.Y,
+                        size.X, size.Y),
+                    tile: false);
+                continue;
+            }
+
             Vector2[] diamond = [center + Vector2.Up * 5, center + Vector2.Right * 5,
                 center + Vector2.Down * 5, center + Vector2.Left * 5];
             DrawColoredPolygon(diamond, new Color(0.82f, 0.23f, 0.36f));
@@ -110,9 +126,53 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
 
         foreach (MapTransitionDefinition transition in _map.TransitionMarkers)
         {
-            Vector2 center = TileToWorld(new Vector2I(transition.SourceCell.X, transition.SourceCell.Y));
+            Vector2 center = TileToLocal(new Vector2I(transition.SourceCell.X, transition.SourceCell.Y));
             DrawCircle(center, 5.0f, new Color(0.30f, 0.85f, 0.95f));
             DrawCircle(center, 5.0f, Colors.White, false, 1.0f);
         }
+    }
+
+    private static Vector2 TileToLocal(Vector2I tile) => new(
+        (tile.X + 0.5f) * TileSize,
+        (tile.Y + 0.5f) * TileSize);
+
+    private static IReadOnlyDictionary<string, Texture2D> LoadEncounterTextures(
+        MapQueryService map,
+        IContentCatalog content)
+    {
+        var textures = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
+        foreach (MapEncounterMarkerDefinition marker in map.EncounterMarkers)
+        {
+            if (marker.DialogueId is null)
+            {
+                continue;
+            }
+
+            EncounterDefinition encounter = content.GetRequired<EncounterDefinition>(marker.EncounterId);
+            EncounterEnemyDefinition? firstEnemy = encounter.EnemyGroup.FirstOrDefault();
+            if (firstEnemy is null)
+            {
+                continue;
+            }
+
+            EnemyDefinition enemy = content.GetRequired<EnemyDefinition>(firstEnemy.EnemyId);
+            if (string.IsNullOrWhiteSpace(enemy.PresentationId))
+            {
+                continue;
+            }
+
+            string assetName = enemy.PresentationId[(enemy.PresentationId.LastIndexOf('.') + 1)..];
+            string path = $"res://game/assets/enemies/{assetName}/battle.png";
+            if (ResourceLoader.Load<Texture2D>(path) is Texture2D texture)
+            {
+                textures.Add(marker.Id, texture);
+            }
+            else
+            {
+                GD.PushWarning($"Encounter marker '{marker.Id}' could not load '{path}'.");
+            }
+        }
+
+        return textures;
     }
 }

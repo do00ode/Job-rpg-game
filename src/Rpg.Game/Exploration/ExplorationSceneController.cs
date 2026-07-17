@@ -1,6 +1,9 @@
 using Godot;
+using RpgGame.Core.Combat;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Maps;
+using RpgGame.Core.Presentation;
 using RpgGame.Core.State;
 using RpgGame.Display;
 using RpgGame.Encounters;
@@ -10,7 +13,7 @@ using RpgGame.Localization;
 namespace RpgGame.Exploration;
 
 /// <summary>
-/// Coordinates keyboard intent, the one room's collision, persistent state, and dialogue UI.
+/// Coordinates keyboard intent, authored map collision, persistent state, and dialogue UI.
 /// </summary>
 /// <remarks>
 /// Godot concerns stop here: keys become logical tile requests, the room accepts or rejects
@@ -20,7 +23,7 @@ namespace RpgGame.Exploration;
 public partial class ExplorationSceneController : Node2D
 {
 	private IExplorationMapView _room = null!;
-	private Node2D _mapNode = null!;
+	private Camera2D _camera = null!;
 	private PlayerMarkerView _player = null!;
 	private TestGuideNpc _guide = null!;
 	private DialoguePanel _dialogue = null!;
@@ -34,6 +37,8 @@ public partial class ExplorationSceneController : Node2D
 	private IContentCatalog? _content;
 	private LocalizedTextCatalog? _text;
 	private IGameSession? _session;
+	private IRandomSource? _randomSource;
+	private MapQueryService? _mapQuery;
 	private IExplorationDevelopmentCommands? _developmentCommands;
 	private InputBindingService? _inputBindings;
 	private bool _developmentCommandInProgress;
@@ -44,15 +49,17 @@ public partial class ExplorationSceneController : Node2D
 	private Vector2I _heldMovementDelta;
 	private string _heldMovementFacing = string.Empty;
 	private double _movementRepeatTimer;
+	private MapEncounterMarkerDefinition? _pendingEncounterAfterDialogue;
+	private static readonly RandomEncounterResolver RandomEncounterResolver = new();
 
-	private const double MovementInitialDelaySeconds = 0.24;
-	private const double MovementRepeatIntervalSeconds = 0.16;
+	private const double MovementInitialDelaySeconds = 0.48;
+	private const double MovementRepeatIntervalSeconds = 0.32;
 
 	/// <summary>Requests reconstruction by the composition root without adding navigation.</summary>
 	public event EventHandler? ReloadRequested;
 
 	/// <summary>
-	/// Requests a direct handoff to one encounter after an accepted step enters its tile.
+	/// Requests a direct handoff for a fixed or random encounter selected during exploration.
 	/// The owner decides which scene to show; exploration never searches for GameRoot.
 	/// </summary>
 	public event EventHandler<EncounterLaunchRequestedEventArgs>? EncounterRequested;
@@ -60,11 +67,15 @@ public partial class ExplorationSceneController : Node2D
 
 	public override void _Ready()
 	{
-		_mapNode = GetNode<Node2D>("Map");
-		_room = _mapNode as IExplorationMapView
+		Node2D mapNode = GetNode<Node2D>("Map");
+		_camera = GetNode<Camera2D>("Camera");
+		_room = mapNode as IExplorationMapView
 			?? throw new InvalidOperationException("Exploration map node must implement IExplorationMapView.");
 		_player = GetNode<PlayerMarkerView>("Player");
 		_guide = GetNode<TestGuideNpc>("Guide");
+		_camera.PositionSmoothingEnabled = false;
+		_camera.Zoom = Vector2.One;
+		_camera.Enabled = true;
 		_dialogue = GetNode<DialoguePanel>("Interface/Dialogue");
 		_controlsPanel = GetNode<ControlsPanel>("Interface/Controls");
 		_displaySettingsPanel = GetNode<DisplaySettingsPanel>("Interface/DisplaySettings");
@@ -88,13 +99,16 @@ public partial class ExplorationSceneController : Node2D
 		IExplorationDevelopmentCommands developmentCommands,
 		InputBindingService inputBindings,
 		DisplaySettingsService displaySettings,
-		LocalizedTextCatalog text)
+		IRandomSource randomSource,
+		LocalizedTextCatalog text,
+		bool resumeHeldMovement = true)
 	{
 		ArgumentNullException.ThrowIfNull(content);
 		ArgumentNullException.ThrowIfNull(session);
 		ArgumentNullException.ThrowIfNull(developmentCommands);
 		ArgumentNullException.ThrowIfNull(inputBindings);
 		ArgumentNullException.ThrowIfNull(displaySettings);
+		ArgumentNullException.ThrowIfNull(randomSource);
 		ArgumentNullException.ThrowIfNull(text);
 
 		if (_session is not null)
@@ -105,6 +119,7 @@ public partial class ExplorationSceneController : Node2D
 		_content = content;
 		_text = text;
 		_session = session;
+		_randomSource = randomSource;
 		_developmentCommands = developmentCommands;
 		_inputBindings = inputBindings;
 		_session.StateChanged += OnSessionStateChanged;
@@ -113,18 +128,24 @@ public partial class ExplorationSceneController : Node2D
 		_displaySettingsPanel.Initialize(displaySettings);
 		_soundSettingsPanel.Initialize(displaySettings);
 		_gameMenuPanel.EquipmentRequested += OnEquipmentRequested;
+		_gameMenuPanel.SaveSlotRequested += OnSaveSlotRequested;
 		_gameMenuPanel.ControlsRequested += OnControlsRequested;
 		_gameMenuPanel.DisplayRequested += OnDisplayRequested;
 		_gameMenuPanel.SoundRequested += OnSoundRequested;
 		_equipmentPanel.Initialize(_content, _session, text);
-		_room.Initialize(new RpgGame.Core.Maps.MapQueryService(
-			_content.GetRequired<MapDefinition>(_session.Current.Location.MapId)));
+		_mapQuery = new MapQueryService(
+			_content.GetRequired<MapDefinition>(_session.Current.Location.MapId));
+		_room.Initialize(_mapQuery, _content);
+		ConfigureCamera();
 		RefreshInstructionText();
 		ApplyAuthoritativeState();
 		SetProcessUnhandledInput(true);
 		SetProcess(true);
 		_readyForInput = true;
-		ResumeHeldMovementIfPressed();
+		if (resumeHeldMovement)
+		{
+			ResumeHeldMovementIfPressed();
+		}
 	}
 
 	public override void _Process(double delta)
@@ -153,7 +174,7 @@ public partial class ExplorationSceneController : Node2D
 	}
 
 	/// <summary>
-	/// Displays feedback for temporary room reconstruction and quick-slot commands.
+	/// Displays feedback for temporary room reconstruction and development commands.
 	/// </summary>
 	public void ShowDevelopmentStatus(string message, bool isError = false)
 	{
@@ -183,6 +204,7 @@ public partial class ExplorationSceneController : Node2D
 		if (_gameMenuPanel is not null)
 		{
 			_gameMenuPanel.EquipmentRequested -= OnEquipmentRequested;
+			_gameMenuPanel.SaveSlotRequested -= OnSaveSlotRequested;
 			_gameMenuPanel.ControlsRequested -= OnControlsRequested;
 		_gameMenuPanel.DisplayRequested -= OnDisplayRequested;
 			_gameMenuPanel.SoundRequested -= OnSoundRequested;
@@ -223,30 +245,18 @@ public partial class ExplorationSceneController : Node2D
 			return;
 		}
 
-		if (MatchesKey(keyEvent, Key.K))
-		{
-			GetViewport().SetInputAsHandled();
-			_ = SaveQuickSlotAsync();
-			return;
-		}
-
-		if (MatchesKey(keyEvent, Key.L))
-		{
-			GetViewport().SetInputAsHandled();
-			_ = LoadQuickSlotAsync();
-			return;
-		}
-
 		if (_dialogue.IsOpen)
 		{
 			if (keyEvent.IsActionPressed(GameInputActions.Interact))
 			{
 				_dialogue.Advance();
+				LaunchPendingEncounterAfterDialogue();
 				GetViewport().SetInputAsHandled();
 			}
 			else if (keyEvent.IsActionPressed(GameInputActions.Menu))
 			{
 				_dialogue.Close();
+				LaunchPendingEncounterAfterDialogue();
 				GetViewport().SetInputAsHandled();
 			}
 
@@ -351,8 +361,13 @@ public partial class ExplorationSceneController : Node2D
 		MapLocationState location = session.Current.Location;
 		var currentTile = new Vector2I(location.X, location.Y);
 		Vector2I requestedTile = currentTile + delta;
+		bool blockedByEncounterActor = _room.TryGetEncounterAt(
+			requestedTile,
+			out MapEncounterMarkerDefinition? requestedEncounter)
+			&& requestedEncounter?.DialogueId is not null;
 		bool canEnter = _room.IsWalkable(requestedTile)
-			&& requestedTile != _room.GuideTile;
+			&& requestedTile != _room.GuideTile
+			&& !blockedByEncounterActor;
 		Vector2I acceptedTile = canEnter ? requestedTile : currentTile;
 		bool moved = acceptedTile != currentTile;
 		_animateNextPlayerPosition = moved;
@@ -367,17 +382,16 @@ public partial class ExplorationSceneController : Node2D
 			Facing = facing,
 		});
 
-		// Trigger only on the edge created by a successful step. ApplyAuthoritativeState,
-		// save/load, R reconstruction, and returning from battle merely render the
-		// saved tile and never call this code, so standing on the marker cannot auto-launch.
+		// Enter-the-tile markers trigger only on a successful step. Dialogue-backed actors use
+		// interaction instead. Applying saved state and returning from battle never call here.
 		if (moved && !_encounterTransitionRequested
-			&& _room.TryGetEncounterAt(acceptedTile, out string encounterId))
+			&& _room.TryGetEncounterAt(
+				acceptedTile,
+				out MapEncounterMarkerDefinition? marker)
+			&& marker is not null
+			&& marker.DialogueId is null)
 		{
-			_encounterTransitionRequested = true;
-			SetProcessUnhandledInput(false);
-			EncounterRequested?.Invoke(
-				this,
-				new EncounterLaunchRequestedEventArgs(new EncounterLaunchRequest(encounterId, _room.MapId)));
+			LaunchEncounter(marker.EncounterId, marker.ClearedFlagId);
 			return;
 		}
 
@@ -395,30 +409,66 @@ public partial class ExplorationSceneController : Node2D
 			SetProcessUnhandledInput(false);
 			TransitionRequested?.Invoke(this,
 				new MapTransitionRequestedEventArgs(new MapTransitionRequest(transition.Id)));
+			return;
+		}
+
+		string? randomEncounterId = RandomEncounterResolver.Resolve(
+			RequireMapQuery().RandomEncounters,
+			RequireRandomSource());
+		if (randomEncounterId is not null)
+		{
+			LaunchEncounter(randomEncounterId, clearanceFlagId: null);
 		}
 	}
 
 	private void TryInteract()
 	{
 		IGameSession session = RequireSession();
-		if (_room.GuideTile.X < 0 || !_guide.Visible)
-		{
-			return;
-		}
-
 		MapLocationState location = session.Current.Location;
 		var playerTile = new Vector2I(location.X, location.Y);
 		Vector2I targetTile = playerTile + FacingToOffset(location.Facing);
 
-		if (targetTile != _room.GuideTile)
+		if (_room.GuideTile.X >= 0 && _guide.Visible && targetTile == _room.GuideTile)
+		{
+			ExplorationInteractionResult result = _guide.Interact(session);
+			DialogueDefinition dialogue = RequireContent()
+				.GetRequired<DialogueDefinition>(result.DialogueId);
+			_dialogue.ShowDialogue(dialogue, RequireText());
+			return;
+		}
+
+		if (_room.TryGetEncounterAt(targetTile, out MapEncounterMarkerDefinition? marker)
+			&& marker?.DialogueId is not null)
+		{
+			ClearHeldMovement();
+			_pendingEncounterAfterDialogue = marker;
+			DialogueDefinition dialogue = RequireContent()
+				.GetRequired<DialogueDefinition>(marker.DialogueId);
+			_dialogue.ShowDialogue(dialogue, RequireText());
+		}
+	}
+
+	private void LaunchPendingEncounterAfterDialogue()
+	{
+		if (_dialogue.IsOpen || _pendingEncounterAfterDialogue is null)
 		{
 			return;
 		}
 
-		ExplorationInteractionResult result = _guide.Interact(session);
-		DialogueDefinition dialogue = RequireContent()
-			.GetRequired<DialogueDefinition>(result.DialogueId);
-		_dialogue.ShowDialogue(dialogue, RequireText());
+		MapEncounterMarkerDefinition marker = _pendingEncounterAfterDialogue;
+		_pendingEncounterAfterDialogue = null;
+		LaunchEncounter(marker.EncounterId, marker.ClearedFlagId);
+	}
+
+	private void LaunchEncounter(string encounterId, string? clearanceFlagId)
+	{
+		_encounterTransitionRequested = true;
+		ClearHeldMovement();
+		SetProcessUnhandledInput(false);
+		EncounterRequested?.Invoke(
+			this,
+			new EncounterLaunchRequestedEventArgs(
+				new EncounterLaunchRequest(encounterId, _room.MapId, clearanceFlagId)));
 	}
 
 	private void OnSessionStateChanged(object? sender, EventArgs eventArgs) =>
@@ -439,13 +489,27 @@ public partial class ExplorationSceneController : Node2D
 			+ $"Interact[{bindings.FormatBindings(GameInputActions.Interact)}]    "
 			+ $"Equipment[{bindings.FormatBindings(GameInputActions.Equipment)}]    "
 			+ $"Menu[{bindings.FormatBindings(GameInputActions.Menu)}]    "
-			+ "Developer: R rebuild, K save, L load";
+			+ "Developer: R rebuild";
 	}
 
 	private void OnEquipmentRequested(object? sender, EventArgs eventArgs)
 	{
 		_gameMenuPanel.Close();
 		_equipmentPanel.Open();
+	}
+
+	private void OnSaveSlotRequested(
+		object? sender,
+		SaveSlotRequestedEventArgs eventArgs)
+	{
+		if (eventArgs.IsLoad)
+		{
+			_ = LoadSlotAsync(eventArgs.SlotId);
+		}
+		else
+		{
+			_ = SaveSlotAsync(eventArgs.SlotId);
+		}
 	}
 
 	private void OnControlsRequested(object? sender, EventArgs eventArgs)
@@ -484,6 +548,7 @@ public partial class ExplorationSceneController : Node2D
 		}
 
 		Vector2 targetPosition = _room.TileToWorld(tile);
+		UpdateCamera(targetPosition);
 		if (_animateNextPlayerPosition)
 		{
 			_animateNextPlayerPosition = false;
@@ -503,6 +568,28 @@ public partial class ExplorationSceneController : Node2D
 			.Where(flag => flag.Value)
 			.Select(flag => flag.Key)
 			.ToHashSet(StringComparer.Ordinal));
+	}
+
+	private void ConfigureCamera()
+	{
+		CameraLimits limits = PixelPerfectGeometry.CalculateCameraLimits(
+			_room.MapPixelWidth / PixelPerfectGeometry.NativeTileSize,
+			_room.MapPixelHeight / PixelPerfectGeometry.NativeTileSize);
+		_camera.LimitLeft = limits.Left;
+		_camera.LimitTop = limits.Top;
+		_camera.LimitRight = limits.Right;
+		_camera.LimitBottom = limits.Bottom;
+		_camera.LimitSmoothed = false;
+		_camera.PositionSmoothingEnabled = false;
+	}
+
+	private void UpdateCamera(Vector2 targetPosition)
+	{
+		PixelPoint center = PixelPerfectGeometry.CalculateCameraCenter(
+			_room.MapPixelWidth,
+			_room.MapPixelHeight,
+			PixelPerfectGeometry.SnapToPixel(targetPosition.X, targetPosition.Y));
+		_camera.Position = new Vector2(center.X, center.Y);
 	}
 
 	private static bool TryGetMovement(
@@ -592,6 +679,12 @@ public partial class ExplorationSceneController : Node2D
 	private LocalizedTextCatalog RequireText() => _text
 		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
 
+	private IRandomSource RequireRandomSource() => _randomSource
+		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
+
+	private MapQueryService RequireMapQuery() => _mapQuery
+		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
+
 	private IExplorationDevelopmentCommands RequireDevelopmentCommands() =>
 		_developmentCommands
 		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
@@ -599,7 +692,7 @@ public partial class ExplorationSceneController : Node2D
 	private InputBindingService RequireInputBindings() => _inputBindings
 		?? throw new InvalidOperationException("ExplorationSceneController is not initialized.");
 
-	private async Task SaveQuickSlotAsync()
+	private async Task SaveSlotAsync(string slotId)
 	{
 		if (_developmentCommandInProgress)
 		{
@@ -609,12 +702,12 @@ public partial class ExplorationSceneController : Node2D
 
 		_developmentCommandInProgress = true;
 		IExplorationDevelopmentCommands commands = RequireDevelopmentCommands();
-		ShowDevelopmentStatus($"Saving {commands.QuickSlotId}...");
+		ShowDevelopmentStatus($"Saving {slotId}...");
 
 		try
 		{
-			await commands.SaveQuickSlotAsync();
-			ShowDevelopmentStatus($"Saved {commands.QuickSlotId}.");
+			await commands.SaveSlotAsync(slotId);
+			ShowDevelopmentStatus($"Saved {slotId}.");
 		}
 		catch (Exception exception)
 		{
@@ -629,7 +722,7 @@ public partial class ExplorationSceneController : Node2D
 		}
 	}
 
-	private async Task LoadQuickSlotAsync()
+	private async Task LoadSlotAsync(string slotId)
 	{
 		if (_developmentCommandInProgress)
 		{
@@ -639,21 +732,21 @@ public partial class ExplorationSceneController : Node2D
 
 		_developmentCommandInProgress = true;
 		IExplorationDevelopmentCommands commands = RequireDevelopmentCommands();
-		ShowDevelopmentStatus($"Loading {commands.QuickSlotId}...");
+		ShowDevelopmentStatus($"Loading {slotId}...");
 
 		try
 		{
-			bool loaded = await commands.LoadQuickSlotAsync();
+			bool loaded = await commands.LoadSlotAsync(slotId);
 			if (loaded)
 			{
-				// Dialogue progress belongs to the disposable UI, not GameState. Keeping an
-				// old panel open after restoring a save would display stale presentation.
-				_dialogue.Close();
+				// GameRoot replaced this controller and reconstructed a fresh presentation.
+				// Do not touch this scene after the successful handoff.
+				return;
 			}
 
 			ShowDevelopmentStatus(loaded
-				? $"Loaded {commands.QuickSlotId}."
-				: $"No save exists in {commands.QuickSlotId}.",
+				? $"Loaded {slotId}."
+				: $"No save exists in {slotId}.",
 				isError: !loaded);
 		}
 		catch (Exception exception)

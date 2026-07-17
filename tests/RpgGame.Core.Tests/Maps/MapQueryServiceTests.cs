@@ -28,6 +28,18 @@ public sealed class MapQueryServiceTests
                     ClearedFlagId = "flag.encounter.test.slime.cleared",
                 },
             ],
+            RandomEncounters = new MapRandomEncounterDefinition
+            {
+                Rate = 8,
+                Entries =
+                [
+                    new MapRandomEncounterEntryDefinition
+                    {
+                        EncounterId = "encounter.test.random",
+                        Weight = 1,
+                    },
+                ],
+            },
         };
         var transition = new MapTransitionDefinition
         {
@@ -49,6 +61,7 @@ public sealed class MapQueryServiceTests
         Assert.Equal((1, 1), (spawn!.X, spawn.Y));
         Assert.True(query.TryGetEncounterAt(1, 1, out MapEncounterMarkerDefinition? encounter));
         Assert.Equal("encounter.test.slime", encounter!.EncounterId);
+        Assert.Equal(8, query.RandomEncounters!.Rate);
         Assert.True(query.TryGetTransitionAt(3, 1, out MapTransitionDefinition? foundTransition));
         Assert.Equal(transition.Id, foundTransition!.Id);
         Assert.False(query.TryGetEncounterAt(2, 1, out _));

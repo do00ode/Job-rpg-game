@@ -28,7 +28,7 @@ bad data cannot reach its future resolver. A physical-damage ability also select
 `damageTypeId`: Slash, Energy, Fire, Ice, or Lightning. The resolver calculates
 `max(1, Strength + power - Defense)`, applies the target's signed percentage modifier for that
 type, floors once, and clamps applied damage to remaining HP. New damage abilities should
-author the type explicitly; omitted legacy definitions use Energy.
+author the type explicitly; omitted legacy physical-damage definitions use Blunt.
 
 A new ability may reuse one of these rows and choose new tuning values. A new target mode or a
 genuinely different effect—healing, poison status, stealing, resurrection, and so on—

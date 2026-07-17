@@ -1020,6 +1020,10 @@ internal sealed class ContentValidator
             RequireReference<EncounterDefinition>(item, $"{path}.encounterId", marker.EncounterId);
             RequireStableKey(item, $"{path}.id", marker.Id, "encounter-marker.");
             RequireStableKey(item, $"{path}.clearedFlagId", marker.ClearedFlagId, "flag.");
+            if (marker.DialogueId is not null)
+            {
+                RequireReference<DialogueDefinition>(item, $"{path}.dialogueId", marker.DialogueId);
+            }
             if (!IsMapTile(map, marker.X, marker.Y))
             {
                 Add(item, path, "map.marker-out-of-bounds", "Encounter marker must be inside the map.");
@@ -1031,6 +1035,47 @@ internal sealed class ContentValidator
             else if (map.Rows[marker.Y][marker.X] != 'E')
             {
                 Add(item, path, "map.encounter-symbol-mismatch", "Encounter marker should be authored over E.");
+            }
+        }
+
+        if (map.RandomEncounters is MapRandomEncounterDefinition randomEncounters)
+        {
+            if (randomEncounters.Rate is < 0 or > 255)
+            {
+                Add(item, "$.randomEncounters.rate", "map.random-encounter-rate-invalid",
+                    "Random encounter rate must be from 0 through 255.");
+            }
+
+            IReadOnlyList<MapRandomEncounterEntryDefinition> entries = RequireList(
+                item,
+                "$.randomEncounters.entries",
+                randomEncounters.Entries);
+            if (entries.Count == 0)
+            {
+                Add(item, "$.randomEncounters.entries", "map.random-encounter-table-empty",
+                    "A random encounter table must contain at least one entry.");
+            }
+
+            long totalWeight = 0;
+            for (int index = 0; index < entries.Count; index++)
+            {
+                MapRandomEncounterEntryDefinition? entry = entries[index];
+                string path = $"$.randomEncounters.entries[{index}]";
+                if (entry is null)
+                {
+                    Add(item, path, "value.null", "Array entries cannot be null.");
+                    continue;
+                }
+
+                RequireReference<EncounterDefinition>(item, $"{path}.encounterId", entry.EncounterId);
+                RequireAtLeast(item, $"{path}.weight", entry.Weight, 1);
+                totalWeight += entry.Weight;
+            }
+
+            if (totalWeight > int.MaxValue)
+            {
+                Add(item, "$.randomEncounters.entries", "map.random-encounter-weight-overflow",
+                    "The total random encounter weight cannot exceed 2147483647.");
             }
         }
 

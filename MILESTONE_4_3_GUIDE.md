@@ -17,6 +17,7 @@ The code-owned stable IDs are:
 | Elemental | `damage-type.fire` |
 | Elemental | `damage-type.ice` |
 | Elemental | `damage-type.lightning` |
+| Future magic | `damage-type.psychic` |
 
 `DamageTypeIds` owns this closed list. Content and data mods may select these IDs but cannot
 create a mechanic by inventing another string. A future type is additive: add its permanent
@@ -40,7 +41,7 @@ damage type while reusing that formula. A dedicated magical-stat formula remains
 ruleset decision; do not invent `rules.damage.magic` in JSON.
 
 New damage abilities should author the type explicitly. Omitted legacy physical-damage content
-resolves as `damage-type.energy` for compatibility. Non-damage rulesets must leave
+resolves as `damage-type.blunt` for compatibility. Non-damage rulesets must leave
 `damageTypeId` null or omitted.
 
 ## Enemy affinities
@@ -105,18 +106,17 @@ Only `slot.weapon.*` equipment may declare a nonempty profile. The checked-in ir
 100% Slash. Mixed components use separate map entries; duplicate type keys are not meaningful
 in a JSON object.
 
-This milestone deliberately does not apply weapon profiles. The campaign has inventory stacks
-but no equipment ownership, equipped slots, or active weapon selection. Applying an inventory
-item as though it were equipped would violate campaign ownership. Empty legacy profiles remain
-valid and reserve an Energy fallback for the later equipment-activation milestone.
+This milestone originally did not apply weapon profiles. Equipment activation now resolves an
+omitted equipment profile through the weapon's required family profile. An unequipped basic
+Attack and any legacy physical-damage ability with no authored type use Blunt.
 
 ## Compatibility
 
 - `AbilityDefinition.DamageTypeId`, `EquipmentDefinition.WeaponDamagePercentages`, and
   `EnemyDefinition.DamageTypePercentModifiers` are additive fields with safe defaults.
 - The content schema version and mod `gameApiVersion` remain unchanged.
-- Omitted legacy ability types resolve as Energy; omitted enemy maps are neutral; omitted
-  weapon maps remain valid for future Energy fallback.
+- Omitted legacy physical ability types resolve as Blunt; omitted enemy maps are neutral;
+  omitted equipment profiles resolve through their authored weapon family.
 - Explicit JSON null collection maps are invalid.
 - No save field or migration is added. Combat snapshots and damage events are transient.
 

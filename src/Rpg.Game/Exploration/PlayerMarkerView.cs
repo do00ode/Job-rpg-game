@@ -27,7 +27,9 @@ public partial class PlayerMarkerView : Node2D
         _facing = facing;
         if (changed)
         {
-            _nextStepFrame = 0;
+            // Frame 1 is the facing/idle pose. The first successful step after
+            // turning must use the alternate pose so a tap is visibly animated.
+            _nextStepFrame = 1;
         }
         if (changed || !_frames.TryGetValue(facing, out Texture2D[]? frames))
         {
@@ -55,7 +57,7 @@ public partial class PlayerMarkerView : Node2D
         CreateTween()
             .SetTrans(Tween.TransitionType.Linear)
             .SetEase(Tween.EaseType.InOut)
-            .TweenProperty(this, "position", targetPosition, 0.13);
+            .TweenProperty(this, "position", targetPosition, 0.26);
     }
 
     public override void _Draw()
@@ -67,7 +69,7 @@ public partial class PlayerMarkerView : Node2D
             Vector2 size = _currentFrame.GetSize();
             DrawTextureRect(
                 _currentFrame,
-                new Rect2(-size.X * 0.5f, -size.Y * 0.5f, size.X, size.Y),
+                new Rect2(-size.X * 0.5f, -size.Y, size.X, size.Y),
                 tile: false,
                 modulate: Colors.White,
                 transpose: false);

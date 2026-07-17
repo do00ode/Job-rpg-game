@@ -323,14 +323,19 @@ public sealed class CombatResolverTests
     }
 
     [Fact]
-    public void Resolve_OmittedLegacyDamageTypeDefaultsToEnergy()
+    public void Resolve_OmittedLegacyPhysicalAbilityDamageTypeDefaultsToBlunt()
     {
         FixedBattle battle = CombatTestFixture.CreateFixedBattle();
-        AbilityDefinition legacyAttack = PhysicalAbility(CombatTestFixture.AttackId, 4m);
+        const string abilityId = "ability.test.legacy-physical";
+        AbilityDefinition legacyAttack = PhysicalAbility(abilityId, 4m);
+        CombatSnapshot snapshot = ReplaceCombatant(
+            battle.Snapshot,
+            "party-0",
+            combatant => WithAbilities(combatant, [abilityId]));
 
         CombatResolution resolution = new CombatResolver(new TestCatalog(legacyAttack)).Resolve(
-            battle.Snapshot,
-            Attack("party-0", "enemy-0"));
+            snapshot,
+            new CombatCommand("party-0", abilityId, ["enemy-0"]));
 
         DamageApplied damage = Assert.IsType<DamageApplied>(Assert.Single(resolution.Events));
         Assert.Equal(DamageTypeIds.Blunt, damage.DamageTypeId);

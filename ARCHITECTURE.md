@@ -99,13 +99,19 @@ injects a Godot-free `MapQueryService`, and renders the ASCII logic rows plus ma
 new map does not require a new view class or scene. The test-room guide is a temporary
 presentation fixture until NPC placement receives its own content slice.
 
-### Fixed encounter handoff
+### Exploration encounter handoff
 
-Milestone 2.5 adds one direct, feature-specific transition without changing persistent-state
-ownership. `TestRoomView` maps the walkable tile `(3, 4)` to the stable content ID
-`encounter.forest.slimes-01`. After a successful step, `ExplorationSceneController` first
-publishes James's destination and facing through `IGameSession.UpdateLocation`, then raises a
-typed `EncounterLaunchRequest`. It never locates or replaces another Node itself.
+Map JSON owns fixed encounter placement, the referenced encounter, its optional pre-battle
+dialogue, and its persistent clearance flag. Dialogue-backed markers render a visible blocking
+actor; interaction presents the authored dialogue before `ExplorationSceneController` raises a
+typed `EncounterLaunchRequest`. Markers without dialogue remain enter-the-tile triggers.
+The controller never locates or replaces another Node itself.
+
+Maps may also own an optional FFIV-inspired random encounter table. After a successful eligible
+step, the Godot-free `RandomEncounterResolver` compares an injected `0..255` roll with the map's
+rate, then selects one encounter from positive authored weights. Fixed launches carry their map
+marker's clearance flag. Random launches deliberately carry no clearance flag, allowing the
+same encounter definition to repeat while using the ordinary battle and reward pipeline.
 
 `GameRoot` resolves that ID as an `EncounterDefinition` and builds its transient enemy/party
 formations before removing exploration. Milestones 3.14 and 3.15 now extend the original
@@ -115,16 +121,15 @@ victory path through atomic rewards and a disposable summary scene. The battle s
 no `IGameSession`; it can report stable defeated enemy definitions and a typed terminal result
 but cannot mutate campaign progress itself.
 
-The trigger check exists only on the accepted-movement path, after the session update. Scene
-construction, `StateChanged`, R reconstruction, quick-load, and battle return only apply
-authoritative state to presentation. After defeat, James can return standing on the marker
-without an immediate transition; stepping off and deliberately stepping back creates a retry.
-After victory, rewards enter inventory before the persistent clearance flag is set. The room
-then hides and ignores the marker after the player confirms the reward summary.
+Trigger checks exist only after accepted movement or explicit interaction. Scene construction,
+`StateChanged`, R reconstruction, quick-load, and battle return only apply authoritative state
+to presentation. After fixed-encounter victory, rewards enter inventory before the marker's
+persistent clearance flag is set; random victories apply rewards without creating a clearance
+fact.
 
-The three explicit presentations—exploration, battle, and reward summary—are not a general
-navigator, scene stack, route registry, or transition state machine. A reusable map navigation
-design still waits for a second actual map.
+The explicit exploration and battle presentations are not a general navigator, scene stack,
+route registry, or transition state machine. Victory rewards remain an owned battle overlay
+until the player confirms the return to exploration.
 
 ### Battle formation foundation
 
@@ -324,9 +329,9 @@ flowchart TD
     Loot --> Inventory
     Inventory --> State["GameState inventory"]
     Completion --> Flag["Encounter clearance after reward success"]
-    State --> Summary["RewardSummaryController"]
-    Flag --> Summary
-    Summary --> Exploration["Exploration"]
+    State --> FieldRewards["BattleFormationView reward items"]
+    Flag --> FieldRewards
+    FieldRewards --> Exploration["Exploration"]
 ```
 
 `BattleCompletionRequest.FromFinalSnapshot` carries defeated enemy definition IDs in combatant
@@ -508,9 +513,9 @@ permanent top slot list remains visible when the lower choice pane opens. The re
 `game.equipment` action opens this scene-local panel directly. Highlight previews still come
 from `EquipmentScreenProjectionResolver`; only confirmation reaches `EquipmentService`.
 
-Milestone 4.96 preserves the authored `1280x720` logical viewport and keeps resolution scaling
-in Godot presentation. Window-size changes scale that stable room coordinate space rather than
-changing map geometry. Scene containers divide the available menu viewport, while
+Milestone 4.96 uses a fixed `320x240` logical viewport and keeps integer aspect-preserving
+scaling in Godot presentation. Window-size changes scale that stable native coordinate space
+with pillarboxes rather than changing map geometry. Scene containers divide the available menu viewport, while
 `BattleFormationView` converts existing core placements into a size-dependent grid and rebuilds
 only view labels after resize; it never changes formation rules or combat state.
 
@@ -730,7 +735,7 @@ ability/target policy.
 - status-effect stacking and timing;
 - dialogue choices, conditions, cutscene commands, additional locale/runtime language features,
   and mod-owned localization;
-- general map transitions and random/scalable encounter triggering details;
+- encounter-zone modifiers, step counters, encounter protection, and scalable regional tables;
 - item use, equipment ownership, active equipment slots, and application of authored weapon
   damage profiles;
 - advanced AI profiles, scoring, and authored behavior differences;

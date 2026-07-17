@@ -81,6 +81,28 @@ public sealed class BattleCompletionServiceTests
     }
 
     [Fact]
+    public void Complete_RepeatableVictoryWithoutClearanceFlagGrantsRewardsEveryTime()
+    {
+        (BattleCompletionService service, GameSession session, RecordingLootResolver resolver) =
+            CreateService([Award(quantity: 1)]);
+
+        BattleCompletionResult first = service.Complete(
+            Request(BattleOutcome.PartyVictory),
+            clearanceFlagId: null,
+            new UnusedRandomSource());
+        BattleCompletionResult second = service.Complete(
+            Request(BattleOutcome.PartyVictory),
+            clearanceFlagId: null,
+            new UnusedRandomSource());
+
+        Assert.Equal(BattleCompletionDisposition.VictoryRewardsApplied, first.Disposition);
+        Assert.Equal(BattleCompletionDisposition.VictoryRewardsApplied, second.Disposition);
+        Assert.Equal(2, resolver.CallCount);
+        Assert.Equal(2, session.Current.Inventory[ItemId]);
+        Assert.Empty(session.Current.EventFlags);
+    }
+
+    [Fact]
     public void Complete_RewardFailureLeavesClearanceFalseAndInventoryUnchanged()
     {
         (BattleCompletionService service, GameSession session, RecordingLootResolver resolver) =
