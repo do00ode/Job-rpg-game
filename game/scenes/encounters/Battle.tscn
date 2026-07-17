@@ -37,39 +37,39 @@ modulate = Color(0.62, 0.62, 0.62, 1)
 [node name="GridDebugToggle" type="Button" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -230.0
-offset_top = 8.0
-offset_right = -12.0
-offset_bottom = 36.0
+offset_left = -96.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 20.0
 mouse_default_cursor_shape = 2
 mouse_filter = 0
 z_index = 10
 text = "Hide Grid (Debug)"
+theme_override_font_sizes/font_size = 7
 
 [node name="BattleLogDebugToggle" type="Button" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -230.0
-offset_top = 40.0
-offset_right = -12.0
-offset_bottom = 68.0
+offset_left = -96.0
+offset_top = 22.0
+offset_right = -4.0
+offset_bottom = 38.0
 mouse_default_cursor_shape = 2
 mouse_filter = 0
 z_index = 10
 text = "Show Log (Debug)"
+theme_override_font_sizes/font_size = 7
 
 [node name="BattleLogWindow" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -310.0
-offset_top = -150.0
-offset_right = 310.0
-offset_bottom = 150.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
@@ -77,10 +77,10 @@ z_index = 20
 
 [node name="Margin" type="MarginContainer" parent="BattleLogWindow"]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
 [node name="VBox" type="VBoxContainer" parent="BattleLogWindow/Margin"]
 layout_mode = 2
@@ -93,12 +93,13 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Combat Log (Debug)"
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 8
 
 [node name="Close" type="Button" parent="BattleLogWindow/Margin/VBox/Header"]
-custom_minimum_size = Vector2(72, 26)
+custom_minimum_size = Vector2(42, 16)
 layout_mode = 2
 text = "Close"
+theme_override_font_sizes/font_size = 7
 
 [node name="LogHost" type="VBoxContainer" parent="BattleLogWindow/Margin/VBox"]
 layout_mode = 2
@@ -111,43 +112,44 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 3
+theme_override_constants/separation = 1
 
 [node name="TurnOrder" type="Label" parent="Margin/VBox"]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 text = "Turn order loads here."
 horizontal_alignment = 1
-autowrap_mode = 2
+clip_text = true
 theme_override_colors/font_color = Color(0.55, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 7
 
 [node name="Title" type="Label" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 text = "Battle"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 20
 
 [node name="EncounterId" type="Label" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 text = "Encounter loads here."
-theme_override_font_sizes/font_size = 12
 
 [node name="BattlefieldId" type="Label" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 text = "Battlefield loads here."
-theme_override_font_sizes/font_size = 12
 
 [node name="FormationView" type="Control" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 410)
+custom_minimum_size = Vector2(0, 126)
 layout_mode = 2
 size_flags_vertical = 0
+clip_contents = true
 script = ExtResource("2_formation")
 
 [node name="StatusRow" type="HBoxContainer" parent="Margin/VBox"]
@@ -179,61 +181,65 @@ theme_override_font_sizes/font_size = 12
 
 [node name="CommandArea" type="VBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 3
+theme_override_constants/separation = 1
 
 [node name="Phase" type="Label" parent="Margin/VBox/CommandArea"]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 text = "Battle phase loads here."
 horizontal_alignment = 1
+autowrap_mode = 2
 theme_override_colors/font_color = Color(1, 0.83, 0.58, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 7
 
 [node name="CommandMenu" type="VBoxContainer" parent="Margin/VBox/CommandArea"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 4
+theme_override_constants/separation = 1
 
 [node name="TargetRow" type="HBoxContainer" parent="Margin/VBox/CommandArea"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 10
+theme_override_constants/separation = 2
 
 [node name="TargetPrompt" type="Label" parent="Margin/VBox/CommandArea/TargetRow"]
 layout_mode = 2
 text = "Target:"
 vertical_alignment = 1
+theme_override_font_sizes/font_size = 7
 
 [node name="Targets" type="HBoxContainer" parent="Margin/VBox/CommandArea/TargetRow"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 2
 
 [node name="EventLog" type="RichTextLabel" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 104)
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
-size_flags_vertical = 0
+size_flags_vertical = 3
 fit_content = false
 scroll_active = true
 scroll_following = true
 theme_override_colors/default_color = Color(0.88, 0.9, 0.96, 1)
-theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/normal_font_size = 8
 
 [node name="ResultRow" type="HBoxContainer" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 12
+theme_override_constants/separation = 4
 
 [node name="Result" type="Label" parent="Margin/VBox/ResultRow"]
 layout_mode = 2
 text = "Terminal result loads here."
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.55, 1, 0.65, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 7
 
 [node name="Continue" type="Button" parent="Margin/VBox/ResultRow"]
-custom_minimum_size = Vector2(110, 28)
+custom_minimum_size = Vector2(70, 16)
 layout_mode = 2
 text = "Continue"
+theme_override_font_sizes/font_size = 7
 
 [node name="InputHint" type="Label" parent="Margin/VBox"]
 visible = false

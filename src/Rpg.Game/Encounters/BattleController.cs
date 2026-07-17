@@ -140,42 +140,55 @@ public partial class BattleController : Control
         var statusRow = (HBoxContainer)_partyStatus.GetParent();
         var stack = (VBoxContainer)statusRow.GetParent();
         var commandArea = (VBoxContainer)_commandMenu.GetParent();
+
+        // Native 320x240 battle HUD. The old implementation expected a
+        // 1280x720-style layout and could never fit in the native viewport.
         var lowerPanel = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(0.0f, 148.0f),
+            CustomMinimumSize = new Vector2(0.0f, 72.0f),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
         };
-        lowerPanel.AddThemeConstantOverride("separation", 12);
+
+        lowerPanel.AddThemeConstantOverride("separation", 4);
+
         stack.AddChild(lowerPanel);
         stack.MoveChild(lowerPanel, statusRow.GetIndex());
 
         var enemyPanel = new VBoxContainer
         {
-            CustomMinimumSize = new Vector2(300.0f, 0.0f),
+            CustomMinimumSize = new Vector2(88.0f, 0.0f),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             SizeFlagsVertical = Control.SizeFlags.ExpandFill,
         };
-        enemyPanel.AddThemeConstantOverride("separation", 3);
+
+        enemyPanel.AddThemeConstantOverride("separation", 1);
         lowerPanel.AddChild(enemyPanel);
 
         _enemyStatus.Reparent(enemyPanel);
+
+        // The event log belongs in its optional debug window rather than consuming
+        // permanent room in the native battle HUD.
         _eventLog.Reparent(_battleLogHost);
+
         commandArea.Reparent(lowerPanel);
-        var spacer = new Control
-        {
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
-        lowerPanel.AddChild(spacer);
         _partyStatus.Reparent(lowerPanel);
+
         statusRow.Visible = false;
 
-        _enemyStatus.CustomMinimumSize = new Vector2(300.0f, 0.0f);
-        _partyStatus.CustomMinimumSize = new Vector2(290.0f, 0.0f);
-        _eventLog.CustomMinimumSize = new Vector2(580.0f, 220.0f);
-        _eventLog.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-        _eventLog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        commandArea.CustomMinimumSize = new Vector2(270.0f, 0.0f);
-        commandArea.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        _enemyStatus.CustomMinimumSize = new Vector2(88.0f, 0.0f);
+        _enemyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+        commandArea.CustomMinimumSize = new Vector2(104.0f, 0.0f);
+        commandArea.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         commandArea.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+
+        _partyStatus.CustomMinimumSize = new Vector2(88.0f, 0.0f);
+        _partyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+        _eventLog.CustomMinimumSize = Vector2.Zero;
+        _eventLog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _eventLog.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
     }
 
     private void ToggleFormationGrid()
@@ -452,18 +465,31 @@ public partial class BattleController : Control
     {
         foreach (CombatantSnapshot combatant in snapshot.Combatants)
         {
-            var hpLabel = new Label();
-            hpLabel.AddThemeFontSizeOverride("font_size", 15);
-            (combatant.Side == BattleSide.Party ? _partyStatus : _enemyStatus).AddChild(hpLabel);
+            var hpLabel = new Label
+            {
+                CustomMinimumSize = new Vector2(0.0f, 12.0f),
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+
+            hpLabel.AddThemeFontSizeOverride("font_size", 8);
+
+            (combatant.Side == BattleSide.Party
+                ? _partyStatus
+                : _enemyStatus).AddChild(hpLabel);
+
             _hpLabelByInstanceId.Add(combatant.InstanceId, hpLabel);
 
             string instanceId = combatant.InstanceId;
+
             var targetButton = new Button
             {
-                CustomMinimumSize = new Vector2(110.0f, 28.0f),
+                CustomMinimumSize = new Vector2(52.0f, 16.0f),
             };
+
+            targetButton.AddThemeFontSizeOverride("font_size", 7);
             targetButton.Pressed += () => SelectTargetAndResolve(instanceId);
             targetButton.FocusEntered += () => SelectFocusedTarget(instanceId);
+
             _targetButtons.AddChild(targetButton);
             _targetButtonByInstanceId.Add(instanceId, targetButton);
         }
@@ -532,16 +558,22 @@ public partial class BattleController : Control
         ShowTopLevelCommands();
     }
 
-    private void AddCommandButton(string text, Action action, bool disabled = false)
+    private void AddCommandButton(
+        string text,
+        Action action,
+        bool disabled = false)
     {
         var button = new Button
         {
-            CustomMinimumSize = new Vector2(150.0f, 28.0f),
+            CustomMinimumSize = new Vector2(92.0f, 16.0f),
             Text = text,
             Disabled = disabled,
         };
+
+        button.AddThemeFontSizeOverride("font_size", 7);
         button.Pressed += action;
         button.FocusEntered += () => _focusedCommandButton = button;
+
         _commandMenu.AddChild(button);
         _commandButtons.Add(button);
         _commandActionByButton.Add(button, action);
@@ -962,19 +994,19 @@ public partial class BattleController : Control
                 continue;
             }
 
-            _hpLabelByInstanceId[combatant.InstanceId].Text = combatant.Side == BattleSide.Enemy
-                ? DisplayName(combatant.InstanceId)
-                : $"{DisplayName(combatant.InstanceId)}: "
-                    + $"{combatant.CurrentHp}/{combatant.MaximumHp} HP | "
-                    + $"{combatant.CurrentMp}/{combatant.MaximumMp} MP";
+            _hpLabelByInstanceId[combatant.InstanceId].Text =
+                combatant.Side == BattleSide.Enemy
+                    ? $"{DisplayName(combatant.InstanceId)}\n"
+                        + $"HP {combatant.CurrentHp}/{combatant.MaximumHp}"
+                    : $"{DisplayName(combatant.InstanceId)}\n"
+                        + $"HP {combatant.CurrentHp}/{combatant.MaximumHp}  "
+                        + $"MP {combatant.CurrentMp}/{combatant.MaximumMp}";
 
             if (_targetButtonByInstanceId.TryGetValue(
                     combatant.InstanceId,
                     out Button? targetButton))
             {
-                targetButton.Text =
-                    $"{DisplayName(combatant.InstanceId)} "
-                    + $"{combatant.CurrentHp}/{combatant.MaximumHp}";
+                targetButton.Text = DisplayName(combatant.InstanceId);
                 targetButton.Disabled = combatant.IsDefeated
                     || _phase != BattleInputPhase.TargetSelection
                     || !IsLegalSelectedTarget(combatant);
