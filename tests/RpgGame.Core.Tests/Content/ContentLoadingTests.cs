@@ -17,7 +17,7 @@ public sealed class ContentLoadingTests
     {
         var catalog = TestContent.LoadCatalog();
 
-        Assert.Equal(52, catalog.Count);
+        Assert.Equal(53, catalog.Count);
         Assert.Single(catalog.GetAll<ActorDefinition>());
         Assert.Equal(3, catalog.GetAll<ClassDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<DialogueDefinition>().Count);
@@ -25,7 +25,7 @@ public sealed class ContentLoadingTests
         Assert.Equal(8, catalog.GetAll<ItemDefinition>().Count);
         Assert.Equal(7, catalog.GetAll<EquipmentDefinition>().Count);
         Assert.Single(catalog.GetAll<LootTableDefinition>());
-        Assert.Equal(7, catalog.GetAll<AbilityDefinition>().Count);
+        Assert.Equal(8, catalog.GetAll<AbilityDefinition>().Count);
         Assert.Equal(2, catalog.GetAll<MagicDisciplineDefinition>().Count);
         Assert.Single(catalog.GetAll<EnemyDefinition>());
         Assert.Equal(3, catalog.GetAll<EncounterDefinition>().Count);

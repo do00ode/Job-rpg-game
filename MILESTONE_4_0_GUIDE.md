@@ -131,7 +131,7 @@ if ($LASTEXITCODE -ne 0) {
 
 ## Deferred scope
 
-Milestone 4.0's inventory boundary still excludes item use, healing or battle items, equipment
+Milestone 4.0's inventory boundary still excludes general item use, healing or battle items, equipment
 ownership and equipping, shops, buying or selling, gold, experience rewards, key-item rules,
 sorting, discard confirmation, storage boxes, and inventory-menu presentation. Victory reward
 composition is documented separately in `MILESTONE_4_2_GUIDE.md`.

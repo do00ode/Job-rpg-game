@@ -72,11 +72,12 @@ internal static class AbilityDefinitionContractValidator
                 ValidatePhysicalDamageParameters(problems, numericParameters);
                 break;
             case AbilityRulesetIds.FlatHealing:
-                ValidateRulesetTargeting(
+                ValidateRulesetTargetings(
                     problems,
                     ability,
                     targetingHasValidShape,
-                    AbilityTargetingIds.SingleAlly);
+                    AbilityTargetingIds.SingleAlly,
+                    AbilityTargetingIds.Self);
                 ValidateFlatHealingParameters(problems, numericParameters);
                 break;
             default:

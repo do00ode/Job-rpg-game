@@ -57,7 +57,8 @@ public sealed class CombatResolver : ICombatResolver
 		}
 
 		if (string.IsNullOrWhiteSpace(command.AbilityId)
-			|| !actor.Value.AbilityIds.Contains(command.AbilityId, StringComparer.Ordinal))
+			|| (!string.Equals(command.AbilityId, "ability.item.potion", StringComparison.Ordinal)
+				&& !actor.Value.AbilityIds.Contains(command.AbilityId, StringComparer.Ordinal)))
 		{
 			Reject(
 				CombatCommandProblemCodes.AbilityNotOwned,

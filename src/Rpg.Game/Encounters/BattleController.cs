@@ -3,6 +3,7 @@ using RpgGame.Core.Combat;
 using RpgGame.Core.Combat.Formation;
 using RpgGame.Core.Content;
 using RpgGame.Core.Content.Definitions;
+using RpgGame.Core.Inventory;
 using RpgGame.Core.Rewards;
 using RpgGame.Input;
 
@@ -45,7 +46,7 @@ public partial class BattleController : Control
 	private Button _continueButton = null!;
 	private Label _inputHint = null!;
 
-	private readonly Dictionary<string, Label> _hpLabelByInstanceId =
+	private readonly Dictionary<string, CombatantStatusLabels> _statusLabelsByInstanceId =
 		new(StringComparer.Ordinal);
 	private readonly Dictionary<string, Button> _targetButtonByInstanceId =
 		new(StringComparer.Ordinal);
@@ -57,10 +58,13 @@ public partial class BattleController : Control
 	private InputBindingService? _inputBindings;
 	private ICombatTimelineResolver? _timelineResolver;
 	private IEnemyCommandPlanner? _enemyPlanner;
+	private InventoryService? _inventory;
 	private CombatSnapshot? _snapshot;
 	private string? _encounterId;
 	private string? _selectedAbilityId;
 	private string? _selectedMagicDisciplineId;
+	private string? _selectedItemId;
+	private bool _showingItemMenu;
 	private string? _selectedTargetId;
 	private Button? _focusedCommandButton;
 	private BattleInputPhase _phase = BattleInputPhase.Uninitialized;
@@ -68,6 +72,13 @@ public partial class BattleController : Control
 	private bool _showingVictoryRewards;
 	private bool _showFormationGrid = true;
 	private bool _showBattleLog;
+
+	private sealed class CombatantStatusLabels
+	{
+		public required Label Name { get; init; }
+		public Label? Hp { get; init; }
+		public Label? Mp { get; init; }
+	}
 	private static readonly List<string> PersistentBattleLogLines = [];
 	private static bool PersistentBattleLogVisible;
 
@@ -210,9 +221,9 @@ public partial class BattleController : Control
 		// 1280x720-style layout and could never fit in the native viewport.
 		var lowerPanel = new PanelContainer
 		{
-			CustomMinimumSize = new Vector2(0.0f, 48.0f),
+			CustomMinimumSize = new Vector2(0.0f, 42.0f),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
+			SizeFlagsVertical = Control.SizeFlags.ShrinkEnd,
 		};
 
 		lowerPanel.AddThemeStyleboxOverride("panel", CreateLowerHudStyle());
@@ -224,8 +235,15 @@ public partial class BattleController : Control
 		lowerContents.AddThemeConstantOverride("separation", 4);
 		lowerPanel.AddChild(lowerContents);
 
+		var lowerSpacer = new Control
+		{
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+		};
+		stack.AddChild(lowerSpacer);
+		stack.MoveChild(lowerSpacer, statusRow.GetIndex());
 		stack.AddChild(lowerPanel);
-		stack.MoveChild(lowerPanel, statusRow.GetIndex());
+		stack.MoveChild(lowerPanel, lowerSpacer.GetIndex() + 1);
 
 		var enemyPanel = new VBoxContainer
 		{
@@ -300,7 +318,8 @@ public partial class BattleController : Control
 		CombatSnapshot initialSnapshot,
 		ICombatTimelineResolver timelineResolver,
 		IEnemyCommandPlanner enemyPlanner,
-		InputBindingService inputBindings)
+		InputBindingService inputBindings,
+		InventoryService inventory)
 	{
 		ArgumentNullException.ThrowIfNull(encounter);
 		ArgumentNullException.ThrowIfNull(content);
@@ -309,6 +328,7 @@ public partial class BattleController : Control
 		ArgumentNullException.ThrowIfNull(timelineResolver);
 		ArgumentNullException.ThrowIfNull(enemyPlanner);
 		ArgumentNullException.ThrowIfNull(inputBindings);
+		ArgumentNullException.ThrowIfNull(inventory);
 		if (_snapshot is not null)
 		{
 			throw new InvalidOperationException("Battle scene is already initialized.");
@@ -330,6 +350,7 @@ public partial class BattleController : Control
 		_timelineResolver = timelineResolver;
 		_enemyPlanner = enemyPlanner;
 		_inputBindings = inputBindings;
+		_inventory = inventory;
 		_inputBindings.BindingsChanged += OnBindingsChanged;
 
 		_encounterLabel.Text = $"Encounter: {encounter.Id}";
@@ -537,19 +558,42 @@ public partial class BattleController : Control
 	{
 		foreach (CombatantSnapshot combatant in snapshot.Combatants)
 		{
-			var hpLabel = new Label
+			var statusRow = new HBoxContainer
 			{
 				CustomMinimumSize = new Vector2(0.0f, 9.0f),
-				HorizontalAlignment = HorizontalAlignment.Center,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			};
+			statusRow.AddThemeConstantOverride("separation", 2);
 
-			hpLabel.AddThemeFontSizeOverride("font_size", 6);
+			var nameLabel = new Label
+			{
+				Text = DisplayName(combatant.InstanceId),
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			nameLabel.AddThemeFontSizeOverride("font_size", 6);
+			statusRow.AddChild(nameLabel);
+
+			Label? hpLabel = null;
+			Label? mpLabel = null;
+			if (combatant.Side == BattleSide.Party)
+			{
+				hpLabel = CreateResourceLabel();
+				mpLabel = CreateResourceLabel();
+				statusRow.AddChild(hpLabel);
+				statusRow.AddChild(mpLabel);
+			}
 
 			(combatant.Side == BattleSide.Party
 				? _partyStatus
-				: _enemyStatus).AddChild(hpLabel);
+				: _enemyStatus).AddChild(statusRow);
 
-			_hpLabelByInstanceId.Add(combatant.InstanceId, hpLabel);
+			_statusLabelsByInstanceId.Add(combatant.InstanceId, new CombatantStatusLabels
+			{
+				Name = nameLabel,
+				Hp = hpLabel,
+				Mp = mpLabel,
+			});
 
 			string instanceId = combatant.InstanceId;
 
@@ -567,6 +611,17 @@ public partial class BattleController : Control
 		}
 	}
 
+	private static Label CreateResourceLabel()
+	{
+		var label = new Label
+		{
+			CustomMinimumSize = new Vector2(0.0f, 9.0f),
+			VerticalAlignment = VerticalAlignment.Center,
+		};
+		label.AddThemeFontSizeOverride("font_size", 5);
+		return label;
+	}
+
 	private void ShowTopLevelCommands()
 	{
 		CombatantSnapshot partyActor = RequireSingleLivingPartyActor(RequireSnapshot());
@@ -576,6 +631,10 @@ public partial class BattleController : Control
 
 		foreach (string abilityId in availability.DirectAbilityIds)
 		{
+			if (string.Equals(abilityId, "ability.item.potion", StringComparison.Ordinal))
+			{
+				continue;
+			}
 			AddCommandButton(ShortDefinitionName(abilityId), () => SelectAbility(abilityId));
 		}
 
@@ -585,11 +644,44 @@ public partial class BattleController : Control
 			AddCommandButton(
 				$"{ShortDefinitionName(disciplineId)} >",
 				() => OpenMagicMenu(disciplineId),
-				discipline.SpellAbilityIds.Count == 0);
+				 discipline.SpellAbilityIds.Count == 0);
 		}
+
+		int potionCount = RequireInventory().GetQuantity("item.consumable.potion");
+		AddCommandButton("Item >", OpenItemMenu, potionCount == 0);
 
 		RefreshPresentation();
 		FocusFirstCommand();
+	}
+
+	private void OpenItemMenu()
+	{
+		if (_phase != BattleInputPhase.Command)
+		{
+			return;
+		}
+
+		_showingItemMenu = true;
+		_phase = BattleInputPhase.MagicSelection;
+		_selectedMagicDisciplineId = null;
+		ClearCommandButtons();
+		int potionCount = RequireInventory().GetQuantity("item.consumable.potion");
+		AddCommandButton($"Potion x{potionCount}", () => SelectItem("item.consumable.potion"), potionCount == 0);
+		AddCommandButton("Back", ReturnToTopLevelCommands);
+		RefreshPresentation();
+		FocusFirstCommand();
+	}
+
+	private void SelectItem(string itemId)
+	{
+		if (!_showingItemMenu || RequireInventory().GetQuantity(itemId) <= 0)
+		{
+			return;
+		}
+
+		_selectedItemId = itemId;
+		_selectedAbilityId = "ability.item.potion";
+		ResolveSelectedAbility(RequireSingleLivingPartyActor(RequireSnapshot()).InstanceId);
 	}
 
 	private void OpenMagicMenu(string magicDisciplineId)
@@ -607,6 +699,7 @@ public partial class BattleController : Control
 				magicDisciplineId,
 				StringComparison.Ordinal));
 		_selectedMagicDisciplineId = magicDisciplineId;
+		_showingItemMenu = false;
 		_phase = BattleInputPhase.MagicSelection;
 		ClearCommandButtons();
 		_magicOverlayTitle.Text = ShortDefinitionName(magicDisciplineId);
@@ -628,6 +721,8 @@ public partial class BattleController : Control
 		}
 
 		_phase = BattleInputPhase.Command;
+		_showingItemMenu = false;
+		_selectedItemId = null;
 		ShowTopLevelCommands();
 	}
 
@@ -828,6 +923,7 @@ public partial class BattleController : Control
 		if (_selectedMagicDisciplineId is null)
 		{
 			_phase = BattleInputPhase.Command;
+			_showingItemMenu = false;
 			ShowTopLevelCommands();
 			return;
 		}
@@ -950,12 +1046,18 @@ public partial class BattleController : Control
 			new CombatCommand(partyActor.InstanceId, ability.Id, [targetId]));
 		CombatSnapshot next = resolution.Next;
 		_snapshot = next;
+		if (_selectedItemId is not null)
+		{
+			RequireInventory().RemoveItem(_selectedItemId, 1);
+		}
 		AppendEvents(resolution.Events);
 
 		if (next.Outcome == BattleOutcome.InProgress)
 		{
 			_selectedAbilityId = null;
 			_selectedMagicDisciplineId = null;
+			_selectedItemId = null;
+			_showingItemMenu = false;
 			_selectedTargetId = null;
 			_phase = BattleInputPhase.Resolving;
 			AdvanceToReadyActor();
@@ -974,6 +1076,8 @@ public partial class BattleController : Control
 
 		_selectedAbilityId = null;
 		_selectedMagicDisciplineId = null;
+		_selectedItemId = null;
+		_showingItemMenu = false;
 		_selectedTargetId = null;
 		_phase = BattleInputPhase.Completed;
 		RefreshPresentation();
@@ -1112,20 +1216,29 @@ public partial class BattleController : Control
 		{
 			if (combatant.IsDefeated)
 			{
-				if (_hpLabelByInstanceId.Remove(combatant.InstanceId, out Label? defeatedLabel))
+				if (_statusLabelsByInstanceId.Remove(combatant.InstanceId, out CombatantStatusLabels? defeatedLabels))
 				{
-					defeatedLabel.QueueFree();
+					defeatedLabels.Name.GetParent().QueueFree();
 				}
 
 				continue;
 			}
 
-			_hpLabelByInstanceId[combatant.InstanceId].Text =
-				combatant.Side == BattleSide.Enemy
-					? DisplayName(combatant.InstanceId)
-					: $"{DisplayName(combatant.InstanceId)}  "
-						+ $"HP {combatant.CurrentHp}/{combatant.MaximumHp} "
-						+ $"MP {combatant.CurrentMp}/{combatant.MaximumMp}";
+			CombatantStatusLabels labels = _statusLabelsByInstanceId[combatant.InstanceId];
+			labels.Name.Text = DisplayName(combatant.InstanceId);
+			if (combatant.Side == BattleSide.Party)
+			{
+				float hpRatio = combatant.MaximumHp <= 0
+					? 0.0f
+					: Mathf.Clamp((float)combatant.CurrentHp / combatant.MaximumHp, 0.0f, 1.0f);
+				float mpRatio = combatant.MaximumMp <= 0
+					? 0.0f
+					: Mathf.Clamp((float)combatant.CurrentMp / combatant.MaximumMp, 0.0f, 1.0f);
+				labels.Hp!.Text = $"{combatant.CurrentHp}/{combatant.MaximumHp}";
+				labels.Hp.Modulate = ResourceColor(hpRatio, new Color(0.35f, 1.0f, 0.45f));
+				labels.Mp!.Text = $"{combatant.CurrentMp}/{combatant.MaximumMp}";
+				labels.Mp.Modulate = ResourceColor(mpRatio, new Color(0.35f, 0.68f, 1.0f));
+			}
 
 			if (_targetButtonByInstanceId.TryGetValue(
 					combatant.InstanceId,
@@ -1138,8 +1251,10 @@ public partial class BattleController : Control
 			}
 		}
 
-		_commandMenu.Visible = _phase == BattleInputPhase.Command;
-		_magicOverlay.Visible = _phase == BattleInputPhase.MagicSelection;
+		_commandMenu.Visible = _phase == BattleInputPhase.Command
+			|| (_phase == BattleInputPhase.MagicSelection && _showingItemMenu);
+		_magicOverlay.Visible = _phase == BattleInputPhase.MagicSelection
+			&& !_showingItemMenu;
 		_targetRow.Visible = false;
 		_targetPrompt.Visible = false;
 		_targetButtons.Visible = false;
@@ -1161,6 +1276,7 @@ public partial class BattleController : Control
 		{
 			BattleInputPhase.Command => string.Empty,
 			BattleInputPhase.MagicSelection =>
+				_showingItemMenu ? "Item: choose an item." :
 				$"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
 			BattleInputPhase.TargetSelection => string.Empty,
 			BattleInputPhase.Resolving => "Resolving the next turn...",
@@ -1181,6 +1297,9 @@ public partial class BattleController : Control
 			"  >  ",
 			preview.Entries.Select(entry => DisplayName(entry.CombatantInstanceId)));
 	}
+
+	private static Color ResourceColor(float ratio, Color fullColor) =>
+		fullColor.Lerp(new Color(1.0f, 0.25f, 0.25f), 1.0f - ratio);
 
 	private void RequestCompletion()
 	{
@@ -1222,7 +1341,7 @@ public partial class BattleController : Control
 				$"Choose a command with movement; confirm "
 				+ $"[{bindings.FormatBindings(GameInputActions.Interact)}].",
 			BattleInputPhase.MagicSelection =>
-				$"Choose a spell with movement; confirm "
+				(_showingItemMenu ? "Choose an item with movement; confirm " : "Choose a spell with movement; confirm ")
 				+ $"[{bindings.FormatBindings(GameInputActions.Interact)}], back "
 				+ $"[{bindings.FormatBindings(GameInputActions.Menu)}].",
 			BattleInputPhase.TargetSelection =>
@@ -1312,6 +1431,9 @@ public partial class BattleController : Control
 		?? throw new InvalidOperationException("Battle scene is not initialized.");
 
 	private IEnemyCommandPlanner RequireEnemyPlanner() => _enemyPlanner
+		?? throw new InvalidOperationException("Battle scene is not initialized.");
+
+	private InventoryService RequireInventory() => _inventory
 		?? throw new InvalidOperationException("Battle scene is not initialized.");
 
 	private InputBindingService RequireInputBindings() => _inputBindings

@@ -42,6 +42,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 	private const string JamesId = "actor.hero.james";
 	private const string IronSwordItemId = "item.equipment.iron-sword";
 	private const string WoodenShieldItemId = "item.equipment.wooden-shield";
+	private const string PotionItemId = "item.consumable.potion";
 	private const string LeatherArmorItemId = "item.equipment.leather-armor";
 	private const string LeatherBootsItemId = "item.equipment.leather-boots";
 	private const string LeatherHelmItemId = "item.equipment.leather-helm";
@@ -141,6 +142,7 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 		var inventory = new InventoryService(Content, Session);
 		inventory.AddItems(
 		[
+			new InventoryAddition(PotionItemId, 1),
 			new InventoryAddition(IronSwordItemId, 1),
 			new InventoryAddition(WoodenShieldItemId, 1),
 			new InventoryAddition(LeatherArmorItemId, 1),
@@ -403,7 +405,8 @@ public partial class GameRoot : Node, IExplorationDevelopmentCommands
 				initialSnapshot,
 				timelineResolver,
 				enemyPlanner,
-				InputBindings);
+				InputBindings,
+				new InventoryService(Content, Session));
 			scene.CompletionRequested += OnBattleCompletionRequested;
 			scene.VictoryRewardsContinueRequested += OnVictoryRewardsContinueRequested;
 			_activeGameplayScene = scene;
