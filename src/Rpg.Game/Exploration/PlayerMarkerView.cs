@@ -11,8 +11,12 @@ public partial class PlayerMarkerView : Node2D
 	private Texture2D? _currentFrame;
 	private int _nextStepFrame;
 
+	/// <summary>Raised after a tweened sprite position is snapped to the logical pixel grid.</summary>
+	public event Action<Vector2>? RenderedPositionChanged;
+
 	public override void _Ready()
 	{
+		TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
 		_frames["north"] = LoadFrames("up");
 		_frames["east"] = LoadFrames("right");
 		_frames["south"] = LoadFrames("down");
@@ -60,7 +64,11 @@ public partial class PlayerMarkerView : Node2D
 		Tween tween = CreateTween();
 		tween.SetTrans(Tween.TransitionType.Linear);
 		tween.SetEase(Tween.EaseType.InOut);
-		tween.TweenProperty(this, "position", targetPosition, StepDurationSeconds);
+		tween.TweenMethod(
+			Callable.From<Vector2>(SetRenderedPosition),
+			Position.Round(),
+			targetPosition.Round(),
+			StepDurationSeconds);
 		tween.TweenCallback(Callable.From(completed));
 	}
 
@@ -90,5 +98,11 @@ public partial class PlayerMarkerView : Node2D
 			ResourceLoader.Load<Texture2D>($"{root}james-{direction}2.png")
 				?? throw new InvalidDataException($"Missing James overworld frame '{direction}2'."),
 		];
+	}
+
+	private void SetRenderedPosition(Vector2 position)
+	{
+		Position = position.Round();
+		RenderedPositionChanged?.Invoke(Position);
 	}
 }

@@ -32,13 +32,11 @@ public sealed class FirstClassKitsTests
     }
 
     [Fact]
-    public void ResolvePartyActor_BlackMageSpellbookUnlocksByLevel()
+    public void ResolvePartyActor_BlackMageStartsWithItsFullTestSpellbook()
     {
         ContentCatalog content = TestContent.LoadCatalog();
 
-        AssertSpellbook(content, 1, [FireId]);
-        AssertSpellbook(content, 3, [FireId, IceId]);
-        AssertSpellbook(content, 5, [FireId, IceId, LightningId]);
+        AssertSpellbook(content, 1, [FireId, IceId, LightningId]);
     }
 
     [Fact]
@@ -56,8 +54,8 @@ public sealed class FirstClassKitsTests
 
     [Theory]
     [InlineData(FireId, DamageTypeIds.Fire, 1)]
-    [InlineData(IceId, DamageTypeIds.Ice, 3)]
-    [InlineData(LightningId, DamageTypeIds.Lightning, 5)]
+    [InlineData(IceId, DamageTypeIds.Ice, 1)]
+    [InlineData(LightningId, DamageTypeIds.Lightning, 1)]
     public void Resolve_BlackMageSpellEmitsItsAuthoredDamageTypeAtUnlockLevel(
         string abilityId,
         string expectedDamageTypeId,

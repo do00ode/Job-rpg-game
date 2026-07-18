@@ -13,11 +13,11 @@
 	  "abilityId": "ability.black-magic.fire"
 	},
 	{
-	  "level": 3,
+	  "level": 1,
 	  "abilityId": "ability.black-magic.ice"
 	},
 	{
-	  "level": 5,
+	  "level": 1,
 	  "abilityId": "ability.black-magic.lightning"
 	}
   ],

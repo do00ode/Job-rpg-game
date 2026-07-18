@@ -31,6 +31,9 @@ public partial class BattleController : Control
 	private BattleFormationView _formationView = null!;
 	private VBoxContainer _partyStatus = null!;
 	private VBoxContainer _enemyStatus = null!;
+	private PanelContainer _magicOverlay = null!;
+	private Label _magicOverlayTitle = null!;
+	private GridContainer _magicSpellGrid = null!;
 	private Label _phaseLabel = null!;
 	private Label _turnOrderLabel = null!;
 	private VBoxContainer _commandMenu = null!;
@@ -102,6 +105,7 @@ public partial class BattleController : Control
 		_formationView = GetNode<BattleFormationView>("Margin/VBox/FormationView");
 		_partyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/PartyStatus");
 		_enemyStatus = GetNode<VBoxContainer>("Margin/VBox/StatusRow/EnemyStatus");
+		ConfigureMagicOverlay();
 		_phaseLabel = GetNode<Label>("Margin/VBox/CommandArea/Phase");
 		_turnOrderLabel = GetNode<Label>("Margin/VBox/TurnOrder");
 		_commandMenu = GetNode<VBoxContainer>("Margin/VBox/CommandArea/CommandMenu");
@@ -135,6 +139,67 @@ public partial class BattleController : Control
 		SetProcessUnhandledInput(false);
 	}
 
+	private void ConfigureMagicOverlay()
+	{
+		_magicOverlay = new PanelContainer
+		{
+			Visible = false,
+			ZIndex = 15,
+		};
+		_magicOverlay.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_magicOverlay.OffsetLeft = 6.0f;
+		_magicOverlay.OffsetTop = 6.0f;
+		_magicOverlay.OffsetRight = -6.0f;
+		_magicOverlay.OffsetBottom = -6.0f;
+		_magicOverlay.AddThemeStyleboxOverride("panel", CreateMagicOverlayStyle());
+		AddChild(_magicOverlay);
+
+		var margin = new MarginContainer();
+		margin.AddThemeConstantOverride("margin_left", 8);
+		margin.AddThemeConstantOverride("margin_top", 6);
+		margin.AddThemeConstantOverride("margin_right", 8);
+		margin.AddThemeConstantOverride("margin_bottom", 6);
+		_magicOverlay.AddChild(margin);
+
+		var contents = new VBoxContainer();
+		contents.AddThemeConstantOverride("separation", 4);
+		margin.AddChild(contents);
+
+		_magicOverlayTitle = new Label
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Text = "Black Magic",
+		};
+		_magicOverlayTitle.AddThemeFontSizeOverride("font_size", 8);
+		_magicOverlayTitle.AddThemeColorOverride("font_color", new Color(0.70f, 0.78f, 1.0f));
+		contents.AddChild(_magicOverlayTitle);
+
+		var spellScroll = new ScrollContainer
+		{
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+		};
+		contents.AddChild(spellScroll);
+
+		_magicSpellGrid = new GridContainer
+		{
+			Columns = 3,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		_magicSpellGrid.AddThemeConstantOverride("h_separation", 3);
+		_magicSpellGrid.AddThemeConstantOverride("v_separation", 3);
+		spellScroll.AddChild(_magicSpellGrid);
+
+		var footer = new Label
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Text = "Select a spell    Menu: Back",
+		};
+		footer.AddThemeFontSizeOverride("font_size", 6);
+		footer.AddThemeColorOverride("font_color", new Color(0.72f, 0.78f, 0.9f));
+		contents.AddChild(footer);
+	}
+
 	private void ConfigureLowerBattlePanel()
 	{
 		var statusRow = (HBoxContainer)_partyStatus.GetParent();
@@ -143,27 +208,34 @@ public partial class BattleController : Control
 
 		// Native 320x240 battle HUD. The old implementation expected a
 		// 1280x720-style layout and could never fit in the native viewport.
-		var lowerPanel = new HBoxContainer
+		var lowerPanel = new PanelContainer
 		{
 			CustomMinimumSize = new Vector2(0.0f, 48.0f),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
 		};
 
-		lowerPanel.AddThemeConstantOverride("separation", 4);
+		lowerPanel.AddThemeStyleboxOverride("panel", CreateLowerHudStyle());
+		var lowerContents = new HBoxContainer
+		{
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+		};
+		lowerContents.AddThemeConstantOverride("separation", 4);
+		lowerPanel.AddChild(lowerContents);
 
 		stack.AddChild(lowerPanel);
 		stack.MoveChild(lowerPanel, statusRow.GetIndex());
 
 		var enemyPanel = new VBoxContainer
 		{
-			CustomMinimumSize = new Vector2(82.0f, 0.0f),
+			CustomMinimumSize = new Vector2(78.0f, 0.0f),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 		};
 
 		enemyPanel.AddThemeConstantOverride("separation", 1);
-		lowerPanel.AddChild(enemyPanel);
+		lowerContents.AddChild(enemyPanel);
 
 		_enemyStatus.Reparent(enemyPanel);
 
@@ -171,19 +243,19 @@ public partial class BattleController : Control
 		// permanent room in the native battle HUD.
 		_eventLog.Reparent(_battleLogHost);
 
-		commandArea.Reparent(lowerPanel);
-		_partyStatus.Reparent(lowerPanel);
+		commandArea.Reparent(lowerContents);
+		_partyStatus.Reparent(lowerContents);
 
 		statusRow.Visible = false;
 
-		_enemyStatus.CustomMinimumSize = new Vector2(82.0f, 0.0f);
+		_enemyStatus.CustomMinimumSize = new Vector2(78.0f, 0.0f);
 		_enemyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
-		commandArea.CustomMinimumSize = new Vector2(96.0f, 0.0f);
+		commandArea.CustomMinimumSize = new Vector2(76.0f, 0.0f);
 		commandArea.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		commandArea.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
 
-		_partyStatus.CustomMinimumSize = new Vector2(82.0f, 0.0f);
+		_partyStatus.CustomMinimumSize = new Vector2(110.0f, 0.0f);
 		_partyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
 		_eventLog.CustomMinimumSize = Vector2.Zero;
@@ -467,7 +539,7 @@ public partial class BattleController : Control
 		{
 			var hpLabel = new Label
 			{
-				CustomMinimumSize = new Vector2(0.0f, 10.0f),
+				CustomMinimumSize = new Vector2(0.0f, 9.0f),
 				HorizontalAlignment = HorizontalAlignment.Center,
 			};
 
@@ -537,12 +609,13 @@ public partial class BattleController : Control
 		_selectedMagicDisciplineId = magicDisciplineId;
 		_phase = BattleInputPhase.MagicSelection;
 		ClearCommandButtons();
+		_magicOverlayTitle.Text = ShortDefinitionName(magicDisciplineId);
 		foreach (string abilityId in discipline.SpellAbilityIds)
 		{
-			AddCommandButton(ShortDefinitionName(abilityId), () => SelectAbility(abilityId));
+			AddMagicSpellButton(ShortDefinitionName(abilityId), () => SelectAbility(abilityId));
 		}
 
-		AddCommandButton("Back", ReturnToTopLevelCommands);
+		AddMagicSpellButton("Back", ReturnToTopLevelCommands);
 		RefreshPresentation();
 		FocusFirstCommand();
 	}
@@ -565,7 +638,7 @@ public partial class BattleController : Control
 	{
 		var button = new Button
 		{
-			CustomMinimumSize = new Vector2(88.0f, 14.0f),
+			CustomMinimumSize = new Vector2(72.0f, 11.0f),
 			Text = text,
 			Disabled = disabled,
 		};
@@ -579,11 +652,64 @@ public partial class BattleController : Control
 		_commandActionByButton.Add(button, action);
 	}
 
+	private void AddMagicSpellButton(
+		string text,
+		Action action,
+		bool disabled = false)
+	{
+		var button = new Button
+		{
+			CustomMinimumSize = new Vector2(88.0f, 16.0f),
+			Text = text,
+			Disabled = disabled,
+		};
+
+		button.AddThemeFontSizeOverride("font_size", 7);
+		button.Pressed += action;
+		button.FocusEntered += () => _focusedCommandButton = button;
+
+		_magicSpellGrid.AddChild(button);
+		_commandButtons.Add(button);
+		_commandActionByButton.Add(button, action);
+	}
+
+	private static StyleBoxFlat CreateLowerHudStyle() => new()
+	{
+		BgColor = new Color(0.035f, 0.055f, 0.09f, 0.94f),
+		BorderColor = new Color(0.42f, 0.54f, 0.72f, 1.0f),
+		BorderWidthLeft = 1,
+		BorderWidthTop = 1,
+		BorderWidthRight = 1,
+		BorderWidthBottom = 1,
+		CornerRadiusTopLeft = 2,
+		CornerRadiusTopRight = 2,
+		CornerRadiusBottomRight = 2,
+		CornerRadiusBottomLeft = 2,
+		ContentMarginLeft = 4.0f,
+		ContentMarginTop = 2.0f,
+		ContentMarginRight = 4.0f,
+		ContentMarginBottom = 2.0f,
+	};
+
+	private static StyleBoxFlat CreateMagicOverlayStyle() => new()
+	{
+		BgColor = new Color(0.025f, 0.04f, 0.08f, 0.96f),
+		BorderColor = new Color(0.42f, 0.56f, 0.86f, 1.0f),
+		BorderWidthLeft = 2,
+		BorderWidthTop = 2,
+		BorderWidthRight = 2,
+		BorderWidthBottom = 2,
+		CornerRadiusTopLeft = 3,
+		CornerRadiusTopRight = 3,
+		CornerRadiusBottomRight = 3,
+		CornerRadiusBottomLeft = 3,
+	};
+
 	private void ClearCommandButtons()
 	{
 		foreach (Button button in _commandButtons)
 		{
-			_commandMenu.RemoveChild(button);
+			button.GetParent().RemoveChild(button);
 			button.QueueFree();
 		}
 
@@ -996,10 +1122,9 @@ public partial class BattleController : Control
 
 			_hpLabelByInstanceId[combatant.InstanceId].Text =
 				combatant.Side == BattleSide.Enemy
-					? $"{DisplayName(combatant.InstanceId)}\n"
-						+ $"HP {combatant.CurrentHp}/{combatant.MaximumHp}"
-					: $"{DisplayName(combatant.InstanceId)}\n"
-						+ $"HP {combatant.CurrentHp}/{combatant.MaximumHp}  "
+					? DisplayName(combatant.InstanceId)
+					: $"{DisplayName(combatant.InstanceId)}  "
+						+ $"HP {combatant.CurrentHp}/{combatant.MaximumHp} "
 						+ $"MP {combatant.CurrentMp}/{combatant.MaximumMp}";
 
 			if (_targetButtonByInstanceId.TryGetValue(
@@ -1013,10 +1138,13 @@ public partial class BattleController : Control
 			}
 		}
 
-		_commandMenu.Visible = _phase is BattleInputPhase.Command or BattleInputPhase.MagicSelection;
+		_commandMenu.Visible = _phase == BattleInputPhase.Command;
+		_magicOverlay.Visible = _phase == BattleInputPhase.MagicSelection;
 		_targetRow.Visible = false;
 		_targetPrompt.Visible = false;
 		_targetButtons.Visible = false;
+		_phaseLabel.Visible = _phase is BattleInputPhase.Resolving
+			or BattleInputPhase.Completed;
 		_formationView.SetTargetedCombatant(
 			_phase == BattleInputPhase.TargetSelection ? _selectedTargetId : null);
 		_formationView.SetHighlightedCombatant(_phase switch
@@ -1034,9 +1162,7 @@ public partial class BattleController : Control
 			BattleInputPhase.Command => string.Empty,
 			BattleInputPhase.MagicSelection =>
 				$"{ShortDefinitionName(_selectedMagicDisciplineId ?? "magic")}: choose a spell.",
-			BattleInputPhase.TargetSelection =>
-				$"{ShortDefinitionName(_selectedAbilityId ?? "ability")}: choose a living "
-				+ $"{TargetSelectionLabel()}.",
+			BattleInputPhase.TargetSelection => string.Empty,
 			BattleInputPhase.Resolving => "Resolving the next turn...",
 			BattleInputPhase.Completed => "Battle ended.",
 			_ => string.Empty,
@@ -1140,13 +1266,6 @@ public partial class BattleController : Control
 		BattleSide? targetSide = GetSelectedTargetSide();
 		return targetSide is null || combatant.Side == targetSide;
 	}
-
-	private string TargetSelectionLabel() => GetSelectedTargetSide() switch
-	{
-		BattleSide.Enemy => "enemy",
-		BattleSide.Party => "ally",
-		_ => "combatant",
-	};
 
 	private string DisplayName(string instanceId) => _formationView.GetDisplayLabel(instanceId);
 

@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://bvkfx1rgnt64p" path="res://src/Rpg.Game/Exploration/CharacterEquipmentPanel.cs" id="9_character_equipment"]
 [ext_resource type="Script" uid="uid://d4dvjifepdi5" path="res://src/Rpg.Game/Display/DisplaySettingsPanel.cs" id="10_display_settings"]
 [ext_resource type="Script" uid="uid://ykd1qdgg5ws1" path="res://src/Rpg.Game/Display/SoundSettingsPanel.cs" id="11_sound_settings"]
+[ext_resource type="Theme" path="res://game/themes/UiTheme.tres" id="12_ui_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_equipment"]
 bg_color = Color(0.035, 0.11, 0.24, 1)
@@ -19,19 +20,8 @@ border_width_right = 6
 border_width_bottom = 6
 border_color = Color(0.28, 0.58, 0.88, 1)
 
-[sub_resource type="SystemFont" id="SystemFont_native_ui"]
-font_names = PackedStringArray("Consolas")
-font_weight = 700
-antialiasing = 0
-hinting = 0
-subpixel_positioning = 0
-generate_mipmaps = false
-
-[sub_resource type="Theme" id="Theme_native_ui"]
-default_font = SubResource("SystemFont_native_ui")
-default_font_size = 6
-
 [node name="ExplorationMap" type="Node2D" unique_id=551639256]
+texture_filter = 1
 script = ExtResource("1_controller")
 
 [node name="Map" type="Node2D" parent="." unique_id=741242105]
@@ -62,17 +52,19 @@ horizontal_alignment = 1
 offset_left = 4.0
 offset_top = 2.0
 offset_right = 316.0
-offset_bottom = 26.0
-theme_override_font_sizes/font_size = 5
+offset_bottom = 36.0
+theme = ExtResource("12_ui_theme")
+theme_override_font_sizes/font_size = 6
 text = "Current control bindings load here."
 autowrap_mode = 2
 
 [node name="DevelopmentStatus" type="Label" parent="Interface" unique_id=959985414]
 modulate = Color(0.55, 1, 0.65, 1)
 offset_left = 4.0
-offset_top = 28.0
+offset_top = 38.0
 offset_right = 316.0
-offset_bottom = 36.0
+offset_bottom = 48.0
+theme = ExtResource("12_ui_theme")
 theme_override_font_sizes/font_size = 6
 text = "Status: Ready."
 
@@ -84,7 +76,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("6_controls")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Controls" unique_id=1604456966]
@@ -147,7 +139,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("7_menu")
 
 [node name="Margin" type="MarginContainer" parent="Interface/GameMenu" unique_id=1637381369]
@@ -246,7 +238,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("10_display_settings")
 
 [node name="Margin" type="MarginContainer" parent="Interface/DisplaySettings" unique_id=1108976608]
@@ -310,7 +302,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("11_sound_settings")
 
 [node name="Margin" type="MarginContainer" parent="Interface/SoundSettings" unique_id=1211076754]
@@ -378,7 +370,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("9_character_equipment")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Equipment" unique_id=1664620113]
@@ -469,19 +461,19 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = -48.0
+offset_top = -76.0
 offset_right = -8.0
 offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 0
-theme = SubResource("Theme_native_ui")
+theme = ExtResource("12_ui_theme")
 script = ExtResource("5_dialogue")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Dialogue" unique_id=927407927]
 layout_mode = 2
-theme_override_constants/margin_left = 6
+theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 6
+theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 4
 
 [node name="VBox" type="VBoxContainer" parent="Interface/Dialogue/Margin" unique_id=375539450]
@@ -490,17 +482,18 @@ theme_override_constants/separation = 2
 
 [node name="Speaker" type="Label" parent="Interface/Dialogue/Margin/VBox" unique_id=1117973330]
 layout_mode = 2
-theme_override_font_sizes/font_size = 6
+theme_override_font_sizes/font_size = 8
 text = "Speaker"
 
 [node name="Line" type="Label" parent="Interface/Dialogue/Margin/VBox" unique_id=1175643360]
-custom_minimum_size = Vector2(0, 21)
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
-theme_override_font_sizes/font_size = 6
+theme_override_font_sizes/font_size = 8
 text = "Dialogue"
 autowrap_mode = 2
 
 [node name="Hint" type="Label" parent="Interface/Dialogue/Margin/VBox" unique_id=444443676]
 layout_mode = 2
-text = "Use Interact / Confirm to continue    Use Menu / Cancel to close"
+theme_override_font_sizes/font_size = 6
+text = "Confirm / Continue    Cancel / Close"
 horizontal_alignment = 2

@@ -3,18 +3,7 @@
 [ext_resource type="Script" uid="uid://duxqnvbeup6lv" path="res://src/Rpg.Game/Encounters/BattleController.cs" id="1_controller"]
 [ext_resource type="Script" uid="uid://bhiac51kpa5k" path="res://src/Rpg.Game/Encounters/BattleFormationView.cs" id="2_formation"]
 [ext_resource type="Texture2D" uid="uid://cney54wilqen1" path="res://game/assets/battlefields/forest-day/background.png" id="2_ugcpl"]
-
-[sub_resource type="SystemFont" id="SystemFont_native_battle_ui"]
-font_names = PackedStringArray("Consolas")
-font_weight = 700
-antialiasing = 0
-hinting = 0
-subpixel_positioning = 0
-generate_mipmaps = false
-
-[sub_resource type="Theme" id="Theme_native_battle_ui"]
-default_font = SubResource("SystemFont_native_battle_ui")
-default_font_size = 6
+[ext_resource type="Theme" path="res://game/themes/UiTheme.tres" id="3_ui_theme"]
 
 [node name="Battle" type="Control" unique_id=88526944]
 layout_mode = 3
@@ -23,7 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_native_battle_ui")
+theme = ExtResource("3_ui_theme")
 script = ExtResource("1_controller")
 
 [node name="Background" type="ColorRect" parent="." unique_id=483049237]

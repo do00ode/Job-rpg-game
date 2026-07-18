@@ -331,12 +331,20 @@ public partial class BattleFormationView : Control
         // Give enemy art strong visual presence beyond its logical cell while keeping the
         // authored footprint authoritative. This follows the classic JRPG composition where
         // enemies read as larger silhouettes than the party sprites on the opposite side.
+        const float visualFootprintScale = 1.25f;
         float scale = Mathf.Min(
-            (occupied.Size.X * 1.50f) / texture.GetWidth(),
-            (occupied.Size.Y * 1.50f) / texture.GetHeight());
-        Vector2 size = new(texture.GetWidth() * scale, texture.GetHeight() * scale);
+            (occupied.Size.X * visualFootprintScale) / texture.GetWidth(),
+            (occupied.Size.Y * visualFootprintScale) / texture.GetHeight());
+        Vector2 size = new(
+            Mathf.Max(1.0f, Mathf.Round(texture.GetWidth() * scale)),
+            Mathf.Max(1.0f, Mathf.Round(texture.GetHeight() * scale)));
+        Vector2 center = new(
+            Mathf.Round(occupied.GetCenter().X),
+            Mathf.Round(occupied.GetCenter().Y));
         Rect2 destination = new(
-            occupied.Position + ((occupied.Size - size) / 2.0f),
+            new Vector2(
+                Mathf.Round(center.X - (size.X * 0.5f)),
+                Mathf.Round(center.Y - (size.Y * 0.5f))),
             size);
         DrawTextureRect(texture, destination, false, new Color(1.0f, 1.0f, 1.0f, GetHighlightAlpha(placement)));
     }

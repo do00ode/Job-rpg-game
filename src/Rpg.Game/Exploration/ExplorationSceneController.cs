@@ -67,11 +67,15 @@ public partial class ExplorationSceneController : Node2D
 
 	public override void _Ready()
 	{
+		// Keep the world canvas pixel-perfect. Interface is hosted in its own CanvasLayer,
+		// so dynamic UI fonts continue to rasterize cleanly at output resolution.
+		TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
 		Node2D mapNode = GetNode<Node2D>("Map");
 		_camera = GetNode<Camera2D>("Camera");
 		_room = mapNode as IExplorationMapView
 			?? throw new InvalidOperationException("Exploration map node must implement IExplorationMapView.");
 		_player = GetNode<PlayerMarkerView>("Player");
+		_player.RenderedPositionChanged += UpdateCamera;
 		_guide = GetNode<TestGuideNpc>("Guide");
 		_camera.PositionSmoothingEnabled = false;
 		_camera.Zoom = Vector2.One;
@@ -165,7 +169,9 @@ public partial class ExplorationSceneController : Node2D
 
 		if (_playerMovementInProgress)
 		{
-			UpdateCamera(_player.Position);
+			// PlayerMarkerView raises its pixel-snapped rendered position after every tween
+			// update. Updating here as well can make Camera2D observe two positions in one
+			// frame, producing visible jitter during a single step.
 			return;
 		}
 
@@ -195,6 +201,7 @@ public partial class ExplorationSceneController : Node2D
 		_readyForInput = false;
 		SetProcessUnhandledInput(false);
 		SetProcess(false);
+		_player.RenderedPositionChanged -= UpdateCamera;
 
 		if (_session is not null)
 		{
@@ -499,14 +506,15 @@ public partial class ExplorationSceneController : Node2D
 		InputBindingService bindings = RequireInputBindings();
 
 		_instructions.Text =
-			$"Move [{bindings.FormatBindings(GameInputActions.MoveUp)}] "
-			+ $"[{bindings.FormatBindings(GameInputActions.MoveRight)}] "
-			+ $"[{bindings.FormatBindings(GameInputActions.MoveDown)}] "
-			+ $"[{bindings.FormatBindings(GameInputActions.MoveLeft)}]"
+			$"Move: {bindings.FormatBindings(GameInputActions.MoveUp)} "
+			+ $"{bindings.FormatBindings(GameInputActions.MoveRight)} "
+			+ $"{bindings.FormatBindings(GameInputActions.MoveDown)} "
+			+ bindings.FormatBindings(GameInputActions.MoveLeft)
 			+ System.Environment.NewLine
-			+ $"Act [{bindings.FormatBindings(GameInputActions.Interact)}]  "
-			+ $"Menu [{bindings.FormatBindings(GameInputActions.Menu)}]  "
-			+ $"Equip [{bindings.FormatBindings(GameInputActions.Equipment)}]  R rebuild";
+			+ $"Act: {bindings.FormatBindings(GameInputActions.Interact)}  "
+			+ $"Menu: {bindings.FormatBindings(GameInputActions.Menu)}"
+			+ System.Environment.NewLine
+			+ $"Equip: {bindings.FormatBindings(GameInputActions.Equipment)}  Reload: R";
 	}
 
 	private void OnEquipmentRequested(object? sender, EventArgs eventArgs)

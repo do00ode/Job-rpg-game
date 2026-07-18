@@ -1,9 +1,10 @@
 # Milestone 4.96 - Pixel-perfect 4:3 presentation
 
-The game uses a fixed `320x240` internal viewport. This is the complete authored frame: twenty
-16x16 map tiles wide by fifteen tiles high. Godot scales that finished frame to the selected
-window with integer nearest-neighbor scaling and keeps its 4:3 aspect ratio. Widescreen output
-uses pillarbox bars; it never stretches the frame or changes the map coordinate system.
+The game uses a fixed `320x240` logical gameplay canvas. This is the complete authored frame:
+twenty 16x16 map tiles wide by fifteen tiles high. Godot uses `canvas_items` stretching with
+integer scale mode so pixel-art CanvasItems keep nearest-neighbor presentation while dynamic UI
+fonts rasterize at output resolution. Widescreen output uses pillarbox bars; it never stretches
+the frame or changes the map coordinate system.
 
 Maps and exploration sprites are authored in native pixels. A map larger than the native frame
 scrolls through a `Camera2D` that follows the player, clamps to map bounds, centers smaller maps,
@@ -29,6 +30,11 @@ for players who want a smaller or larger crisp output without changing the inter
 The project launches at 960x720 by default. Resolution selection is currently session-local;
 persistent display preferences are deferred. The internal viewport remains 320x240 at every size.
 
+Pixel-art CanvasItems use the project default nearest texture filter. UI must use the shared scene
+theme rather than a machine-specific `SystemFont` or intentionally disabled font rasterization.
+When a redistributable UI TTF/OTF is added under `game/assets/fonts/`, that theme is the single
+place to assign it; until then Godot's built-in dynamic fallback font is used deliberately.
+
 `BattleFormationView` owns only adaptable rendering geometry. It calculates cell widths, cell
 heights, grid positions, and presentation labels from its allocated `Control.Size`, then rebuilds
 those labels when resized. Formation rules, placements, command resolution, and `GameState` stay
@@ -43,4 +49,4 @@ Supported manual output checks:
 At each size, verify the equipment, Game Menu, Controls, dialogue, battle, and reward summary
 remain inside the 4:3 frame and that widescreen output has pillarboxes rather than distortion.
 This milestone does not add mobile layouts, safe-area handling, controller-specific navigation,
-localization expansion, or dynamic font scaling.
+or localization expansion.
