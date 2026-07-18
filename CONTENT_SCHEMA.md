@@ -282,6 +282,8 @@ This keeps common inventory/shop data in exactly one place.
 | `buyPrice`, `sellPrice` | integer | Nonnegative base values. |
 | `maxStack` | integer, optional | Defaults to `99` for ordinary items. Unique items always use an effective maximum of `1`. |
 | `unique` | boolean, optional | Defaults to `false`. Use for one-of-a-kind story or quest items; it forces an effective max stack of `1`. |
+| `battleUse` | boolean, optional | Defaults to `false`. When true, an owned item appears in the battle Item menu and can select any living combatant on either side. |
+| `battleAbilityId` | ID, optional | Required when `battleUse` is true. References the code-owned ability contract that supplies the item's current effect; its targeting must be `target.combatant.single`. |
 
 | Equipment field | Type | Notes |
 |---|---|---|

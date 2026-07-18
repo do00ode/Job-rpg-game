@@ -5,7 +5,7 @@
   "descriptionKey": "item.potion.description",
   "abilityKindId": "ability-kind.skill",
   "magicDisciplineIds": [],
-  "targetingId": "target.self",
+  "targetingId": "target.combatant.single",
   "costStatisticId": null,
   "costAmount": 0,
   "rulesetId": "rules.healing.flat",

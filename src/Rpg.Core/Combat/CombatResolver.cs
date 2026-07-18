@@ -57,7 +57,7 @@ public sealed class CombatResolver : ICombatResolver
 		}
 
 		if (string.IsNullOrWhiteSpace(command.AbilityId)
-			|| (!string.Equals(command.AbilityId, "ability.item.potion", StringComparison.Ordinal)
+			|| (!command.AbilityId.StartsWith("ability.item.", StringComparison.Ordinal)
 				&& !actor.Value.AbilityIds.Contains(command.AbilityId, StringComparer.Ordinal)))
 		{
 			Reject(
@@ -249,13 +249,22 @@ public sealed class CombatResolver : ICombatResolver
         LocatedCombatant target,
         AbilityDefinition ability)
     {
-        if (target.Value.Side != actor.Value.Side)
+        if (string.Equals(ability.TargetingId, AbilityTargetingIds.SingleAlly, StringComparison.Ordinal)
+            && target.Value.Side != actor.Value.Side)
         {
             Reject(
                 CombatCommandProblemCodes.TargetAllyRequired,
 				$"Ability '{ability.Id}' requires an ally target, but "
 				+ $"'{actor.Value.InstanceId}' and '{target.Value.InstanceId}' are on "
                 + "opposing sides.");
+        }
+
+        if (string.Equals(ability.TargetingId, AbilityTargetingIds.Self, StringComparison.Ordinal)
+            && !string.Equals(target.Value.InstanceId, actor.Value.InstanceId, StringComparison.Ordinal))
+        {
+            Reject(
+                CombatCommandProblemCodes.TargetSameSide,
+				$"Ability '{ability.Id}' requires its acting combatant as the target.");
         }
 
         int authoredHealing = RequirePositiveWholePower(ability);

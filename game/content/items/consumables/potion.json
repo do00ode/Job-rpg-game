@@ -5,5 +5,7 @@
   "descriptionKey": "item.potion.description",
   "buyPrice": 30,
   "sellPrice": 15,
-  "maxStack": 99
+  "maxStack": 99,
+  "battleUse": true,
+  "battleAbilityId": "ability.item.potion"
 }

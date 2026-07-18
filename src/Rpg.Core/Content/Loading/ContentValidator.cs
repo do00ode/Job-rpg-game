@@ -460,6 +460,26 @@ internal sealed class ContentValidator
         RequireAtLeast(item, "$.buyPrice", itemDefinition.BuyPrice, 0);
         RequireAtLeast(item, "$.sellPrice", itemDefinition.SellPrice, 0);
         RequireAtLeast(item, "$.maxStack", itemDefinition.MaxStack, 1);
+        if (itemDefinition.BattleUse)
+        {
+            if (string.IsNullOrWhiteSpace(itemDefinition.BattleAbilityId))
+            {
+                Add(item, "$.battleAbilityId", "item.battle-ability-missing",
+                    "A battle-use item requires a nonblank battleAbilityId.");
+            }
+            else
+            {
+                RequireReference<AbilityDefinition>(
+                    item,
+                    "$.battleAbilityId",
+                    itemDefinition.BattleAbilityId);
+            }
+        }
+        else if (itemDefinition.BattleAbilityId is not null)
+        {
+            Add(item, "$.battleAbilityId", "item.battle-ability-without-battle-use",
+                "battleAbilityId is only valid when battleUse is true.");
+        }
     }
 
     private void ValidateEquipment(LoadedContent item, EquipmentDefinition equipment)

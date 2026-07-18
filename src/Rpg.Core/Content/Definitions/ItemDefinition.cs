@@ -32,4 +32,16 @@ public sealed record ItemDefinition : ContentDefinition
     /// limit of one; ordinary items default to ninety-nine.
     /// </summary>
     public bool Unique { get; init; }
+
+    /// <summary>
+    /// Whether an owned stack can be selected from the battle Item command.
+    /// Battle-use items always select one living combatant from either side.
+    /// </summary>
+    public bool BattleUse { get; init; }
+
+    /// <summary>
+    /// The code-owned ability contract executed when this item is used in battle.
+    /// Required only when <see cref="BattleUse"/> is true.
+    /// </summary>
+    public string? BattleAbilityId { get; init; }
 }

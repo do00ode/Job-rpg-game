@@ -134,6 +134,27 @@ public sealed class FirstClassKitsTests
     }
 
     [Fact]
+    public void Resolve_PotionCanHealAnEnemyTarget()
+    {
+        FixedBattle battle = CombatTestFixture.CreateFixedBattle();
+        CombatantSnapshot[] combatants = battle.Snapshot.Combatants.ToArray();
+        combatants[1] = combatants[1].WithCurrentHp(5);
+        var injuredSnapshot = new CombatSnapshot(
+            battle.Snapshot.Round,
+            battle.Snapshot.TimelineTime,
+            combatants);
+
+        CombatResolution resolution = new CombatResolver(battle.Content).Resolve(
+            injuredSnapshot,
+            new CombatCommand("party-0", PotionId, ["enemy-0"]));
+
+        HealingApplied healing = Assert.IsType<HealingApplied>(Assert.Single(resolution.Events));
+        Assert.Equal("enemy-0", healing.TargetCombatantId);
+        Assert.Equal(17, healing.Amount);
+        Assert.Equal(22, healing.CurrentHp);
+    }
+
+    [Fact]
     public void Resolve_InsufficientFireMpRejectsWithoutChangingHpOrMp()
     {
         FixedBattle battle = CombatTestFixture.CreateFixedBattle(BlackMageId);

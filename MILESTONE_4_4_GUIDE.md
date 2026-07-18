@@ -35,6 +35,12 @@ Magic submenus use an opaque full-battle overlay with a scrollable three-column 
 The overlay is presentation only: it projects the same authored spell order and button actions as
 the ordinary command menu, and it closes before target selection begins.
 
+Battle-use inventory items are a third top-level command. Every owned `ItemDefinition` with
+`battleUse: true` appears in the Item submenu and targets any living combatant, using its
+referenced `battleAbilityId` contract. This keeps the menu presentation separate from the
+effect: current items can heal or damage through existing contracts, and later effects remain
+content-selected, code-owned combat rules.
+
 Milestone 4.6 supplies the first authored kits that use this projection: Knight Power Strike
 and Black Mage's Black Magic spell list. Names remain temporary stable-ID-derived placeholders.
 Localized display names, MP affordability explanations, command icons, multi-actor queues,

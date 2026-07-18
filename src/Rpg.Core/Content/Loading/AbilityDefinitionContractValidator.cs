@@ -77,7 +77,8 @@ internal static class AbilityDefinitionContractValidator
                     ability,
                     targetingHasValidShape,
                     AbilityTargetingIds.SingleAlly,
-                    AbilityTargetingIds.Self);
+                    AbilityTargetingIds.Self,
+                    AbilityTargetingIds.SingleCombatant);
                 ValidateFlatHealingParameters(problems, numericParameters);
                 break;
             default:

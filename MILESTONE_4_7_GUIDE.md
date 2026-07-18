@@ -40,5 +40,9 @@ spell without a matching unlocked discipline remains unavailable.
 No save field, migration, schema-version, or mod data-API change is required. Current HP and
 MP remain battle-local snapshot state.
 
-Deferred: revive, defeated targeting, area healing, enemy healer AI, healing items, regeneration,
+Battle-use items may also select `target.combatant.single`; flat healing then restores HP on the
+chosen living ally or enemy. Potion is the first example. This does not create a general item
+effect engine: every item still references one validated, code-owned ability contract.
+
+Deferred: revive, defeated targeting, area healing, enemy healer AI, regeneration,
 status cleansing, overheal/shields, magical-stat scaling, random variance, animation, and sound.

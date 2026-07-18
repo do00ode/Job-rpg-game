@@ -262,14 +262,14 @@ public partial class ExplorationSceneController : Node2D
 			if (keyEvent.IsActionPressed(GameInputActions.Interact))
 			{
 				_dialogue.Advance();
-				LaunchPendingEncounterAfterDialogue();
 				GetViewport().SetInputAsHandled();
+				LaunchPendingEncounterAfterDialogue();
 			}
 			else if (keyEvent.IsActionPressed(GameInputActions.Menu))
 			{
 				_dialogue.Close();
-				LaunchPendingEncounterAfterDialogue();
 				GetViewport().SetInputAsHandled();
+				LaunchPendingEncounterAfterDialogue();
 			}
 
 			return;

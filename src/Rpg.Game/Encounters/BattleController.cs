@@ -647,8 +647,7 @@ public partial class BattleController : Control
 				 discipline.SpellAbilityIds.Count == 0);
 		}
 
-		int potionCount = RequireInventory().GetQuantity("item.consumable.potion");
-		AddCommandButton("Item >", OpenItemMenu, potionCount == 0);
+		AddCommandButton("Item >", OpenItemMenu, !GetOwnedBattleItems().Any());
 
 		RefreshPresentation();
 		FocusFirstCommand();
@@ -656,7 +655,8 @@ public partial class BattleController : Control
 
 	private void OpenItemMenu()
 	{
-		if (_phase != BattleInputPhase.Command)
+		if (_phase != BattleInputPhase.Command
+			&& !(_phase == BattleInputPhase.MagicSelection && _showingItemMenu))
 		{
 			return;
 		}
@@ -665,8 +665,13 @@ public partial class BattleController : Control
 		_phase = BattleInputPhase.MagicSelection;
 		_selectedMagicDisciplineId = null;
 		ClearCommandButtons();
-		int potionCount = RequireInventory().GetQuantity("item.consumable.potion");
-		AddCommandButton($"Potion x{potionCount}", () => SelectItem("item.consumable.potion"), potionCount == 0);
+		foreach (ItemDefinition item in GetOwnedBattleItems())
+		{
+			string itemId = item.Id;
+			AddCommandButton(
+				$"{ShortDefinitionName(itemId)} x{RequireInventory().GetQuantity(itemId)}",
+				() => SelectItem(itemId));
+		}
 		AddCommandButton("Back", ReturnToTopLevelCommands);
 		RefreshPresentation();
 		FocusFirstCommand();
@@ -679,9 +684,27 @@ public partial class BattleController : Control
 			return;
 		}
 
+		ItemDefinition item = RequireContent().GetRequired<ItemDefinition>(itemId);
+		if (!item.BattleUse || string.IsNullOrWhiteSpace(item.BattleAbilityId))
+		{
+			throw new InvalidDataException(
+				$"Item '{itemId}' cannot be used in battle because it has no battle ability.");
+		}
+
+		AbilityDefinition ability = RequireContent().GetRequired<AbilityDefinition>(item.BattleAbilityId);
+		if (!string.Equals(
+				ability.TargetingId,
+				AbilityTargetingIds.SingleCombatant,
+				StringComparison.Ordinal))
+		{
+			throw new InvalidDataException(
+				$"Battle-use item '{itemId}' must use '{AbilityTargetingIds.SingleCombatant}' "
+				+ $"so it can target either side.");
+		}
+
 		_selectedItemId = itemId;
-		_selectedAbilityId = "ability.item.potion";
-		ResolveSelectedAbility(RequireSingleLivingPartyActor(RequireSnapshot()).InstanceId);
+		_selectedAbilityId = ability.Id;
+		BeginTargetSelection(null);
 	}
 
 	private void OpenMagicMenu(string magicDisciplineId)
@@ -920,6 +943,14 @@ public partial class BattleController : Control
 
 		_selectedTargetId = null;
 		_selectedAbilityId = null;
+		if (_showingItemMenu)
+		{
+			_selectedItemId = null;
+			_phase = BattleInputPhase.MagicSelection;
+			OpenItemMenu();
+			return;
+		}
+
 		if (_selectedMagicDisciplineId is null)
 		{
 			_phase = BattleInputPhase.Command;
@@ -1358,6 +1389,12 @@ public partial class BattleController : Control
 		.Where(combatant => (side is null || combatant.Side == side) && !combatant.IsDefeated)
 		.OrderBy(combatant => combatant.Side == BattleSide.Party ? 1 : 0)
 		.Select(combatant => combatant.InstanceId)
+		.ToArray();
+
+	private ItemDefinition[] GetOwnedBattleItems() => RequireContent()
+		.GetAll<ItemDefinition>()
+		.Where(item => item.BattleUse && RequireInventory().GetQuantity(item.Id) > 0)
+		.OrderBy(item => item.Id, StringComparer.Ordinal)
 		.ToArray();
 
 	private BattleSide? GetSelectedTargetSide()
