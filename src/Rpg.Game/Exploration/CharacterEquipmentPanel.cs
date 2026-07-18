@@ -207,9 +207,11 @@ public partial class CharacterEquipmentPanel : PanelContainer
         var button = new Button
         {
             Text = text,
-            CustomMinimumSize = new Vector2(0.0f, 28.0f),
+            CustomMinimumSize = new Vector2(0.0f, 10.0f),
             Alignment = HorizontalAlignment.Left,
+            Flat = true,
         };
+        button.AddThemeFontSizeOverride("font_size", 5);
         button.Pressed += action;
         button.FocusEntered += () => { _focusedButton = button; focused?.Invoke(); };
         container.AddChild(button);

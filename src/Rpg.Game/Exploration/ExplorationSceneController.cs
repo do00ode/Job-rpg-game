@@ -310,14 +310,19 @@ public partial class ExplorationSceneController : Node2D
 		_heldMovementDelta = delta;
 		_heldMovementFacing = facing;
 		_movementRepeatTimer = MovementInitialDelaySeconds;
-		_player.SetFacing(facing);
 
-		// Direction changes are rendered immediately, but the logical step already in
-		// progress owns movement until its tween completes. The held direction remains
-		// queued in these fields and is consumed by OnPlayerMovementCompleted.
+		// A completed movement step may accept a newly held direction. Keep that direction
+		// queued until its tween finishes so its walking sprite cannot turn mid-step.
 		if (!_playerMovementInProgress)
 		{
-			TryMove(delta, facing);
+			if (string.Equals(RequireSession().Current.Location.Facing, facing, StringComparison.Ordinal))
+			{
+				TryMove(delta, facing);
+			}
+			else
+			{
+				FaceDirection(facing);
+			}
 		}
 	}
 
@@ -347,6 +352,18 @@ public partial class ExplorationSceneController : Node2D
 		_heldMovementDelta = Vector2I.Zero;
 		_heldMovementFacing = string.Empty;
 		_movementRepeatTimer = 0;
+	}
+
+	private void FaceDirection(string facing)
+	{
+		IGameSession session = RequireSession();
+		MapLocationState location = session.Current.Location;
+		if (string.Equals(location.Facing, facing, StringComparison.Ordinal))
+		{
+			return;
+		}
+
+		session.UpdateLocation(location with { Facing = facing });
 	}
 
 	private void TryMove(Vector2I delta, string facing)
@@ -482,17 +499,14 @@ public partial class ExplorationSceneController : Node2D
 		InputBindingService bindings = RequireInputBindings();
 
 		_instructions.Text =
-			$"Move U[{bindings.FormatBindings(GameInputActions.MoveUp)}] "
-			+ $"R[{bindings.FormatBindings(GameInputActions.MoveRight)}]"
+			$"Move [{bindings.FormatBindings(GameInputActions.MoveUp)}] "
+			+ $"[{bindings.FormatBindings(GameInputActions.MoveRight)}] "
+			+ $"[{bindings.FormatBindings(GameInputActions.MoveDown)}] "
+			+ $"[{bindings.FormatBindings(GameInputActions.MoveLeft)}]"
 			+ System.Environment.NewLine
-			+ $"Move D[{bindings.FormatBindings(GameInputActions.MoveDown)}] "
-			+ $"L[{bindings.FormatBindings(GameInputActions.MoveLeft)}]"
-			+ System.Environment.NewLine
-			+ $"Interact[{bindings.FormatBindings(GameInputActions.Interact)}] "
-			+ $"Menu[{bindings.FormatBindings(GameInputActions.Menu)}]"
-			+ System.Environment.NewLine
-			+ $"Equipment[{bindings.FormatBindings(GameInputActions.Equipment)}]  "
-			+ "R rebuild";
+			+ $"Act [{bindings.FormatBindings(GameInputActions.Interact)}]  "
+			+ $"Menu [{bindings.FormatBindings(GameInputActions.Menu)}]  "
+			+ $"Equip [{bindings.FormatBindings(GameInputActions.Equipment)}]  R rebuild";
 	}
 
 	private void OnEquipmentRequested(object? sender, EventArgs eventArgs)

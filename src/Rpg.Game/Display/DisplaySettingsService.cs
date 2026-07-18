@@ -5,6 +5,9 @@ namespace RpgGame.Display;
 /// <summary>Application-lifetime owner of the small supported window-resolution preset list.</summary>
 public sealed class DisplaySettingsService
 {
+    private const int NativeViewportWidth = 320;
+    private const int NativeViewportHeight = 240;
+    private static readonly int[] SupportedIntegerScales = [2, 3, 4, 5];
     private static readonly Vector2I[] SupportedResolutions =
     [
         new(640, 480),
@@ -19,6 +22,7 @@ public sealed class DisplaySettingsService
     public event EventHandler? BattleMusicChanged;
     public event EventHandler? OverworldMusicChanged;
     public IReadOnlyList<Vector2I> Resolutions => SupportedResolutions;
+    public IReadOnlyList<int> IntegerScales => SupportedIntegerScales;
     public Vector2I CurrentResolution => DisplayServer.WindowGetSize();
     public bool BattleMusicEnabled { get; private set; } = true;
     public int BattleMusicVolumePercent { get; private set; } = 70;
@@ -59,6 +63,24 @@ public sealed class DisplaySettingsService
             throw new ArgumentException($"Unsupported display resolution '{resolution}'.", nameof(resolution));
         }
 
+        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+        DisplayServer.WindowSetSize(resolution);
+        ResolutionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Sets a bounded nearest-neighbor output scale for the fixed 320x240 canvas.</summary>
+    public void SetIntegerScale(int scale)
+    {
+        if (!SupportedIntegerScales.Contains(scale))
+        {
+            throw new ArgumentOutOfRangeException(nameof(scale));
+        }
+
+        SetWindowSize(new Vector2I(NativeViewportWidth * scale, NativeViewportHeight * scale));
+    }
+
+    private void SetWindowSize(Vector2I resolution)
+    {
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
         DisplayServer.WindowSetSize(resolution);
         ResolutionChanged?.Invoke(this, EventArgs.Empty);

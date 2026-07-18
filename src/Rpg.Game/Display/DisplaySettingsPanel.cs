@@ -7,6 +7,7 @@ namespace RpgGame.Display;
 public partial class DisplaySettingsPanel : PanelContainer
 {
     private Label _currentResolution = null!;
+    private VBoxContainer _scalePresets = null!;
     private VBoxContainer _presets = null!;
     private Button _closeButton = null!;
     private readonly List<Button> _buttons = [];
@@ -19,6 +20,7 @@ public partial class DisplaySettingsPanel : PanelContainer
     public override void _Ready()
     {
         _currentResolution = GetNode<Label>("Margin/VBox/CurrentResolution");
+        _scalePresets = GetNode<VBoxContainer>("Margin/VBox/ScalePresets");
         _presets = GetNode<VBoxContainer>("Margin/VBox/Presets");
         _closeButton = GetNode<Button>("Margin/VBox/Close");
         Visible = false;
@@ -28,10 +30,19 @@ public partial class DisplaySettingsPanel : PanelContainer
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _settings.ResolutionChanged += OnResolutionChanged;
+        foreach (int scale in _settings.IntegerScales)
+        {
+            int captured = scale;
+            AddPresetButton(
+                _scalePresets,
+                $"{captured}x ({captured * 320} x {captured * 240})",
+                () => RequireSettings().SetIntegerScale(captured));
+        }
+
         foreach (Vector2I resolution in _settings.Resolutions)
         {
             Vector2I captured = resolution;
-            AddPresetButton($"{captured.X} x {captured.Y}", () => RequireSettings().SetResolution(captured));
+            AddPresetButton(_presets, $"{captured.X} x {captured.Y}", () => RequireSettings().SetResolution(captured));
         }
 
         AddButton(_closeButton, Close);
@@ -68,13 +79,19 @@ public partial class DisplaySettingsPanel : PanelContainer
     private void Refresh()
     {
         Vector2I current = RequireSettings().CurrentResolution;
-        _currentResolution.Text = $"Current: {current.X} x {current.Y}";
+        int horizontalScale = current.X / 320;
+        int verticalScale = current.Y / 240;
+        _currentResolution.Text = current.X % 320 == 0
+            && current.Y % 240 == 0
+            && horizontalScale == verticalScale
+                ? $"Current: {current.X} x {current.Y} ({horizontalScale}x)"
+                : $"Current: {current.X} x {current.Y}";
     }
 
-    private void AddPresetButton(string text, Action action)
+    private void AddPresetButton(VBoxContainer host, string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(0.0f, 30.0f) };
-        _presets.AddChild(button);
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(0.0f, 14.0f) };
+        host.AddChild(button);
         AddButton(button, action);
     }
 

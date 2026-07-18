@@ -145,7 +145,7 @@ public partial class BattleController : Control
 		// 1280x720-style layout and could never fit in the native viewport.
 		var lowerPanel = new HBoxContainer
 		{
-			CustomMinimumSize = new Vector2(0.0f, 72.0f),
+			CustomMinimumSize = new Vector2(0.0f, 48.0f),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
 		};
@@ -157,7 +157,7 @@ public partial class BattleController : Control
 
 		var enemyPanel = new VBoxContainer
 		{
-			CustomMinimumSize = new Vector2(88.0f, 0.0f),
+			CustomMinimumSize = new Vector2(82.0f, 0.0f),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 		};
@@ -176,14 +176,14 @@ public partial class BattleController : Control
 
 		statusRow.Visible = false;
 
-		_enemyStatus.CustomMinimumSize = new Vector2(88.0f, 0.0f);
+		_enemyStatus.CustomMinimumSize = new Vector2(82.0f, 0.0f);
 		_enemyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
-		commandArea.CustomMinimumSize = new Vector2(104.0f, 0.0f);
+		commandArea.CustomMinimumSize = new Vector2(96.0f, 0.0f);
 		commandArea.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		commandArea.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
 
-		_partyStatus.CustomMinimumSize = new Vector2(88.0f, 0.0f);
+		_partyStatus.CustomMinimumSize = new Vector2(82.0f, 0.0f);
 		_partyStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
 		_eventLog.CustomMinimumSize = Vector2.Zero;
@@ -467,11 +467,11 @@ public partial class BattleController : Control
 		{
 			var hpLabel = new Label
 			{
-				CustomMinimumSize = new Vector2(0.0f, 12.0f),
+				CustomMinimumSize = new Vector2(0.0f, 10.0f),
 				HorizontalAlignment = HorizontalAlignment.Center,
 			};
 
-			hpLabel.AddThemeFontSizeOverride("font_size", 8);
+			hpLabel.AddThemeFontSizeOverride("font_size", 6);
 
 			(combatant.Side == BattleSide.Party
 				? _partyStatus
@@ -483,10 +483,10 @@ public partial class BattleController : Control
 
 			var targetButton = new Button
 			{
-				CustomMinimumSize = new Vector2(52.0f, 16.0f),
+				CustomMinimumSize = new Vector2(48.0f, 12.0f),
 			};
 
-			targetButton.AddThemeFontSizeOverride("font_size", 7);
+			targetButton.AddThemeFontSizeOverride("font_size", 6);
 			targetButton.Pressed += () => SelectTargetAndResolve(instanceId);
 			targetButton.FocusEntered += () => SelectFocusedTarget(instanceId);
 
@@ -565,12 +565,12 @@ public partial class BattleController : Control
 	{
 		var button = new Button
 		{
-			CustomMinimumSize = new Vector2(92.0f, 16.0f),
+			CustomMinimumSize = new Vector2(88.0f, 14.0f),
 			Text = text,
 			Disabled = disabled,
 		};
 
-		button.AddThemeFontSizeOverride("font_size", 7);
+		button.AddThemeFontSizeOverride("font_size", 6);
 		button.Pressed += action;
 		button.FocusEntered += () => _focusedCommandButton = button;
 

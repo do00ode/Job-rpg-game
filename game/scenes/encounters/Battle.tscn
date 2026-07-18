@@ -4,6 +4,18 @@
 [ext_resource type="Script" uid="uid://bhiac51kpa5k" path="res://src/Rpg.Game/Encounters/BattleFormationView.cs" id="2_formation"]
 [ext_resource type="Texture2D" uid="uid://cney54wilqen1" path="res://game/assets/battlefields/forest-day/background.png" id="2_ugcpl"]
 
+[sub_resource type="SystemFont" id="SystemFont_native_battle_ui"]
+font_names = PackedStringArray("Consolas")
+font_weight = 700
+antialiasing = 0
+hinting = 0
+subpixel_positioning = 0
+generate_mipmaps = false
+
+[sub_resource type="Theme" id="Theme_native_battle_ui"]
+default_font = SubResource("SystemFont_native_battle_ui")
+default_font_size = 6
+
 [node name="Battle" type="Control" unique_id=88526944]
 layout_mode = 3
 anchors_preset = 15
@@ -11,6 +23,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("Theme_native_battle_ui")
 script = ExtResource("1_controller")
 
 [node name="Background" type="ColorRect" parent="." unique_id=483049237]
@@ -46,7 +59,7 @@ offset_top = 4.0
 offset_right = -4.0
 offset_bottom = 20.0
 mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Hide Grid (Debug)"
 
 [node name="BattleLogDebugToggle" type="Button" parent="." unique_id=1377498125]
@@ -59,7 +72,7 @@ offset_top = 22.0
 offset_right = -4.0
 offset_bottom = 38.0
 mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Show Log (Debug)"
 
 [node name="BattleLogWindow" type="PanelContainer" parent="." unique_id=821931903]
@@ -93,13 +106,13 @@ layout_mode = 2
 [node name="Title" type="Label" parent="BattleLogWindow/Margin/VBox/Header" unique_id=75447747]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 6
 text = "Combat Log (Debug)"
 
 [node name="Close" type="Button" parent="BattleLogWindow/Margin/VBox/Header" unique_id=509614701]
 custom_minimum_size = Vector2(42, 16)
 layout_mode = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Close"
 
 [node name="LogHost" type="VBoxContainer" parent="BattleLogWindow/Margin/VBox" unique_id=805584461]
@@ -126,7 +139,7 @@ theme_override_constants/separation = 1
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Turn order loads here."
 horizontal_alignment = 1
 clip_text = true
@@ -147,7 +160,7 @@ layout_mode = 2
 text = "Battlefield loads here."
 
 [node name="FormationView" type="Control" parent="Margin/VBox" unique_id=430889239]
-custom_minimum_size = Vector2(0, 126)
+custom_minimum_size = Vector2(0, 150)
 clip_contents = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -166,7 +179,7 @@ size_flags_horizontal = 3
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.82, 1, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 6
 text = "PARTY STATUS"
 
 [node name="EnemyStatus" type="VBoxContainer" parent="Margin/VBox/StatusRow" unique_id=1822471012]
@@ -177,7 +190,7 @@ size_flags_horizontal = 3
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 6
 text = "ENEMY STATUS"
 
 [node name="CommandArea" type="VBoxContainer" parent="Margin/VBox" unique_id=204991200]
@@ -188,7 +201,7 @@ theme_override_constants/separation = 1
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.83, 0.58, 1)
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Battle phase loads here."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -205,7 +218,7 @@ alignment = 1
 
 [node name="TargetPrompt" type="Label" parent="Margin/VBox/CommandArea/TargetRow" unique_id=965299505]
 layout_mode = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Target:"
 vertical_alignment = 1
 
@@ -217,7 +230,7 @@ theme_override_constants/separation = 2
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/default_color = Color(0.88, 0.9, 0.96, 1)
-theme_override_font_sizes/normal_font_size = 8
+theme_override_font_sizes/normal_font_size = 6
 scroll_following = true
 
 [node name="ResultRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1142575869]
@@ -228,21 +241,21 @@ alignment = 1
 [node name="Result" type="Label" parent="Margin/VBox/ResultRow" unique_id=37250997]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 1, 0.65, 1)
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Terminal result loads here."
 vertical_alignment = 1
 
 [node name="Continue" type="Button" parent="Margin/VBox/ResultRow" unique_id=1126373999]
-custom_minimum_size = Vector2(70, 16)
+custom_minimum_size = Vector2(58, 14)
 layout_mode = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 text = "Continue"
 
 [node name="InputHint" type="Label" parent="Margin/VBox" unique_id=596952642]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.62, 1, 0.72, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 6
 text = "Current battle bindings load here."
 horizontal_alignment = 1
 autowrap_mode = 2

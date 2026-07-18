@@ -247,7 +247,7 @@ public partial class EquipmentPanel : PanelContainer
 
     private void AddActionButton(string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(360.0f, 38.0f) };
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(0.0f, 14.0f) };
         button.Pressed += action;
         button.FocusEntered += () => _focusedButton = button;
         _actions.AddChild(button);

@@ -478,12 +478,12 @@ public partial class BattleFormationView : Control
         AddLabel(
             "ENEMIES",
             new Rect2(new Vector2(layout.EnemyLeft, 0.0f), new Vector2(enemyWidth, 16.0f)),
-            12,
+            6,
             new Color(1.0f, 0.72f, 0.72f));
         AddLabel(
             "PARTY",
             new Rect2(new Vector2(layout.PartyLeft, 0.0f), new Vector2(partyWidth, 16.0f)),
-            12,
+            6,
             new Color(0.66f, 0.82f, 1.0f));
 
         for (int row = 0; row < BattleFormationRules.RowCount; row++)
@@ -494,7 +494,7 @@ public partial class BattleFormationView : Control
                 new Rect2(
                     new Vector2(0.0f, top),
                     new Vector2(layout.EnemyLeft - 2.0f, layout.CellHeight)),
-                10,
+                5,
                 new Color(0.75f, 0.8f, 0.9f));
         }
     }
@@ -520,7 +520,7 @@ public partial class BattleFormationView : Control
         AddLabel(
             GetPlacementLabel(placement),
             labelArea,
-            11,
+            6,
             Colors.White);
     }
 
@@ -600,8 +600,9 @@ public partial class BattleFormationView : Control
             + BattleFormationRules.PartyColumnCount;
         float partyCellWidth = availableWidth / layoutUnits;
         float enemyCellWidth = partyCellWidth * enemyCellWidthRatio;
-        float gridHeight = Mathf.Min(220.0f, Mathf.Max(64.0f, Size.Y - 24.0f));
-        float gridTop = Mathf.Max(20.0f, Size.Y - gridHeight - 4.0f);
+        const float topPadding = 32.0f;
+        float gridHeight = Mathf.Min(220.0f, Mathf.Max(64.0f, Size.Y - topPadding - 4.0f));
+        float gridTop = Mathf.Max(topPadding, Size.Y - gridHeight - 4.0f);
         float cellHeight = gridHeight / BattleFormationRules.RowCount;
         float partyLeft = outerMargin + (BattleFormationRules.EnemyColumnCount * enemyCellWidth) + gridGap;
         return new FormationLayout(

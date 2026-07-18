@@ -38,17 +38,17 @@ public partial class TestGuideNpc : Node2D, IExplorationInteractable
 
 	public override void _Draw()
 	{
-		var body = new Rect2(new Vector2(-8, -8), new Vector2(16, 16));
+		var body = new Rect2(new Vector2(-5, -6), new Vector2(10, 12));
 		Color bodyColor = _wasPreviouslySpokenTo
 			? new Color(0.25f, 0.78f, 0.47f)
 			: new Color(0.93f, 0.55f, 0.20f);
 
 		DrawRect(body, bodyColor);
-		DrawRect(body, Colors.White, false, 2.0f);
+		DrawRect(body, Colors.White, false, 1.0f);
 
 		if (_wasPreviouslySpokenTo)
 		{
-			DrawCircle(new Vector2(0, -1), 3.0f, Colors.White);
+			DrawCircle(new Vector2(0, -1), 2.0f, Colors.White);
 		}
 	}
 }

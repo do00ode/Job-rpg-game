@@ -19,6 +19,18 @@ border_width_right = 6
 border_width_bottom = 6
 border_color = Color(0.28, 0.58, 0.88, 1)
 
+[sub_resource type="SystemFont" id="SystemFont_native_ui"]
+font_names = PackedStringArray("Consolas")
+font_weight = 700
+antialiasing = 0
+hinting = 0
+subpixel_positioning = 0
+generate_mipmaps = false
+
+[sub_resource type="Theme" id="Theme_native_ui"]
+default_font = SubResource("SystemFont_native_ui")
+default_font_size = 6
+
 [node name="ExplorationMap" type="Node2D" unique_id=551639256]
 script = ExtResource("1_controller")
 
@@ -34,12 +46,12 @@ z_index = 2
 script = ExtResource("4_guide")
 
 [node name="Name" type="Label" parent="Guide" unique_id=342800267]
-offset_left = -24.0
-offset_top = 10.0
-offset_right = -1.0
-offset_bottom = 22.0
-theme_override_font_sizes/font_size = 8
-text = "Guide"
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 0.0
+theme_override_font_sizes/font_size = 6
+text = "G"
 horizontal_alignment = 1
 
 [node name="Camera" type="Camera2D" parent="." unique_id=539802200]
@@ -50,18 +62,18 @@ horizontal_alignment = 1
 offset_left = 4.0
 offset_top = 2.0
 offset_right = 316.0
-offset_bottom = 40.0
-theme_override_font_sizes/font_size = 7
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 5
 text = "Current control bindings load here."
 autowrap_mode = 2
 
 [node name="DevelopmentStatus" type="Label" parent="Interface" unique_id=959985414]
 modulate = Color(0.55, 1, 0.65, 1)
 offset_left = 4.0
-offset_top = 42.0
+offset_top = 28.0
 offset_right = 316.0
-offset_bottom = 54.0
-theme_override_font_sizes/font_size = 8
+offset_bottom = 36.0
+theme_override_font_sizes/font_size = 6
 text = "Status: Ready."
 
 [node name="Controls" type="PanelContainer" parent="Interface" unique_id=947282491]
@@ -72,14 +84,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
+theme = SubResource("Theme_native_ui")
 script = ExtResource("6_controls")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Controls" unique_id=1604456966]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="Interface/Controls/Margin" unique_id=263537732]
 layout_mode = 2
@@ -87,13 +100,13 @@ theme_override_constants/separation = 4
 
 [node name="Title" type="Label" parent="Interface/Controls/Margin/VBox" unique_id=275641194]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 7
 text = "Controls"
 horizontal_alignment = 1
 
 [node name="Help" type="Label" parent="Interface/Controls/Margin/VBox" unique_id=2065117277]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 6
 text = "Select a binding, then press any keyboard key. Keys cannot be shared between actions.
 R, K, and L remain reserved for temporary developer tools."
 horizontal_alignment = 1
@@ -105,7 +118,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 3
 
 [node name="Status" type="Label" parent="Interface/Controls/Margin/VBox" unique_id=1029683187]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Choose a binding, then press the replacement key."
 horizontal_alignment = 1
@@ -117,12 +130,12 @@ theme_override_constants/separation = 8
 alignment = 1
 
 [node name="Reset" type="Button" parent="Interface/Controls/Margin/VBox/Footer" unique_id=682966382]
-custom_minimum_size = Vector2(130, 32)
+custom_minimum_size = Vector2(110, 14)
 layout_mode = 2
 text = "Reset Defaults"
 
 [node name="Close" type="Button" parent="Interface/Controls/Margin/VBox/Footer" unique_id=249146128]
-custom_minimum_size = Vector2(130, 32)
+custom_minimum_size = Vector2(110, 14)
 layout_mode = 2
 text = "Close"
 
@@ -134,14 +147,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
+theme = SubResource("Theme_native_ui")
 script = ExtResource("7_menu")
 
 [node name="Margin" type="MarginContainer" parent="Interface/GameMenu" unique_id=1637381369]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="Interface/GameMenu/Margin" unique_id=52162934]
 layout_mode = 2
@@ -150,42 +164,42 @@ alignment = 1
 
 [node name="Title" type="Label" parent="Interface/GameMenu/Margin/VBox" unique_id=478563072]
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 7
 text = "Menu"
 horizontal_alignment = 1
 
 [node name="Equipment" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=2090029416]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Equipment"
 
 [node name="Save" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=601432024]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Save"
 
 [node name="Load" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=765855213]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Load"
 
 [node name="Controls" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=2031795347]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Controls"
 
 [node name="Display" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=1276682755]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Display"
 
 [node name="Sound" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=517271676]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Sound"
 
 [node name="Close" type="Button" parent="Interface/GameMenu/Margin/VBox" unique_id=680090836]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Close"
 
@@ -200,27 +214,27 @@ text = "Save Game"
 horizontal_alignment = 1
 
 [node name="Slot1" type="Button" parent="Interface/GameMenu/Margin/VBox/SlotPanel" unique_id=862747942]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Slot 1"
 
 [node name="Slot2" type="Button" parent="Interface/GameMenu/Margin/VBox/SlotPanel" unique_id=1469019772]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Slot 2"
 
 [node name="Slot3" type="Button" parent="Interface/GameMenu/Margin/VBox/SlotPanel" unique_id=552840905]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Slot 3"
 
 [node name="Slot4" type="Button" parent="Interface/GameMenu/Margin/VBox/SlotPanel" unique_id=1808748615]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Slot 4"
 
 [node name="Back" type="Button" parent="Interface/GameMenu/Margin/VBox/SlotPanel" unique_id=1228307083]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Back"
 
@@ -232,40 +246,59 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
+theme = SubResource("Theme_native_ui")
 script = ExtResource("10_display_settings")
 
 [node name="Margin" type="MarginContainer" parent="Interface/DisplaySettings" unique_id=1108976608]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="Interface/DisplaySettings/Margin" unique_id=844273928]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 alignment = 1
 
 [node name="Title" type="Label" parent="Interface/DisplaySettings/Margin/VBox" unique_id=1030559226]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.25, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 7
 text = "Display"
 horizontal_alignment = 1
 
 [node name="CurrentResolution" type="Label" parent="Interface/DisplaySettings/Margin/VBox" unique_id=1525642592]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.9, 0.92, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Current output resolution"
+horizontal_alignment = 1
+
+[node name="ScaleTitle" type="Label" parent="Interface/DisplaySettings/Margin/VBox" unique_id=2064350591]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.9, 0.92, 1)
+theme_override_font_sizes/font_size = 6
+text = "Pixel Scale (320 x 240)"
+horizontal_alignment = 1
+
+[node name="ScalePresets" type="VBoxContainer" parent="Interface/DisplaySettings/Margin/VBox" unique_id=1525518835]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ResolutionTitle" type="Label" parent="Interface/DisplaySettings/Margin/VBox" unique_id=216703217]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.9, 0.92, 1)
+theme_override_font_sizes/font_size = 6
+text = "Other Window Sizes"
 horizontal_alignment = 1
 
 [node name="Presets" type="VBoxContainer" parent="Interface/DisplaySettings/Margin/VBox" unique_id=943875192]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
 [node name="Close" type="Button" parent="Interface/DisplaySettings/Margin/VBox" unique_id=372272119]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Close"
 
@@ -277,14 +310,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
+theme = SubResource("Theme_native_ui")
 script = ExtResource("11_sound_settings")
 
 [node name="Margin" type="MarginContainer" parent="Interface/SoundSettings" unique_id=1211076754]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="Interface/SoundSettings/Margin" unique_id=448752523]
 layout_mode = 2
@@ -294,19 +328,19 @@ alignment = 1
 [node name="Title" type="Label" parent="Interface/SoundSettings/Margin/VBox" unique_id=427076203]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.25, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 7
 text = "Sound"
 horizontal_alignment = 1
 
 [node name="BattleMusic" type="CheckButton" parent="Interface/SoundSettings/Margin/VBox" unique_id=645024715]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 button_pressed = true
 text = "Battle Music"
 alignment = 1
 
 [node name="BattleMusicVolume" type="HSlider" parent="Interface/SoundSettings/Margin/VBox" unique_id=237781917]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 tooltip_text = "Combat music volume"
 value = 70.0
@@ -322,7 +356,7 @@ text = "Overworld Music Volume"
 horizontal_alignment = 1
 
 [node name="OverworldMusicVolume" type="HSlider" parent="Interface/SoundSettings/Margin/VBox" unique_id=1320260778]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 value = 100.0
 
@@ -332,7 +366,7 @@ text = "100%"
 horizontal_alignment = 1
 
 [node name="Close" type="Button" parent="Interface/SoundSettings/Margin/VBox" unique_id=338506649]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 text = "Close"
 
@@ -344,77 +378,80 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_equipment")
+theme = SubResource("Theme_native_ui")
 script = ExtResource("9_character_equipment")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Equipment" unique_id=1664620113]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
 [node name="VBox" type="VBoxContainer" parent="Interface/Equipment/Margin" unique_id=1011301648]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 1
 
 [node name="Title" type="Label" parent="Interface/Equipment/Margin/VBox" unique_id=1197774609]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.25, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 6
 text = "Equipment"
 
 [node name="Character" type="Label" parent="Interface/Equipment/Margin/VBox" unique_id=2012455693]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 5
 text = "Character"
 
 [node name="EquippedHeading" type="Label" parent="Interface/Equipment/Margin/VBox" unique_id=1668471204]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.9, 0.92, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 5
 text = "EQUIPPED"
 
 [node name="Slots" type="VBoxContainer" parent="Interface/Equipment/Margin/VBox" unique_id=309129056]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 0
 
 [node name="Separator" type="HSeparator" parent="Interface/Equipment/Margin/VBox" unique_id=648331984]
 layout_mode = 2
 
 [node name="Lower" type="HBoxContainer" parent="Interface/Equipment/Margin/VBox" unique_id=252388228]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 4
 
 [node name="ChoicesColumn" type="VBoxContainer" parent="Interface/Equipment/Margin/VBox/Lower" unique_id=331579850]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
+theme_override_constants/separation = 1
 
 [node name="ChoicesTitle" type="Label" parent="Interface/Equipment/Margin/VBox/Lower/ChoicesColumn" unique_id=486893918]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.9, 0.92, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 5
 text = "Choose a slot above"
 
 [node name="Choices" type="VBoxContainer" parent="Interface/Equipment/Margin/VBox/Lower/ChoicesColumn" unique_id=424027309]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 3
+theme_override_constants/separation = 0
 
 [node name="StatsColumn" type="VBoxContainer" parent="Interface/Equipment/Margin/VBox/Lower" unique_id=56824203]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
+theme_override_constants/separation = 1
 
 [node name="Comparison" type="RichTextLabel" parent="Interface/Equipment/Margin/VBox/Lower/StatsColumn" unique_id=1977942160]
 layout_mode = 2
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
+theme_override_font_sizes/normal_font_size = 5
 
 [node name="Detail" type="Label" parent="Interface/Equipment/Margin/VBox/Lower/StatsColumn" unique_id=1998614613]
+visible = false
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 5
 text = "Empty slot."
 autowrap_mode = 2
 max_lines_visible = 3
@@ -431,34 +468,35 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -144.0
-offset_right = -24.0
-offset_bottom = -16.0
+offset_left = 8.0
+offset_top = -48.0
+offset_right = -8.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 0
+theme = SubResource("Theme_native_ui")
 script = ExtResource("5_dialogue")
 
 [node name="Margin" type="MarginContainer" parent="Interface/Dialogue" unique_id=927407927]
 layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
 
 [node name="VBox" type="VBoxContainer" parent="Interface/Dialogue/Margin" unique_id=375539450]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 2
 
 [node name="Speaker" type="Label" parent="Interface/Dialogue/Margin/VBox" unique_id=1117973330]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 6
 text = "Speaker"
 
 [node name="Line" type="Label" parent="Interface/Dialogue/Margin/VBox" unique_id=1175643360]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 21)
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 6
 text = "Dialogue"
 autowrap_mode = 2
 

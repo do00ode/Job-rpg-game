@@ -10,13 +10,10 @@ namespace RpgGame.Exploration;
 public partial class DataDrivenMapView : Node2D, IExplorationMapView
 {
 	private const int TileSize = PixelPerfectGeometry.NativeTileSize;
-	private const float EncounterMarkerMaxSize = TileSize * 2.0f;
 	private static readonly Vector2I TestRoomGuideTile = new(7, 4);
 	private const string TestRoomMapId = "map.prologue.test-room";
 
 	private MapQueryService _map = null!;
-	private IReadOnlyDictionary<string, Texture2D> _encounterTextureByMarkerId =
-		new Dictionary<string, Texture2D>(StringComparer.Ordinal);
 	private IReadOnlySet<string> _clearedEncounterFlags = new HashSet<string>(StringComparer.Ordinal);
 
 	public string MapId => _map.MapId;
@@ -28,7 +25,6 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
 	{
 		_map = map ?? throw new ArgumentNullException(nameof(map));
 		ArgumentNullException.ThrowIfNull(content);
-		_encounterTextureByMarkerId = LoadEncounterTextures(map, content);
 		QueueRedraw();
 	}
 
@@ -59,37 +55,6 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
 		ArgumentNullException.ThrowIfNull(clearedFlagIds);
 		_clearedEncounterFlags = new HashSet<string>(clearedFlagIds, StringComparer.Ordinal);
 		QueueRedraw();
-	}
-	private static Rect2 CalculateEncounterTextureRectangle(
-	Texture2D texture,
-	Vector2 tileCenter)
-	{
-		Vector2 sourceSize = texture.GetSize();
-
-		if (sourceSize.X <= 0.0f || sourceSize.Y <= 0.0f)
-		{
-			return new Rect2(tileCenter, Vector2.Zero);
-		}
-
-		// Never allow an exploration encounter actor to exceed 32x32 native pixels.
-		// Smaller true pixel-art assets remain at their authored size.
-		float scale = Mathf.Min(
-			1.0f,
-			Mathf.Min(
-				EncounterMarkerMaxSize / sourceSize.X,
-				EncounterMarkerMaxSize / sourceSize.Y));
-
-		// Round destination dimensions and coordinates so scaled sprites remain
-		// aligned to the native pixel grid.
-		Vector2 drawSize = new(
-			Mathf.Max(1.0f, Mathf.Round(sourceSize.X * scale)),
-			Mathf.Max(1.0f, Mathf.Round(sourceSize.Y * scale)));
-
-		Vector2 topLeft = new(
-			Mathf.Round(tileCenter.X - (drawSize.X * 0.5f)),
-			Mathf.Round(tileCenter.Y + (TileSize * 0.5f) - drawSize.Y));
-
-		return new Rect2(topLeft, drawSize);
 	}
 	public override void _Draw()
 	{
@@ -138,14 +103,9 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
 
 			if (_clearedEncounterFlags.Contains(marker.ClearedFlagId)) continue;
 			Vector2 center = TileToLocal(new Vector2I(marker.X, marker.Y));
-			if (marker.DialogueId is not null
-				&& _encounterTextureByMarkerId.TryGetValue(marker.Id, out Texture2D? texture))
+			if (marker.DialogueId is not null)
 			{
-				DrawTextureRect(
-					texture,
-					CalculateEncounterTextureRectangle(texture, center),
-					tile: false);
-
+				DrawEncounterActor(center);
 				continue;
 			}
 
@@ -163,47 +123,21 @@ public partial class DataDrivenMapView : Node2D, IExplorationMapView
 		}
 	}
 
+	private void DrawEncounterActor(Vector2 center)
+	{
+		// Dialogue encounters use a native 16x16 field marker. Battle art is deliberately
+		// never reused here: its independent tactical presentation may exceed one map cell.
+		Rect2 body = new(center + new Vector2(-6.0f, -6.0f), new Vector2(12.0f, 13.0f));
+		DrawRect(body, new Color(0.62f, 0.24f, 0.52f));
+		DrawRect(body, Colors.White, false, 1.0f);
+		DrawLine(center + new Vector2(-6.0f, -5.0f), center + new Vector2(-8.0f, -7.0f), Colors.White);
+		DrawLine(center + new Vector2(6.0f, -5.0f), center + new Vector2(8.0f, -7.0f), Colors.White);
+		DrawRect(new Rect2(center + new Vector2(-3.0f, -2.0f), new Vector2(2.0f, 2.0f)), Colors.White);
+		DrawRect(new Rect2(center + new Vector2(1.0f, -2.0f), new Vector2(2.0f, 2.0f)), Colors.White);
+	}
+
 	private static Vector2 TileToLocal(Vector2I tile) => new(
 		(tile.X + 0.5f) * TileSize,
 		(tile.Y + 0.5f) * TileSize);
 
-	private static IReadOnlyDictionary<string, Texture2D> LoadEncounterTextures(
-		MapQueryService map,
-		IContentCatalog content)
-	{
-		var textures = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
-		foreach (MapEncounterMarkerDefinition marker in map.EncounterMarkers)
-		{
-			if (marker.DialogueId is null)
-			{
-				continue;
-			}
-
-			EncounterDefinition encounter = content.GetRequired<EncounterDefinition>(marker.EncounterId);
-			EncounterEnemyDefinition? firstEnemy = encounter.EnemyGroup.FirstOrDefault();
-			if (firstEnemy is null)
-			{
-				continue;
-			}
-
-			EnemyDefinition enemy = content.GetRequired<EnemyDefinition>(firstEnemy.EnemyId);
-			if (string.IsNullOrWhiteSpace(enemy.PresentationId))
-			{
-				continue;
-			}
-
-			string assetName = enemy.PresentationId[(enemy.PresentationId.LastIndexOf('.') + 1)..];
-			string path = $"res://game/assets/enemies/{assetName}/battle.png";
-			if (ResourceLoader.Load<Texture2D>(path) is Texture2D texture)
-			{
-				textures.Add(marker.Id, texture);
-			}
-			else
-			{
-				GD.PushWarning($"Encounter marker '{marker.Id}' could not load '{path}'.");
-			}
-		}
-
-		return textures;
-	}
 }

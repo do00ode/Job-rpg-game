@@ -24,6 +24,8 @@ exploration does not remain visible behind a menu.
 
 The Game Menu includes a Display entry backed by `DisplaySettingsService`. It immediately applies
 one supported windowed resolution: 640x480, 800x600, 1024x768, 1280x720, 1366x768, or 1920x1080.
+It also offers explicit 2x through 5x integer pixel-scale presets (640x480 through 1600x1200)
+for players who want a smaller or larger crisp output without changing the internal canvas.
 The project launches at 960x720 by default. Resolution selection is currently session-local;
 persistent display preferences are deferred. The internal viewport remains 320x240 at every size.
 

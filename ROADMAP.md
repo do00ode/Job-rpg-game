@@ -484,7 +484,7 @@ hybrid classes. See `MILESTONE_4_95_GUIDE.md`.
 
 ### Milestone 4.96 - Resolution-safe presentation
 
-- Preserve the authored `1280x720` logical viewport and scale it for CRT-safe 4:3 output.
+- Preserve the authored `320x240` logical viewport and scale it for CRT-safe 4:3 output.
 - Use container-driven menu layouts instead of introducing a second logical scene dimension.
 - Keep equipment, menus, controls, dialogue, battle, and rewards inside the available viewport.
 - Scale battle formation geometry from its allocated presentation area without changing core

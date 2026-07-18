@@ -118,7 +118,7 @@ public partial class ControlsPanel : PanelContainer
             var actionLabel = new Label
             {
                 Text = definition.DisplayName,
-                CustomMinimumSize = new Vector2(150.0f, 0.0f),
+                CustomMinimumSize = new Vector2(118.0f, 0.0f),
                 ClipText = true,
             };
             row.AddChild(actionLabel);
@@ -129,7 +129,7 @@ public partial class ControlsPanel : PanelContainer
                 string capturedActionId = definition.Id;
                 var button = new Button
                 {
-                    CustomMinimumSize = new Vector2(70.0f, 32.0f),
+                    CustomMinimumSize = new Vector2(80.0f, 14.0f),
                 };
                 button.Pressed += () => BeginCapture(capturedActionId, capturedIndex);
                 row.AddChild(button);
